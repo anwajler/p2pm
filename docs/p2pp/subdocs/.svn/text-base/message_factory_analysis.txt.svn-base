@@ -1,0 +1,89 @@
+================================================================================
+|                                                                              |
+|                            MessageFactory analysis                           | 
+|                                                                              |
+|                                                               Maciej Skorupka|
+|                                                        s3874{at}pjwstk.edu.pl|
+================================================================================
+
+
+I   Analysis
+# 70 (0111 0000)
+    -> protocolVer1 01, responseACK 11, A 0, P 0, R 0, 0->used in next field
+# c8 (0 from previous byte, 11001000)
+    -> response code 200
+# 02
+    -> bootstrap 2
+# ff
+    -> TTL 255
+# 596abf0d
+    -> magic cookie
+# 00000000
+    -> transaction ID
+# 00000034
+    -> message length -> 52
+# 00000000
+    -> sourceID
+# 00000001
+    -> responseID
+# 00                                  | 
+    -> peerInfo                       |
+# 00                                  |
+    -> A, B, reserved                 |
+# 001b                                |
+    -> object length 27               |
+# 01                                  |
+    -> PeerID                         |
+# 00                                  |
+    -> A, B, reserved                 |
+# 0004                                |
+    -> object length 4                |
+# 00000001                            |
+    -> PeerID value                   |
+# 02                                  |
+    -> AddressInfo                    |
+# 00                                  |
+    -> A, B, reserved                 |
+# 000f                                |
+    -> object length 15               |
+# 01                                  |
+    -> Num 1                          |
+# 04                                  |
+    -> R 0, Resv 0, IP v4             |
+# 00                                  |
+    -> Foundation                     |
+# 00                                  |
+    -> ComponentID                    |
+# 00000000                            |
+    -> Priority                       |
+# 00                                  |
+    -> TT 0, HT 0                     |
+# 1ba8                                |
+    -> port 7080                      |
+# c0a80132                            |
+    -> ip 192.168.1.50                |
+# 00                                  |
+    -> PeerInfo                       |
+# 00                                  |
+    -> A B Reserved                   |
+# 0000                                |
+    -> object length 0                |
+# 05                                  |
+    -> P2POptions                     |
+# 00                                  |
+    -> A B Reserved                   |
+# 000d                                |
+    -> object length 13               |
+# 01                                  |
+    -> hash algorithm SHA-1           |
+# 14                                  |
+    -> hash algorithm length 20       |
+# 02                                  |
+    -> P2P algorithm Kademlia         |
+# 02                                  |
+    -> base 2                         |
+# 08                                  |
+    -> overlayID length 8             |
+# 4b6164656d6c6961                    |
+    -> overlayID                      |
+

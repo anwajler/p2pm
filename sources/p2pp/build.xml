@@ -1,0 +1,71 @@
+<project name="P2PP" default="compile" basedir="." xmlns:cs="antlib:com.puppycrawl.tools.checkstyle">
+
+	<description>Build file for Peer-to-Peer Protocol library.</description>
+
+	<!-- properties -->
+	<property name="bin.dir" value="bin" />
+	<property name="jar.dir" value="jar" />
+	<property name="lib.dir" value="lib" />
+	<property name="src.dir" value="src" />
+	<property name="dist.dir" value="dist" />
+	<property name="doc.dir" value="doc" />
+	<property name="api_doc.dir" value="doc/api" />
+	<!-- end of properties -->
+
+	<!-- classpath -->
+	<path id="classpath">
+		<fileset dir="${lib.dir}" includes="**/*.jar" />
+	</path>
+	<!-- end of classpath -->
+
+	<!-- targets -->
+	<target name="compile" depends="clean" description="Compiles all source files.">
+		<mkdir dir="${bin.dir}" />
+		<javac srcdir="${src.dir}" destdir="${bin.dir}" classpathref="classpath" debug="on" debuglevel="source,lines,vars" />
+	</target>
+	<target name="clean" description="Deletes everything in bin and jar directories.">
+		<delete dir="${bin.dir}" />
+		<delete dir="${jar.dir}" />
+		<delete dir="${dist.dir}" />
+	</target>
+	<target name="rebuild" description="Cleans project and then compiles everything." depends="clean, compile">
+	</target>
+	<target name="jar" depends="compile" description="Compiles all source files and creates jar file using those.">
+		<mkdir dir="${jar.dir}" />
+		<jar destfile="${jar.dir}/p2pp.jar" basedir="${bin.dir}">
+			<manifest>
+				<attribute name="Main-Class" value="pl.edu.pjwstk.p2pp.launchers.CommandLineLauncher" />
+				<attribute name="Class-Path" value="../lib/commons-cli-1.1.jar ../lib/junit-4.4.jar ../lib/mysql-connector-java-5.1.7-bin.jar ../lib/log4j-1.2.15.jar" />
+			</manifest>
+		</jar>
+	</target>
+	<target name="javadoc" description="Creates javadoc documentation in doc/api directory.">
+		<javadoc packagenames="pl.edu.pjwstk.p2pp.*" sourcepath="src" defaultexcludes="yes" destdir="${api_doc.dir}" author="true" version="true" use="true" windowtitle="P2PP API">
+			<doctitle>
+				<![CDATA[<h1>P2PP API</h1>]]></doctitle>
+		<tag name="todo" scope="all" description="To do:" />
+	</javadoc>
+</target>
+<target name="javadoc_zip" depends="javadoc" description="Creates javadoc documentation in doc/api.zip.">
+	<zip destfile="${doc.dir}/api.zip">
+		<zipfileset dir="${api_doc.dir}/" />
+	</zip>
+	<delete dir="${api_doc.dir}" />
+</target>
+<target name="gzip" description="Creates tar.gz archive with jar file, third-party libraries and documentation.">
+	<mkdir dir="${dist.dir}" />
+	<tar destfile="${dist.dir}/p2pp.tar" basedir="." includes="${lib.dir}/*.jar, ${jar.dir}/p2pp.jar, log4j.properties, start.sh" />
+	<gzip destfile="${dist.dir}/p2pp.tar.gz" src="${dist.dir}/p2pp.tar" />
+	<delete file="${dist.dir}/p2pp.tar" />
+</target>
+<target name="zip" description="Creates zip archive with jar file, third-party libraries and documentation.">
+	<mkdir dir="${dist.dir}" />
+	<zip destfile="${dist.dir}/p2pp.zip" basedir="." includes="${lib.dir}/*.jar, ${jar.dir}/p2pp.jar, log4j.properties, start.sh" />
+</target>
+<target name="run">
+	<java jar="${jar.dir}/p2pp.jar" fork="true" />
+</target>
+
+<!-- end of targets -->
+
+</project>

@@ -1,0 +1,19 @@
+*******************************************************************************
+*                                                                             *
+*      Description of how to use of Peer-to-Peer Protocol (P2PP) library      *
+*                                                                             *
+*                                         Maciej Skorupka s3874@pjwstk.edu.pl *
+*******************************************************************************
+
+    First of all, if you want to use described library, you have to:
+1) Download p2pp.jar file from our website [1]. There's a Files section where
+newest version of p2pp.jar is placed. In future, there will be a set of files
+with versions, but currently there's only the newest version.  
+
+
+
+
+References
+
+[1] https://hrom.quak.pjwstk.edu.pl/gf/project/p2pp/ 
+    P2PP website.

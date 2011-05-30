@@ -1,0 +1,14 @@
+1. Where to start P2PPManager in J2ME?
+2. Do we have to use UDP or TCP, or maybe both at the same time?
+3. If an answer for Q2 is that we can have both at the same time, then how to 
+    determine which transport should be used for join() and other API methods? 
+    There's also a PeerInfo object that contains info about a port, so it has to 
+    know which port to use.
+4. Enroll and Authenticate messages have "Certificate-Sign-Request". What's 
+    that? It seems that there's no description for this.
+5. There's a problem with encryption. There's no DTLS implementation in Java so
+    there's no way to encrypt UDP communication.
+6. Is Resource-list a GeneralObject? 
+7. Why UnhashedID is not defined as part of PeerInfo? This way is used in 
+   main implementation 0.2.
+8. Bootstrap server remember 

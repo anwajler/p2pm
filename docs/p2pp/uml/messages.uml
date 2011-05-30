@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uml:Package xmi:version="2.1" xmlns:xmi="http://schema.omg.org/spec/XMI/2.1" xmlns:uml="http://www.eclipse.org/uml2/2.1.0/UML" xmi:id="_sVwKMVHmEd2Bh4RErARFhw" name="Package">
+  <elementImport xmi:id="_sacc8FHmEd2Bh4RErARFhw">
+    <importedElement xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Boolean"/>
+  </elementImport>
+  <elementImport xmi:id="_sas7oFHmEd2Bh4RErARFhw">
+    <importedElement xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+  </elementImport>
+  <elementImport xmi:id="_sas7oVHmEd2Bh4RErARFhw">
+    <importedElement xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#UnlimitedNatural"/>
+  </elementImport>
+  <elementImport xmi:id="_sas7olHmEd2Bh4RErARFhw">
+    <importedElement xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+  </elementImport>
+  <packagedElement xmi:type="uml:Class" xmi:id="_ud3GMFHmEd2Bh4RErARFhw" name="Message">
+    <ownedOperation xmi:id="_G_YUMFHnEd2Bh4RErARFhw" name="asBytes" isAbstract="true">
+      <ownedParameter xmi:id="_l39PoFJPEd2Lspu6mkJq-Q" direction="return"/>
+    </ownedOperation>
+    <ownedOperation xmi:id="_jwogUFJbEd2Lspu6mkJq-Q" name="getBitsCount">
+      <ownedParameter xmi:id="_lVLcQFJbEd2Lspu6mkJq-Q" direction="return"/>
+    </ownedOperation>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_u326kFHmEd2Bh4RErARFhw" name="Request">
+    <generalization xmi:id="_2vEHYFHmEd2Bh4RErARFhw" general="_ud3GMFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_xXWb0FHmEd2Bh4RErARFhw" name="Indication">
+    <generalization xmi:id="_3c1zYFHmEd2Bh4RErARFhw" general="_ud3GMFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_xtjVUFHmEd2Bh4RErARFhw" name="Acknowledgment">
+    <generalization xmi:id="_1-7D4FHmEd2Bh4RErARFhw" general="_ud3GMFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_x6ygEFHmEd2Bh4RErARFhw" name="Response">
+    <generalization xmi:id="_3FzzcFHmEd2Bh4RErARFhw" general="_ud3GMFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_xrYgMFHoEd2Bh4RErARFhw" name="EnrollRequest">
+    <generalization xmi:id="_V4WBoFHpEd2Bh4RErARFhw" general="_u326kFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_yDQ0sFHoEd2Bh4RErARFhw" name="AuthenticateRequest">
+    <generalization xmi:id="_WRmPIFHpEd2Bh4RErARFhw" general="_u326kFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_yYVFwFHoEd2Bh4RErARFhw" name="BootstrapRequest">
+    <generalization xmi:id="_WsnXMFHpEd2Bh4RErARFhw" general="_u326kFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_y2UCQFHoEd2Bh4RErARFhw" name="JoinRequest">
+    <generalization xmi:id="_XWurMFHpEd2Bh4RErARFhw" general="_u326kFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_zGuc0FHoEd2Bh4RErARFhw" name="LookupPeerRequest">
+    <generalization xmi:id="_ZRMMwFHpEd2Bh4RErARFhw" general="_u326kFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_z3UMQFHoEd2Bh4RErARFhw" name="QueryRequest">
+    <generalization xmi:id="_czG0UFHpEd2Bh4RErARFhw" general="_u326kFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_0H3wwFHoEd2Bh4RErARFhw" name="ExchangeTableRequest">
+    <generalization xmi:id="_a7OFoFHpEd2Bh4RErARFhw" general="_u326kFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_0eruQFHoEd2Bh4RErARFhw" name="ReplicateRequest">
+    <generalization xmi:id="_amcvgFHpEd2Bh4RErARFhw" general="_u326kFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_0w11QFHoEd2Bh4RErARFhw" name="TransferRequest">
+    <generalization xmi:id="_aNxJwFHpEd2Bh4RErARFhw" general="_u326kFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_1A3OQFHoEd2Bh4RErARFhw" name="PublishObjectRequest">
+    <generalization xmi:id="_Z3fXwFHpEd2Bh4RErARFhw" general="_u326kFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_1TpAUFHoEd2Bh4RErARFhw" name="LookupObjectRequest">
+    <generalization xmi:id="_ZkpUQFHpEd2Bh4RErARFhw" general="_u326kFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_1o2bUFHoEd2Bh4RErARFhw" name="RemoveObjectRequest">
+    <generalization xmi:id="_bRvvQFHpEd2Bh4RErARFhw" general="_u326kFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_17UEUFHoEd2Bh4RErARFhw" name="TunnelRequest">
+    <generalization xmi:id="_brxY0FHpEd2Bh4RErARFhw" general="_u326kFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_2MQDUFHoEd2Bh4RErARFhw" name="ConnectRequest">
+    <generalization xmi:id="_cCblUFHpEd2Bh4RErARFhw" general="_u326kFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_2gi4UFHoEd2Bh4RErARFhw" name="InviteRequest">
+    <generalization xmi:id="_cX8iUFHpEd2Bh4RErARFhw" general="_u326kFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3tY0AFHqEd2Bh4RErARFhw" name="EnrollResponse">
+    <generalization xmi:id="_dZLD4FHrEd2Bh4RErARFhw" general="_x6ygEFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3tY0AlHqEd2Bh4RErARFhw" name="AuthenticateResponse">
+    <generalization xmi:id="_dtBM8FHrEd2Bh4RErARFhw" general="_x6ygEFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3tZbEFHqEd2Bh4RErARFhw" name="BootstrapResponse">
+    <generalization xmi:id="_eD-UYFHrEd2Bh4RErARFhw" general="_x6ygEFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3tZbElHqEd2Bh4RErARFhw" name="JoinResponse">
+    <generalization xmi:id="_ehDR8FHrEd2Bh4RErARFhw" general="_x6ygEFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3tZbFFHqEd2Bh4RErARFhw" name="LookupPeerResponse">
+    <generalization xmi:id="_e4Za8FHrEd2Bh4RErARFhw" general="_x6ygEFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3taCIFHqEd2Bh4RErARFhw" name="QueryResponse">
+    <generalization xmi:id="_igHvkFHrEd2Bh4RErARFhw" general="_x6ygEFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3taCIlHqEd2Bh4RErARFhw" name="TableResponse">
+    <generalization xmi:id="_fQM28FHrEd2Bh4RErARFhw" general="_x6ygEFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3taCJFHqEd2Bh4RErARFhw" name="ReplicateResponse">
+    <generalization xmi:id="_flB3cFHrEd2Bh4RErARFhw" general="_x6ygEFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3tapMFHqEd2Bh4RErARFhw" name="TransferResponse">
+    <generalization xmi:id="_f-IT8FHrEd2Bh4RErARFhw" general="_x6ygEFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3tapMlHqEd2Bh4RErARFhw" name="PublishObjectResponse">
+    <generalization xmi:id="_gUBrcFHrEd2Bh4RErARFhw" general="_x6ygEFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3tapNFHqEd2Bh4RErARFhw" name="LookupObjectResponse">
+    <generalization xmi:id="_grJyAFHrEd2Bh4RErARFhw" general="_x6ygEFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3tbQQFHqEd2Bh4RErARFhw" name="RemoveObjectResponse">
+    <generalization xmi:id="_hCzdAFHrEd2Bh4RErARFhw" general="_x6ygEFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3tbQQlHqEd2Bh4RErARFhw" name="TunnelResponse">
+    <generalization xmi:id="_ha_TgFHrEd2Bh4RErARFhw" general="_x6ygEFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3tbQRFHqEd2Bh4RErARFhw" name="ConnectResponse">
+    <generalization xmi:id="_hwRnAFHrEd2Bh4RErARFhw" general="_x6ygEFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3tb3UFHqEd2Bh4RErARFhw" name="InviteResponse">
+    <generalization xmi:id="_iJh0gFHrEd2Bh4RErARFhw" general="_x6ygEFHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_Ksnj4FJIEd2Lspu6mkJq-Q" name="LeaveIndication">
+    <generalization xmi:id="_PgzEkFJIEd2Lspu6mkJq-Q" general="_xXWb0FHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_LC-OYFJIEd2Lspu6mkJq-Q" name="KeepAliveIndication">
+    <generalization xmi:id="_P_B4sFJIEd2Lspu6mkJq-Q" general="_xXWb0FHmEd2Bh4RErARFhw"/>
+  </packagedElement>
+</uml:Package>

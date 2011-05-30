@@ -1,0 +1,1590 @@
+﻿================================================================================
+|                                                                              |
+|           Documentation for Peer-to-Peer Protocol (draft 01)                 |
+|                           implementation in Java.                            | 
+|                                                                              |
+|                                                               Maciej Skorupka|
+|                                                        s3874{at}pjwstk.edu.pl|
+================================================================================
+
+Table of contents.
+
+I       Overview.
+II      API.
+III     Basic classes and objects.
+IV      Message model.
+V       General Object.
+VI      P2PPManager.
+VII     Message's processing.
+VIII    Communication step-by-step.
+IX      Utilities.
+X       What's implemented.
+XI      Porting issues.
+XII     Tests.
+XIII    Thoughts.
+XIV     How to change things.
+XV      References.
+XVI     Diagrams.
+XVII    References.
+
+Appendix A - Changes history.
+Appendix B - Running.
+Appendix C - How to extend?
+
+
+Abstract
+
+    This document is a documentation of Peer-to-Peer Protocol (P2PP) 
+implementation using Java language. Implementation is for Java-enabled
+platforms such as J2SE and Android.  
+
+
+
+I	  Overview.
+
+    This document describes implementation of Peer-to-Peer Protocol (P2PP) in 
+Java programming language. Implementation is based on draft 01 of P2PP [1].
+Because P2PP uses ICE for NAT traversal, it is also implemented (by Robert 
+Strzelecki (s1142@pjwstk.edu.pl) and Sławomir Ostrowski 
+(s0175@pjwstk.edu.pl)).
+    
+    There are few guidelines for this project. First of all, the library that 
+will be an outcome of this work, must be as portable for Java-enabled platforms
+as possible. The main platforms are J2SE and Android. Initially, there was a 
+requirement for it to work on J2ME, but it was decided that it isn't needed. 
+Second thing is that the code will be running using Kademlia protocol[2], but 
+it has to be extensible so that it could run with other protocols.
+
+    This code will be used in mTeam Project[3]. It will be a part responsible 
+for communication and storing data in distributed (peer-to-peer) way.
+
+    Throughout the project, unit tests are used for testing parts of code. 
+There's a directory called "tests" with packages. Those packages contain unit 
+tests for classes from the project. Every tested class has a corresponding one 
+with Test suffix. So, for instance, there's a class MyClass in 
+"src/pl.edu.pjwstk.p2pp" package and there's a MyClassTest in 
+"tests/pl.edu.pjwstk.p2pp" package. Unit tests are made using jUnit framework 
+(version 4.4). There's a also an idea to make a testing platform for 
+distributed testing of working nodes, but it isn't decided yet how it will look
+like. 
+
+    Whole coding, testing, debugging and UML diagrams are made using Eclipse IDE
+(3.4 with UML2 and AmaterasUML plugins) on Ubuntu 8.04/8.10. Command-line 
+parsing is made using CLI package by Apache.
+
+    As there is only one implementation of P2PP (it is not full implementation 
+of this protocol) and it is open source, we use it as a point of reference in 
+many ways. Some parts of specification are not very clear or are labelled as 
+"TBD". Mentioned implementation is hosted on Salman Baset's site [6] and is 
+called a reference implementation throughout this document.
+
+II	    API.
+
+    As in every programming library, the most interesting part is an API that it
+exposes. This implementation has it also. It is for nodes that want to 
+participate in P2PP communication. 
+
+    Main guideline for an API is mentioned in protocol specification[1]:
+
+	'An application using peer-to-peer protocol issues non-blocking calls
+	to P2PP layer to accomplish operations, namely, join, leave, publish,
+	lookup, remove, and query.  Since an operation may take long time to
+	complete, an application supplies a call-back function for each API,
+	not shown in the parameters.'
+
+    This gives us no choice and we have to make listeners for incoming message.
+The best way to implement this is through interface, so there's 
+one - P2PPNodeCallback. Every user of an API will have to implement interface's 
+methods and pass its reference to a Node object (this process has detailed 
+description in III.2 and VI). Then if one wants to, for instance, join an 
+overlay, one has to use join() method exposed by Node object. Every API method
+has a corresponding callback. So a list of methods and their listener 
+equivalents looks like this:
+
+        Node.join()     ->      P2PPNodeCallback.joinCallback()
+        Node.query()    ->      P2PPNodeCallback.queryCallback()
+        Node.leave()    ->      P2PPNodeCallback.leaveCallback()
+        Node.publish()  ->      P2PPNodeCallback.publishCallback()
+        Node.lookup()   ->      P2PPNodeCallback.lookupCallback()
+        Node.remove()   ->      P2PPNodeCallback.removeCallback()
+        
+    There's one additional callback for all possible errors that might appear
+in response to API calls:
+
+        P2PPNodeCallback.errorCallback() 
+        
+    There are also some extensions to standard callbacks. They were introduced
+by Paulina Adamska (s3529@pjwstk.edu.pl). TODO (reference to a place where 
+specification of those methods is!!!) Because of that, there are 4 more 
+methods in P2PPNodeCallback interface:
+
+        P2PPNodeCallback.onDeliverRequest()
+        P2PPNodeCallback.onForwardingRequest()
+        P2PPNodeCallback.onNeighborJoin()
+        P2PPNodeCallback.onNeighborLeave()
+
+    Diagram 1[1] shows this API as a class diagram.
+
+    So let's discuss API's methods one by one and then describe how they
+should be used.
+
+
+1.	    Query.
+
+    Isn't implemented yet!
+
+    First method's signature is like this:
+	
+	    query(String Overlay-peer-network-address,
+             int Overlay-peer-port);
+
+    First argument is String because InetAddress class is not used in J2ME 
+platform (currently J2ME isn't used, but at first there was a plan to support
+this platform). The String has to contain IP (v4 or v6) or a DNS name in text form. 
+'overlay-peer-port' is int, because it is TCP or UDP port that may be up to 
+65536. If first argument is null or isn't a proper Internet address, or the 
+second argument isn't a proper port number, IllegalArgumentException is thrown.
+
+    Callback equivalent looks like this:
+
+	    queryCallback(byte[] Overlay-ID, String P2P-Algorithm, 
+	                  String Hash-Algorithm, short Hash-Algorithm-Len);
+
+    Overlay-ID's type is byte[]. This type is capable of storing those ID's that
+may be of different sizes. BitSet was the first choice, but J2ME doesn't support
+it. Maybe String will be used, but it isn't decided yet. Second and third is a 
+String, because those are names. Fourth one is short because this is simply a 
+number that will be stored in 8 bytes. Java's byte is not used in here, because 
+this language doesn't support unsigned byte. 
+
+2.	Join.
+
+    First method has arguments as follows:
+
+	    join(byte[] Overlay-ID, String Overlay-peer-network-address, 
+	                   int Overlay-peer-port);
+
+    Overlay-ID's type is byte[]. At the moment it isn't used internally because
+specification doesn't seem to mention how, when and where it should be used. 
+Second argument is String because InetAddress class is not used in J2ME 
+platform. J2ME support isn't needed anymore, but this may stay as it is. The 
+String has to contain IP (v4 or v6) or DNS name in text form. 
+'overlay-peer-port' is int, because it is TCP or UDP port.
+
+    Callback equivalent has no arguments. It only informs that join took place 
+so it looks very simple:
+
+	    joinCallback();
+
+3.	Leave.
+
+    First method looks like this:
+
+	    leave(byte[] Overlay-ID);
+
+    As in previous methods, Overlay-ID is byte[]. This method does not have a 
+callback equivalent.
+
+4.	Publish.
+
+    First method has a signature as follows:
+
+	    publish(byte[] Unhashed-Resource-ID, 
+                    GeneralResource Resource-Object);
+
+    Unhashed-Resource-ID's type is byte[]. This array will contain different 
+length data. 'Resource-Object' is of GeneralResource type. It is a class that 
+describes general resource object. It is inherited by every resource object, so 
+it is possible to read any kind of resource object. 
+
+    Callback method has four arguments. Content type, subtype, unhashedKey
+and resourceObjectValue are used here because user of an API wants to know
+for which publish() call this callback is.
+
+	    publishCallback(byte contentType, byte contentSubtype, 
+	                    byte[] unhashedKey, byte[] resourceObjectValue);
+
+5.	Remove.
+
+    Isn't implemented yet!
+    
+    First method looks like this:
+
+	    remove(byte[] Resource-ID);
+
+    Resource-ID's type is byte[], for the same reason as in publish method.
+
+    Callback method has no arguments.
+
+	    removeCallback();
+
+6.	Lookup.
+    
+    First method has arguments as follows:
+
+        lookup(byte contentType, byte contentSubtype, byte[] resourceID, 
+                Owner owner);
+
+    Originally (as it was described in P2PP specification draft 01), this 
+method was with one parameter - resourceID. Salman's implementation has 
+LookupObject in Node class and this method assumes that given resourceID is for
+StringValue content type. We want our method to give a possibility of looking 
+for all types of resources. Because of those facts, this method has four types
+arguments. Content type and subtype determine a type of resource. ResourceID
+is unhashed ID that will be hashed if structured network is used. Owner
+is optional (may be null), because sometimes API user might want to search for
+all objects (published by anyone) of given type and key.
+
+    Callback method returns a list of found ResourceObjects. If list is empty,
+no resources were found.
+
+        lookupCallback(Vector<ResourceObject> resourceObjects);
+
+7.  ErrorCallback.
+
+    Sometimes there might be an error during some of API calls. For example,
+if peer is already a part of some overlay, errorCallback() will be invoked,
+because peer can't be a part of more than one overlay at the same time.
+
+        errorCallback(ErrorInterface errorObject, int errorCode);
+        
+    ErrorCode contains information about what type of an error it is. 
+There are constants for this in P2PPNodeCallback interface (for example
+-1 is for bootstrapping error).
+
+TODO add description of Paulina's callbacks 
+
+8.  Invoking methods.
+
+    So how this methods are invoked? There's a P2PPManager class which is 
+responsible for managing P2PP entities such as Peer, Client and all P2PP 
+servers. Details of P2PPManager class are described in a chapter VI. API 
+methods are in Node class (this class is inherited by Peer and Client).
+
+    Second thing is how to listen to callback methods. We have to create an 
+implementation for P2PPListener and add it to a Node by using 
+setCallback(P2PPNodeCallback) method. Node is then added to P2PPManager. Then,
+we have to remember Node somewhere so that we can invoke API methods on it. It
+may look like this: 
+        
+        P2PPListener listener = new P2PPListener() {
+            public void joinCallback() {
+                // do something
+            }
+            public void publishCallback() {
+                // do something
+            }
+            // all other API methods...
+        };
+        KademliaPeer peer = new KademliaPeer();
+        peer.addP2PPListener(listener);
+        P2PPManager manager = new P2PPManager();
+        manager.addEntity(manager);
+        manager.start();
+        peer.join("overlayname", "192.168.1.100", 7080);
+        
+    This process is similar for other API methods. The only difference is that
+other API method is invoked on Node object .
+
+
+III     Basic classes and objects.
+
+    There are some basic ideas behind P2PP and they can be modelled as 
+classes and relations between them. The fundamental ones are User, Node,
+Peer, Client, Joining Peer, Admitting Peer, PeerID, Routing Table, Neighbor 
+Table, Resource Object, Service, Overlay Operator, Enrollment and Authentication
+Server, Bootstrap Server, Diagnostic Server. All the terms are described in
+details in the P2PP specification[1]. The most interesting fact is how this
+is implemented. 
+
+    First of all, there are classes for most of things mentioned on the
+previous long list. Let's begin with a general class for all the entities that 
+may participate in P2PP communication - P2PPEntity.
+
+1.  P2PPEntity.
+
+    We want a Peer, BootstrapServer, EAndAServer and DiagnosticsServer to 
+work on one machine and on the same ports and to be treated the same way 
+(currently not tested this way). One main superclass (P2PPEntity) for all 
+entities that want to communicate using P2PP is a way for achieving this goal. 
+This class is inherited directly by Node (and then by Peer (and Client) and 
+its subclasses) BootstrapServer, EAndAServer and DiagnosticServer. 
+
+    Every entity has a possibility of getting a message received by a transport 
+and sending one using it. Second thing is achieved using 
+OutgoingMessagesListener which is given in setOutgoingListener(). In this 
+implementation this object is nested in P2PPManager, so that it listens to 
+messages but also has access to all members and methods of P2PPManager and can
+pass a message to writers (described later). fireOnSend(Message) passes message
+to OutgoingMessagesListener. This may be called a process of passing a message to 
+transport layer of P2PP.  
+     
+    Receiving of message by an entity is achieved by onReceive(Message) method 
+that is invoked whenever a P2PPManager receives a message. This method returns 
+true if message was consumed (this entity will take care of the message).
+Decision whether to consume a message is a three-step process:
+
+    * Firstly, canConsume(Message) method is invoked. Peer, Client and every type
+      of server must define this method basing on types that in can handle. This 
+      decision is made  basing on type of message (BootstrapServer can consume only 
+      BootstrapRequests and Acknowledgment for BootstrapResponses). 
+      canConsume(Message) is abstract protected method (declared this way in 
+      P2PPEntity) that returns true if an entity can consume the message and 
+      false otherwise. 
+    
+    * Secondly, if canConsume() has returned true, generalAnalysis(Message) is
+      invoked. This method is private to P2PPEntity. This is the same thing
+      that is described in P2PP specification [1] (chapter 4.3). This method
+      returns true if message should be consumed by this entity. If not,
+      third method won't be invoked and message will be forwarded to so-called
+      next hop.
+    
+    * Last invoked method is consume(Message). This method assumes that local
+      entity doesn't know about any other node or server that is better for 
+      received message (canConsume(Message) and generalAnalysis(Message) 
+      take care of that).  
+                 
+
+2.  Node.
+
+    Node is Peer and Client in general and also an entity. This is a great 
+place for inheritance. So, there is an abstract class Node. It is inherited by 
+Client and by Peer. Peer and Client are inherited by protocol-specific versions
+(KademliaPeer, KademliaClient for instance). 
+
+    Node has to know about few things, but also P2PPEntity wants to know some 
+of them, so there's EntitiesSharedDataManager that contains much information:
+    - about overlay options - p2pAlgorithm, overlayID, overlayID length, 
+      hashAlgorithm, hash length, hash algorithm base
+    - about other nodes - RoutingTable, NeighborTable, numberOfNeighbors, 
+    - about resources - PublishTable, resourceTable, replicatedTable,
+    - about transactions - TransactionTable
+    - others - numberOfClients, mediaRelayFlows, bandwidth, numberOfMessages, 
+      aSNum (Autonomous System Number), 
+
+TODO EntitiesSharedDataManager should be deleted from implementation. Things 
+that are in it should be places in P2PPEntity class or in its subclasses. 
+
+    Tables are described in details in chapter III.2. Routing table, neighbor 
+table, publish table, resource table, replicated table and transaction table 
+have corresponding classes, namely, RoutingTable, NeighborTable, PublishTable, 
+ResourceTable, ReplicatedTable and TransactionTable. NumberOfNeighbors will 
+be calculated by NeighborTable. Node object stores a long variable (startTime)
+that stores a millisecond at which this Node started to work. This millisecond 
+is in Unix epoch time. Number of clients counting method isn't decided yet. 
+MediaRelayFlows, bandwidth, numberOfMessages and ANS situation is similar. 
+p2pAlgorithm, overlayID, hashAlgorithm and algorithmBase are properties got 
+in P2POptions (BootstrapResponse message, to be precise), so this object is 
+stored in EntitiesSharedDatamanager. 
+
+    Every node exposes an API as defined in chapter II. 
+
+3.  Tables.
+
+    As it was mentioned earlier, every Node has an RoutingTable, NeighborTable
+and few others. Both routing table and neighbor table have to store information
+about Peers, but not as Peer objects. This is because Peer object stores many
+additional info (such as described tables). Data about Peers in tables is 
+stored in PeerInfo objects. Routing table and neighbor table are P2P-algorithm
+specific. There are abstract superclasses for both of them (RoutingTable and 
+NeighborTable). 
+
+    TransactionTable stores information about in-progress transactions. Its 
+detailed description is in chapter IV.8.  
+
+4.  Servers.
+
+    There are three types of servers and each of them has its own class. So 
+there are classes EAndAServer (EAndA abbreviation was made because 
+EnrollmentAuthenticationServer is too long), BootstrapServer and 
+DiagnosticServer. Those classes are subclasses of P2PPEntity, so they may 
+receive messages and send them. Moreover, they may be working simultaneously on
+one machine, also with nodes. At the moment it wasn't tested if this works as 
+expected, but that's a low priority task. Currently only BootstrapServer
+implementation for Kademlia protocol is ready. BootstrapServer is an abstract
+class that has to be subclassed by protocol-specific classes 
+(KademliaBootstrapServer method is ready).
+
+    BootstrapServer has a map (hashtable, to be exact) with hashedIDs as keys
+and PeerInfo objects as values. Those entries are remembered, because 
+BootstrapServer doesn't want to hold duplicated values. When BootstrapRequest
+is received, UnhashedID is extracted from it. It is hashed using 
+overlay-specific algorithm. This hashed value is used as a key in hashtable.
+Then response is created and filled with information about overlay and 
+hashedID. 
+    
+    EAndAServer and DiagnosticServer aren't ready by now and there's no good 
+specification of how they should work. 
+    
+
+
+5.  Service and Resource Object.
+    
+a)  ResourceObject 
+
+    Resource object is described in P2PP specification [1] this way:
+    
+    'A resource-object is a blob of data stored in the
+      overlay and is identified by a resource-ID.  Examples of resource-
+      objects are SIP URIs, routing-records, file-names, and service
+      identifiers such as those identifying STUN or TURN servers.  Each
+      resource-object has meta-data associated with it such as content-
+      type, content-usage, owner and expiration-time.  The meta-data can
+      also be defined by the user.  Resource Object is known as resource
+      record in the concepts document.'
+      
+    These objects are implemented by using ResourceObject class that inherits
+from GeneralObject (described in chapter V). This is made this way, so that
+ResourceObject may be added to P2PPMessages (described in chapter IV). Every
+ResourceObject has an ID (unhashed and hashed), type, subtype and value. There 
+are more attributes - owner and signature. 
+
+    Every resource object may return its byte representation using asBytes()
+because it is a subclass of GeneralObject.
+
+    Every resource object has a value, that is implemented as 
+ResourceObjectValue object (this solution is based on reference 
+implementation; P2PP specification [1] doesn't define this type of object, but
+only mentions Resource-Object-Value in chapter 9.3.10). It is a part of every 
+ResourceObject and contains an array of bytes. Those bytes are interpreted 
+by ResourceObject's subclasses. 
+
+b)  Service
+    
+    Services are also described in P2PP specification[1]:
+
+    'The peers in P2PP provide storage services.  This allows other peers
+    and clients to store data on a peer or a set of peers.  In P2PP, the
+    data to be stored is defined as a resource-object.'
+
+    Service is, as the specification says:
+    
+    'Service:  A node can offer services such as NAT and firewall traversal and 
+               may relay traffic for other nodes. A node advertises its service 
+               capabilities in the overlay using a resource-object. Different 
+               nodes can advertise the same service. The nodes store service 
+               advertisements as resource-objects in the overlay.'
+               
+    Service is a class that is managed by ResourceManager (an object that 
+takes care of ResourceObjects and Services). Services may be added to it or 
+removed from it by using addService(Service) method in P2PPManager class. This
+can happen only before P2PPManager is started. 
+    
+
+IV      Message model.
+
+    Everyone participating in communication using P2PP has to use the same type
+of messages. Their set is extensible so that new type of messages may be added. 
+Every message has a same so-called common-header, so that's a great place
+for inheritance. Furthermore, it was highly probable that somewhere in code will
+be a need for storing different messages in one container/array. Moreover, we 
+don't want to receive/send only P2PP messages (we want also messages of 
+STUN/TURN/ICE protocols). Last thing is that we want to have byte representation
+of every message, so it can be send over network.
+
+    There's an upper-class Message that contains information about message in 
+general. It stores receiver's and sender's port and address. Moreover, it has 
+information about the transport layer that has to be used (if message will be 
+send) or was used (if message was received). Transport type is determined using
+two properties - overReliable and encrypted (both boolean). If overReliable is
+true, then TCP or TLS will be used. Otherwise UDP or DTLS. Second property says
+if encryption has to be used. So when false, and overReliable is true, then TCP
+will be used etc. Both addresses are stored as String, so that the message may
+be using IPv4 or v6 in text form. To get byte representation of message, 
+abstract asBytes() should be used. 
+    
+    Message class is subclassed by protocol-dependant messages like 
+P2PPMessage, that stores things specific for all P2PP messages. Those things 
+are described later in this chapter. As there are 5 subtypes of P2PP messages
+(namely Request, Response, ResponseACK, Indication and Acknowledgment), there 
+were 5 subclasses at first. But now, I decided not to create ResponseACK 
+subclass. This is because the only difference between it and Response is in
+common header. So we can create Responses with constructor that will use those
+fields (messageType and A flag with data appropriate for responseACK).
+
+    Message redefines toString() method from Object class. It now returns 
+some basic info about message. Subclasses add interesting info to it by using 
+super.toString(). For instance, BootstrapRequest returns information about 
+sender and receiver data, transport type, header (which is common to all 
+P2PPMessages), both PeerInfo objects, P2POptions object and additional PeerInfo
+objects. Every GeneralObject also redefines toString() method from Object, so
+subobjects of messages may be also printed. This is described in details
+in chapter V. Subclasses of Message have to add things using super.toString().
+String describing message has a structure like this (new lines are here just to
+fit page, in toString() it is a space):
+
+    senderAddress=Address, senderPort=Port, receiverAddress=Address, 
+    receiverPort=Port, protocol=ProtocolName
+    
+    Let's describe P2PPMessage in details.
+    
+1.  P2PPMessage.
+
+    Every P2PPMessage has to give a possibility of getting it as an array of 
+bytes. This is achieved by defining asBytes() method from Message class. There's
+also a protected method asBytes(int). This method is implemented in a strictly 
+defined way. Every class in P2PPMessage hierarchy has it's own implementation of 
+asBytes(int). There's also a method getBitsCount() that returns a number of bits
+that the byte representation consist of. This method was created because Message
+may contain number of bits which is not a factor of 8. Now I think that's not
+possible, but it will stay this way. 
+
+    So how does this asBytes(int) method work? First of all, it is invoked with
+an int argument. This is because we want to create an array of bytes that will
+hold the whole Message (with all things that are added by subclasses). So we
+have to know the number of bits that it will consist of. By having this argument
+we can create an array of bytes that can hold those bits. Let's name that array
+"bytes". Moreover, we can determine the message length field in Message. When
+invoking, for instance, JoinRequest.asBytes(int s), super(s) is invoked at 
+first and this method invokes super(s) also. Now we're in 
+P2PPMessage.asBytes(int). That's the place where "bytes" is created and filled 
+with common header data. Then "bytes" is returned, so we're in 
+Request.asBytes(int). There, super.getBitsCount() is invoked, so we know where
+to start adding Request-specific data to "bytes". Then those data are added and
+"bytes" is returned. In JoinRequest.asBytes(int) we do almost the same thing.
+First, we determine the bit index at which we start adding JoinRequest-specific
+data. Then we add that to "bytes" and return that array.
+
+    Second important thing is that we want to know the size (number of bits) of
+a P2PPMessage to be created. It is done by getBitsCount() method. Every class in
+P2PPMessage's inheritance hierarchy returns its super-class size + its own size.
+So, for instance, P2PPMessage class returns 
+128+(sourceID.length+resourceID.length). 
+
+    So, when asBytes(int) is invoked on, for instance, JoinRequest object, 
+super(int) is invoked (so Request.asBytes(int) is invoked). This method invokes 
+super(int) from P2PPMessage class. The last invocation creates and returns an 
+array of bytes with a length of 2+2+1+1+1+9+8+8+32+32+32+(sourceID.length+0) 
+(same number will be returned by P2PPMessage.getBitsCount()). So that array is 
+now in Request.asBytes(int) method. In here, there's a call for 
+super.getBitsCount() method. It is made to know where to start adding bytes of a
+subclass. After that, request adds its bytes in appropriate place and then 
+returns a modified "bytes" which now consist of P2PPMessage and Request bytes.
+
+    As described previously, toString() method has to be used by Message 
+subclasses. It uses super.toString() to get Message part and then adds own 
+part. After this, returned String looks like this:
+
+    TakenFromMessage, P2PPMessageName=[header=[HeaderDescription], 
+    value=[Values]]
+    
+    P2PPMessageName is for instance BootstrapRequest. 
+    HeaderDescription contains things included in P2PPMessage separated by 
+        commas.
+    Values are described in chapter V.1. 
+
+    
+
+    There are more methods worth mentioning - createACK(), getPeerInfo() 
+and addObject(GeneralObject): 
+
+a) public Acknowledgment createACK();
+Returns Acknowledgment for P2PPMessage on which the method was invoked. It has 
+to be implemented by subclasses. If the message can't create ACK for itself, it 
+returns null (Acknowledgment class does this, because P2PP doesn't define ACK 
+for ACK). This method is used when analyzing received message. 
+
+b) public abstract PeerInfo getPeerInfo(); 
+Returns PeerInfo object included in this message. Most messages contain 
+PeerInfo object of message originator. This method returns it. If there's no 
+such PeerInfo object, null is returned. TODO at the moment I think that 
+every P2PPMessage (even in the future) will contain PeerInfo object.
+
+c) public addObject(GeneralObject) throws UnsupportedGeneralObjectException;
+Because most of P2PP messages contain general objects, there's this method for 
+adding them. Each P2PP message has certain set of objects that it may contain. 
+When trying to add general object to a message that can't handle it, 
+UnsupportedGeneralObjectException is thrown.
+
+    Diagram 04 [4] shows Messages hierarchy. Now it is a good moment for 
+describing Message types in details.
+
+2.  Request.
+
+    There are 15 types of Requests, namely, EnrollRequest, AuthenticateRequest,
+BootstrapRequest, JoinRequest, LookupPeerRequest, ExchangeTableRequest, 
+ReplicateRequest, TransferRequest, PublishObjectRequest, LookupObjectRequest,
+RemoveObjectRequest, TunnelRequest, ConnectRequest, InviteRequest and 
+QueryRequest. Every Request has a corresponding Response.
+    
+3.  Response.
+
+    Responses are for corresponding Requests, so there are 15 types of them, 
+namely, EnrollResponse, AuthenticateResponse, BootstrapResponse, JoinResponse,
+LookupPeerResponse, ExchangeTableResponse, ReplicateResponse, TransferResponse,
+PublishObjectResponse, LookupObjectResponse, RemoveObjectResponse, 
+TunnelResponse, ConnectResponse, InviteResponse and QueryResponse.
+    
+4.  ResponseACK.
+
+    As it was described at the beginning of this chapter, this class is no
+longer needed. ResponseACK (as defined in P2PP specification[1]) is created
+using Response objects with appropriate messageType, that is available by
+using getMessageType() method or isResponseACK(). 
+    
+    
+5.  Indication.
+
+    Indications are P2PP messages that don't need acknowledgment. 
+LeaveIndication and KeepAliveIndication are the indications in P2PP. 
+Currently only the first one is used.  
+
+6.  Acknowledgment.
+
+    Acknowledgment is created for received request or response. It is created 
+by createACK() method from P2PPMessage class.
+
+7.  Transaction.
+
+    Transaction may be called a sequence of P2PPMessages. There are three types 
+of Transactions, namely, request, response and indication. Type depends on how 
+the Transaction was constructed. When created with Request argument, it is a 
+request Transaction, when with Response, it is response, and the same scheme 
+with Indication. There's also a necessity of knowing if a Transaction is over 
+reliable or unreliable transport. This is done in constructor (boolean 
+argument).
+    
+    Firstly this class was Thread's subclass, but this created a lot of threads
+with little to do. After some research I realized that it will be better to 
+create a onTimeSlot() method that will be invoked every time there will be 
+a moment (time slot) when a transaction can check if it should do something
+(retransmissions, handle income message etc.). Similar construct is used in
+reference implementation.
+
+    Transactions are also slightly different than those described in P2PP
+specification [1]. When a peer wants to communicate with another peer, it
+creates a message and transaction for it by using TransactionTable described
+in next sub-chapter. Peer passes a Vector of AddressInfo objects to 
+transaction, so that it will be aware of addresses of remote peer. When
+transaction starts, it tries to send message to first of given addresses.
+If there's no proper response after retransmissions, peer tries to reach
+that peer using next of addresses. This happens until there's proper response
+or there are no addresses left. 
+
+    Transactions aren't stored directly in entity, but with TransactionTable 
+object in between. Detailed description of this object is in next sub-chapter.
+
+    Last interesting thing about transaction is that there is a 
+TransactionListener interface. Objects of this type are passed to Transaction,
+so that transaction will inform them about its end (failed or terminated). 
+
+8.  TransactionTable.
+
+    TransactionTable object is used for storing and finding in-progress 
+Transactions. There are several useful methods: 
+
+a) public Transaction createTransaction(P2PPMessage, boolean);
+Transaction can be created using this method. Type of created transaction 
+depends on message given as first argument. Second parameter informs if 
+transaction is create by this entity, so that new ID will be generated. If 
+there's already transaction matching given message, this method returns null.
+
+b) public Transaction createAndFillTransaction(P2PPMessage, boolean);
+Does the same thing as (a) method, but it also fills message with generated 
+transactionID. If null is returned, given message won't be filled with anything.
+
+c) public Transaction getTransaction(P2PPMessage);
+Returns transaction matching given message. Null is returned, if there's no 
+matching transaction. 
+
+d) public boolean removeMatchingTransaction(P2PPMessage);
+Removes transaction matching given message. Returns true if transaction was 
+removed. False otherwise.
+    
+    Transactions are stored in TransactionTable using hashtables for each
+type of transaction. TransactionTable has a method onTimeSlot() that is
+invoked whenever there's time for it to do its things. Transaction table
+sometimes makes retransmissions etc.
+
+V       GeneralObject.
+
+    In P2PP there are so-called objects. They are many types of them but 
+generally they contain some data. There's a GeneralObject class that is 
+an upper-class for all the P2PP objects. It is inherited by PeerInfo, 
+PeerID, AddressInfo, UnhashedID, Uptime, P2POptions, RequestOptions, 
+DiagnosticOptions, RoutingTable, NeighborTable, PLookup, ResourceID, RLookup,
+ResourceObject, Expires, Owner, CertificateSigningRequest, X509Signature, 
+TimeWindow, Connections, NodeResourceUtilization, MessagesReceived, ASNumber,
+Error. Diagram 03 [3] shows this. 
+
+1.  General methods.
+
+    Every GeneralObject has asBytes() method that returns its byte 
+representation. It uses the same concept as P2PPMessage, so description from 
+chapter IV.1 refers to GeneralObject's asBytes().
+
+    Some of general objects are used as parts of other objects, so there's a 
+method addSubobject(GeneralObject). It works similar to addObject(GeneralObject)
+from P2PPMessage.
+
+    Moreover, GeneralObject redefines toString() method. Returned String has a
+structure like this:
+
+    GeneralObjectTypeName=[header=[HeaderInfo], value=[Values]]
+    
+    GeneralObjectTypeName is a string containing GeneralObject type name (for
+        instance PeerInfo);
+    HeaderInfo is a string containing information that is stored in common 
+        header of GeneralObject (length etc.)
+    Values is a string containing information about things that are important
+        for GeneralObject (for instance PeerInfo object returns text 
+        representation of its subobjects such as PeerID, UnhashedID etc.). It
+        consists of a number of Value strings separated by "," sign.
+    Value also has a structure:
+    
+        ValueName=[StringRepresentationOfValue]
+
+2.  ResourceObject.
+
+    ResourceObject is described in chapter III. 
+    
+ 
+VI      P2PPManager.
+
+    P2PPManager may be called a main class of this project. Everything starts 
+and ends here. It's an object that will be created and will start a set of 
+threads. The exact place where it will be created depends on the platform. In 
+J2SE this may take place in main() method. On Android this may be done in some 
+kind of service. 
+    
+    Nevertheless, this object will be created, one way or another. P2PPManager 
+is created with ports numbers on which it will work (TCP, UDP, TLS, DTLS). It 
+stores a vector with entities that it manages. Those entities are added using
+addEntity(P2PPEntity) method. (TODO Probably there should be only one object of
+every direct subclass of P2PPEntity. Otherwise entities will compete with each 
+other for messages). Moreover, P2PPManager contains so-called 
+CommunicationObjects - each of them is responsible for reading and writing 
+over one transport type (currently there's only one - UDPCommunicationObject).
+Set of those communication objects is called transport layer in this project. 
+
+    As the Diagram 01 shows, there's a mechanism used for communication between
+those classes (objects, to be precise). Manager is kind of mediator between
+entities and transport. Every entity reacts basing on what transport receives 
+and reacts on what entities want to send. So how those layers communicate? It 
+is made using Message objects. They are passed from bottom to top (when 
+received) and the other way (when sent).
+     
+    
+    
+--------------------------------------------------------------------------------
+                                                                       entities    
+                              +------------+
+                              | P2PPEntity |
+                              +------------+
+-------------------------------- |     /|\ -------------------------------------
+                                 |      |                              mediator
+                                \|/     |
+                 +---------------------------------------+     
+                 |             P2PPManager               |
+                 +---------------------------------------+    
+------------------  |         /|\          /|\         |  ----------------------
+                    |          |            |          |              transport
+                   \|/         |            |         \|/           
+            +------------------------+ +------------------------+
+            | UDPCommunicationObject | | TCPCommunicationObject |
+            +------------------------+ +------------------------+
+            
+Diagram 01: P2PPManager class with entities and transport layer.  
+
+    One of most important things that P2PPManager does is giving time slots to
+entities. Time slot is (at least in this project) processor's time given
+to an entity (or something that entity contains, because entity may give some
+part of its time slot) to do its things. So, when P2PPManager wants an entity
+to check its transactions, publish tables etc., it invokes onTimeSlot() method
+from P2PPEntity class and an entity does what it wants to do. This way, 
+there's one main thread that handles most of the job. This way synchronization
+and many thread-related problems are avoided (cell phones aren't happy about 
+having many threads).
+    
+
+1.  Transport (reliable/unreliable and encrypted/not encrypted).
+
+    There's a CommunicationObject which is an abstract object for 
+communication over one transport protocol. 
+
+    It has two main methods:
+    - onRead() that is responsible for reading from socket and returning 
+      message. 
+    - onSend() that is used for sending message passed as an argument 
+      (if that communication object can't handle this message, it returns 
+      false)
+    - setSourceIDLength() that is used when node is bootstrapped, so that
+      it will know how to parse incoming bytes (has to know a length of
+      sourceIDs and responseIDs) 
+
+    P2PP entities may communicate over secure protocols like TLS and DTLS. 
+Because of this fact, there's a need for this to happen the same way as without
+security. At the moment, this project doesn't use this kind of security, because
+there's no open-source DTLS implementation and we've decided to create first 
+version that uses UDP. Nonetheless, in the future, it has to be capable of 
+doing this.
+
+2.  P2PP entities.
+
+    Entities are, like it was said in chapter III.1, capable of getting messages
+thanks to the onReceive(P2PPMessage) method and sending using 
+OutgoingMessagesListener that is set by P2PPManager. 
+
+    Every entity wants to do some things not only when it receives a message. 
+Because of that, there's onTimeSlot() method. Moreover, entities have to know 
+whether they can satisfy received request (canSatisfyRequest(Request) method)
+and get next hop for received request (getNextHop(Request) method).   
+
+    Diagram for P2PPEntity class is [5].
+    
+    
+3.  P2PPManager
+
+    P2PPManager has a strictly defined life-cycle. TODO Should the manager
+thread be described here? 
+    
+                          ----------------------------------
+                          | (a) creates P2PPManager object |   
+                          ----------------------------------
+                                           |
+                                           |
+                                          \|/
+                            -------------------------------
+                            | (b) adds P2PPEntity objects |   
+                            -------------------------------
+                                           |
+                                           |
+                                          \|/
+                             ----------------------------
+                             | (c) adds Service objects |   
+                             ----------------------------
+                                           |
+                                           |
+                                          \|/
+                             ----------------------------
+                             | (d) starts P2PPManager   |   
+                             ----------------------------
+                             
+                          
+
+a)  creates P2PPManager object
+
+    P2PPManager object is created using numbers for ports on which the program
+will work and with AbstractMessageFactory object that will be used as a factory
+for objects received on sockets. In the future it is planned that there will 
+be many factories working simultaneously, so that services may be using its 
+factories for messages. If received bytes won't be suitable for first factory,
+second will try to parse it etc.
+
+b)  adds P2PPEntity objects
+
+    P2PPManager has to be filled with entities and data for them. At the moment,
+there's option for using only one type of Node (KademliaPeer, ChordPeer etc. 
+[only Kademlia is being implemented]) or Server (KademliaBootstrapServer etc.)
+at the same time, so if KademliaBootstrapServer will be used during starting, 
+it will be used to program's end. This should be changed some way, I think. Only
+one Node's object can be used at the same time, so if there's peer added, other
+peer or client can't be added. There may be any combination of Node, 
+BootstrapServer and other servers. 
+
+    For every Node there MUST be a P2PPNodeCallback set by using 
+setCallback(P2PPNodeCallback) method. This gives a possibility of getting 
+API callbacks somewhere. 
+
+c)  adds Service objects
+
+    Penultimate step is adding P2PP services that will be exposed by node.  
+    
+d)  starts P2PPManager
+
+    P2PPManager is started using start() method. This creates sockets, 
+starts listening on them (by Reader objects) and starts a thread that will
+be giving time slots to readers/writers and to entities.
+
+    Last thing that's worth mentioning about P2PPManager is that in future
+there should be a way to create a P2PPManager without adding specific node
+objects. There should be a way to use proper Peer or Client subclass basing
+on information provided by BootstrapServer.
+
+VII     Message's processing.
+
+    One of the most complex parts of this implementation is message's 
+processing. So how it looks like?  
+
+    Like it was described in chapter III.1, messages are passed to entities
+by using onReceive(Message) final method. This method is implemented in 
+P2PPEntity class and can't be redefined, because we don't want to change
+behaviour defined there. It returns boolean that informs if given message
+was consumed by an entity on which this method was invoked. 
+
+1.  canConsume(Message)
+
+    So what happens internally? First of all, message is checked if it can be
+consumed by this type of entity (canConsume(Message)). If not, message won't 
+be consumed and onReceive(Message) returns false. If there are two or more
+local entities, only one should return true. TODO Add description of which 
+types are consumed by which type of entities.
+
+
+2.  generalAnalysis(Message)
+
+    Then, if message can be consumed (i.e. entity is interested in this type
+of message), general analysis takes place in generalAnalysis(Message) method.
+This process is described in chapter 4.3 of P2PP specification [1]. True
+is returned if given message should be passed to overlay layer (i.e. may be
+consumed). In here transaction is matched, TTL is checked etc. 
+    
+    In a case when request was received, isBestKnownPeer(Request) method is 
+used internally in generalAnalysis(). This is a place where node checks whether
+it's the best peer for given request. In general, returned true means that 
+received request won't be forwarded to next hop. Reasons for forwarding (or not 
+forwarding) depend on entity and request types.
+
+    BootstrapServer:
+    - BootstrapRequest - That's the only case in which BootstrapServer returns
+        true.
+    
+    KademliaPeer (Peer?)
+    - JoinRequest - True is returned when RoutingTable doesn't know about peer
+        closer to ID contained in request. 
+    - PublishObjectRequest - True is returned when there's no peer closer to ID
+        of published resource object.
+    - LookupObjectRequest - True is returned when there's no peer closer to ID
+        of searched resource object. 
+    TODO more handling for peer?
+    TODO Is this the same for all peers? What about clients?
+    
+3.  consume(Message)
+
+    Third and last part of message's processing is made in consume(Message) 
+method which is invoked only if general analysis returned true. This is a
+place where the biggest part of messages' processing takes place. This method
+has to be implemented in entities of P2P protocol being used (KademliaPeer
+etc.). 
+
+    At the moment, processing is made only for KademliaPeer class, but many
+parts may be used in implementations for other P2P protocols. Probably, some
+parts of code may be put in Node/Peer/Client classes.
+
+    TODO description of how massages are consumed.    
+
+
+VIII    Communication step-by-step. TBD.
+
+    This process is more or less like one described in specification, but there
+are some places where specification does not contain many details. Of course, 
+this chapter isn't describing all the details. It focuses on how the messages
+and objects look like. 
+
+1.  Bootstrapping.
+
+    Bootstrapping is a communication between peer/client that wants to join an
+overlay and a bootstrap server. Peer/client must know address and port of 
+bootstrap server. It sends BootstrapRequest contains PeerInfo object that 
+consists of PeerID with four zeroes, UnhashedID with any data (it will be used
+as a seed for hash function generating peerID of peer joining an overlay) and
+AddressInfo with host address (as defined by ICE) of bootstraping node. There's 
+also Uptime object. The exact structure (in proper order) looks like this:
+    
+    BootstrapRequest = Common Header
+                       Peer-Info (requesting peer)
+                       
+    Peer-Info = Common header
+                PeerID (with four zeroes)
+                Uptime (probably zero as value)
+                ResourceList (it isn't decided if this should be present, 
+                              because nobody knows if this is general object)
+                AddressInfo
+                UnhashedID
+                              
+                      
+    In response to that, there's BootstrapResponse containing peers in overlay. 
+Response consists of PeerInfo describing bootstrap server (with PeerID, Uptime, 
+probably ResourceList, AddressInfo and optional UnhashedID) and second 
+describing request originator (with PeerID filled with value generated by 
+bootstrap server and rest of the data is same as in request except for Uptime 
+that is not included because there's no sense in sending it). P2POptions object
+contains information about overlay and is followed by 0 or more PeerInfo objects
+describing peers known to bootstrap server. Those PeerInfo objects contain 
+PeerID, Uptime (TODO maybe should not contain it because it will be outdated), 
+ResourceList (as in other places, ResourceList is nut sure), AddressInfo and 
+UnhashedID. More formally, this response looks like this:
+
+    BootstrapResponse = Common Header
+                        Peer-Info (bootstrap peer)
+                        Peer-Info (request originator)
+                        P2P-Options
+                        [Peer-Info]*
+                        [Ext]
+             
+    Peer-Info = PeerID (bootstrap peerID)
+                Uptime
+                ResourceList (isn't decided yet)
+                AddressInfo
+                [UnhashedID]
+                
+    Peer-Info = PeerID (request originator peerID)
+                ResourceList (isn't decided yet)
+                AddressInfo
+                UnhashedID
+                
+    P2POptions = Hash-algorithm
+                 Hash-algorithm-length
+                 DHT-algorithm
+                 OverlayID-length
+                 Overlay-ID
+                 
+    Peer-Info = PeerID
+                Uptime
+                ResourceList (isn't decided yet)
+                Addressinfo
+                UnhashedID
+                
+2.  Joining.
+    
+    After node received list of bootstrap candidates, process of joining begins.
+If there were no bootstrap candidates, this process is omitted, because node is
+already joined. In other cases, first thing is determining reachable address. 
+This is made by searching STUN and TURN servers and then communicating with 
+them (TODO currently only with STUN). First operation is sending 
+LookupObjectRequest with RLookup object containing "STUN_PORT" (TODO 
+"TURN_PORT") hash as ResourceID, "STUN_PORT" constant as "content type" and 0 as
+"content subtype". Owner is not included as additional information. This is how 
+it looks more formally: 
+
+       LookupObjectRequest = Common Header
+                             PeerInfo (joining peer)
+                             RLookup
+                             
+       RLookup = Content type (STUN_PORT)
+                 Content subtype (0)
+                 ResourceID (hash of "STUN_PORT" string).
+
+    Response contains TODO
+
+
+IX     Utilities.
+
+    This project has some kind of utility classes that are used in different 
+places for doing common things. There are a few of them and there's a 
+description for each of them in separate sub-chapter.
+
+1.  AbstractMessageFactory.
+
+    AbstractMessageFactory is abstract class that is inherited by factories for
+messages read from sockets. At the moment there's only one implementation of 
+this class, because it uses only the messages defined in specification. 
+Nonetheless, there may be another implementation when there will be new message
+types. This factory is given as an argument in P2PPManager constructor, so that
+this object will use this factory for all the reading from sockets.
+    
+    This approach gives us a possibility to change the way the messages are 
+created basing on read data, so there's a place for optimization. Moreover, if
+there are new type of messages, there won't be a need for changing everything in
+reading from sockets, but we will have to only create new subclass of
+AbstractMessageFactory and add it to manager by using setMessageFactory() 
+method.
+
+2. 	ByteUtils.
+
+	ByteUtils is an utility class for bytes manipulation. It is used throughout
+the project mostly for creating byte representation of objects and messages. 
+   
+X       What's implemented.
+
+    1.  Messages
+    
+    Request, Response, Acknowledgment and Indication
+    
+    BootstrapRequest and BootstrapResponse
+    
+    JoinRequest and JoinResponse
+    
+    LookupObjectRequest and LookupObjectResponse
+    
+    PublishObjectRequest and PublishObjectResponse
+    
+    TransferRequest and TransferResponse
+    
+    NextHopResponse and HopsExceededResponse
+    
+    2.  P2PP entities
+
+    Node, Peer and KademliaPeer
+    
+    BootstrapServer and KademliaBootstrapServer
+    
+    3.  Readers/Writers
+    
+    UDPReader and UDPWriter, so that only UDP can be used.
+    
+    4.  
+
+
+XI        Differences. TBD.
+
+    This chapter describes differences between this implementation and two 
+things - protocol specification and reference implementation.
+
+1.  Between specification and our implementation.
+
+    Our implementation differs from specification in many ways.
+    
+    a) Specification seems to say that PeerInfo object contains only one 
+    AddressInfo object. In this implementation there may be more than one 
+    AddressInfo object because an entity may know about more then one address
+    (for example one host candidate, one server reflexive and one relayed 
+    candidate). Every time an entity wants to send a message to a remote entity,
+    it creates transaction (using TransactionTable create() methods) and gives 
+    a vector of AddressInfo objects that will be used for sending a message.
+    In onTimeSlot() a transaction tries to send a message on first of those 
+    addresses. If this won't succeed, it tries another one. Transaction is
+    considered failed, if communication with none of those addresses succeeds. 
+    
+    
+2.  Between specification and reference implementation.
+    
+    Reference implementation is different from specification in many ways. 
+    
+    a) First thing is that there are additional "Cont-types" (as defined in 13th
+       chapter of specification [1]). They're declared in "msg/msgheader.h" 
+       file. "STUN_PORT" is used when node wants to find a port of STUN server
+       in overlay. "STRINGVAL" seems to describe simple string values.
+    b) There are additional object types ("msg/msgheader.h").
+    c) There are additional request types ("msg/msgheader.h"). 
+     
+
+XII       Porting issues. TBD.
+
+    This project intends to be as portable as possible. There are problems with 
+achieving this goal. Most of it are because of J2ME's lack of classes and 
+mechanisms (like generics). A person that will be porting this library should 
+be aware of these facts: 
+
+1.  Lack of generics in J2ME. 
+
+    Because of the fact that J2ME doesn't support generics mechanism, all 
+the dynamic structures are used without it. It was decided that
+J2ME won't be supported.
+
+2.  No collections.
+
+    As there are no collectinos in J2ME, Vector and Hashtable are used for 
+dynamic structures throughout the project. It was decided that J2ME won't be
+supported, but too much was already done, so that Vector and Hashtable are
+used used instead of collections throughout the implementation. 
+ 
+3.  Lack of Socket and DatagramSocket classes.
+
+    There are no Socket (and ServerSocket) and DatagramSocket classes in J2ME.
+Moreover, in J2SE and on Android, there are no way to get a connection the same
+way as on J2ME. Because of that, whole creation and reading/writing using 
+sockets has to be ported to J2ME in the future. It seems that this won't change
+everything, because classes are different but mechanism is similar. It was 
+decided that J2ME won't be supported. 
+    
+4.  Lack of BigInteger class.
+
+    There is no BigInteger class (or something similar) in J2ME. This class is
+great for routing and neighbor table (easy way of getting distance, XORing etc.)
+and is used there. There should be a way to get this class to work on J2ME, but
+that's left to a person that will be porting this library. It was decided that
+J2ME won't be supported. 
+
+XIII      Tests.
+
+    This chapter covers a topic of testing this project. Currently not many 
+things were tested using unit tests. Unit tests were used mostly for checking
+if asBytes() methods return proper byte arrays. Distribtuted 
+tests are covered in other project - P2PTester.
+    
+
+XIV     Thoughts.
+
+    What gives me a headache is which part of this protocol gives room for 
+Kademlia or other protocols. P2PP specification gives details of nearly 
+everything. It seems that Messages and GeneralObjects are the same. I also think
+that Kademlia implementation is only a way of creating id, and choosing who to
+send what (just a thought though). I think that it will be good to use some kind
+of a Protocol abstract class, that will be responsible for protocol-specific 
+stuff. Adding new protocol will be creating new subclass. DONE!
+
+
+    Remember that specification says:
+
+    'P2PP allows peers to store data having the same
+    resource-ID, type and sub-type but different owners.  Similarly, P2PP
+    allows nodes to search for resource-objects published by different
+    owners.'
+    
+    There's a problem with J2ME. It doesn't have many, many classes from J2SE. 
+There's no java.nio package. This brought me to a thought that it will be good 
+to make an implementation using java.io but with an assumption that it could be 
+replaced with java.nio version. It was decided that J2ME won't be used, so
+this problem is no more. 
+    
+    Specification seems to have a mistake in Address-Info object definition. 
+ASCII drawing shows that Num field consists of 8 bits, but a description says 
+that it contains 4 bits.
+
+    Is Resource-List (in PeerInfo) a general object (as defined in P2PP 
+specification)?
+    
+    What is "ext" in, for instance, EnrollResponse. I think that's "extension"
+but what's that exactly? Now I see that this is an extension mechanism. 
+Extensions can be done by making subclasses of existing classes. For instance
+if we want to have EnrollResponse extended, we make a subclass and override 
+asBytes(), asBytes(int) and getBitsCount().
+
+    It seems that Signature is a ResourceObject because it has type and subtype.
+    
+    It seems that ResponseACK message is not needed, because the only difference
+between it and Response is in the "messageType" field and A flag in common 
+header. 
+    
+    When TCP and when UDP is used?
+    
+    It seems that there should be an additional thread with node timers.
+    
+    There may be a problem with received packets whose size is bigger than 
+Integer.MAX_VALUE but I don't think that it's possible to receive packets that 
+big.
+
+    At the moment, our own logging class is used. When I started working on this
+project I wasn't aware of existence of log4j library. It will be a good thing
+to start using that library, because it's widely known and used and is better.   
+
+
+XVI      References.
+
+[1]	http://tools.ietf.org/html/draft-baset-p2psip-p2pp-01
+	It is also included as text file in this project in doc directory.
+
+[2]	http://en.wikipedia.org/wiki/Kademlia
+
+	Maymounkov, P. and D. Mazieres, "Kademlia: A Peer-to-Peer
+    Information System Based on the XOR Metric", IPTPS'01: Revised
+    Papers from the First International Workshop on Peer-to-Peer
+    Systems London, UK, pp. 53-65, March 2002.
+
+[3]	http://mteam.pjwstk.edu.pl/
+
+[4] http://www1.cs.columbia.edu/~salman/peer/
+
+[5] https://stun4j.dev.java.net/
+    Open-source implementation of STUN protocol.
+    
+[6] http://www.inf.ed.ac.uk/teaching/courses/ip/chord-desc.html
+    Chord protocol.
+    
+
+XVII    Diagrams. TBD.
+
+[1] API diagram. doc/uml/api.cld
+
+[2] Node inheritance hierarchy. doc/uml/node.uml
+
+[3] GeneralObject inheritance hierarchy. doc/uml/generalobject.uml
+
+[4] Messages hierarchy. doc/uml/messages.uml
+
+[5] P2PPentity. doc/uml/p2ppentity.cld
+
+
+
+Appendix A - Changes history.
+
+10.07.2008
+
+First version. Defined an API. Basic description in overview. References for 
+P2PP draft 01 and Kademlia specification on Wikipedia and mTeam project site 
+were added.
+
+11.07.2008
+
+Added info about how to invoke API's methods using P2PPManager class. 
+Moreover, after thinking a lot about API, I've made a decision to change 
+interface for listening to transactions. There's no need to listen to, for
+instance, queryCallback() when the join() method was invoked. Because of that 
+there will be dedicated listener for every API method (query, join etc.).
+
+Added references for diagrams for API and Node. Nodes, servers (not much), 
+services and tables were described.
+
+13.07.2008
+
+Added more info about Nodes. Added Overlay and User to nodes.uml diagram. New
+chapter (Thoughts) with all the thoughts about implementation. Added there a
+thought about which part of P2PP is undefined so that Kademlia can be used and
+a thought to remember what type of ResourceObjects may be stored by a Peer.
+Message Model chapter added.
+
+14.07.2008
+
+Added chapter about GeneralObject. Added reference to GeneralObject diagram.
+Some info added to Message Model chapter. More details about Peers. Thought 
+about java.io and java.nio.
+
+15.07.2008
+
+Added a thought about a form in which bits of Message should be returned. 
+Changed Message.asBits() to asBytes() because sending through a network is
+using bytes. Added Message.getBitsCount() to know how much bits are used in 
+array of bytes returned by Message.asBytes().
+
+28.07.2008
+
+Tests moved to tests directory. This is recommended on many sites, so I decided
+to try it this way. This separates real code from tests, so it sounds good.
+
+Porting issues chapter added.
+
+29.07.2008
+
+Message.asBytes(int) and GeneralObject.asBytes(int) is changed to protected and 
+both classes now have public asBytes() method without any arguments.
+
+05.08.2008
+
+ResponseACK class is deleted, so everything about it in this document is changed
+(Message Model chapter).
+ 
+08.08.2008
+
+What a date?! Added a chapter about P2PPManager. P2PPManager is changed from a
+singleton class to a regular one. This decision was made after reading some 
+guidelines for using (and not using) singletons. I realized that there's no need
+to use this design pattern here.
+
+09.08.2008
+
+Added description of Transaction and TransactionTable in "Message model" 
+chapter. 
+
+12.08.2008
+Added info to porting issues (sockets are different in J2ME). 
+Message got a port and address attribute.
+
+13.08.2008
+As there is no sequence UML diagram in UML2 plugin in Eclipse, AmaterasUML 
+plugin was added and every sequence diagram is made using it. Sequence diagram
+is very useful for describing how transactions are created.
+
+14.08.2008
+After some reading I realized that there's no need for Transaction being a 
+thread. Now it is a TimerTask, so it will be used by Timer object. 
+
+20.08.2008
+P2PPManager changed to ClientManager and there's a NodeManager upper-class 
+inherited by all the managers. All the servers are subclasses also.
+
+05.09.2008
+Changes made in P2PPManager description.
+
+23.09.2008
+API redefined so that now there's only one listener for all API methods. 
+Message renamed to P2PPMessage to make it more self-explanatory. The second 
+factor was that I want this project to be capable of receiving STUN messages. 
+This was done by creating Message class that is inherited by P2PPMessage, 
+TurnMessage and StunMessage, so that entities may receive messages of any 
+protocol.
+
+01.10.2008
+Minor corrections of bad names of classes etc. 
+
+06.10.2008
+STUN4J tested as NAT traversal. STUN4J can't work with reference implementation
+of P2PP. When asking reference implementation, segmentation fault happens on 
+its side. 
+
+10.10.2008
+Added chapter VII describing communication step-by-step.
+
+20.01.2009
+It was decided that implementation doesn't have to work on J2ME devices, so
+parts describing J2ME stuff may be omitted. 
+This document is now cleaned, so that it shows current version of 
+implementation.
+
+30.01.2009
+Further improvements in documentation. Chapter VII (Message's processing) was
+added, so that discussion about this may happen.
+
+19.03.2009
+Slightly updated in many places. Nothing significant.
+
+02.04.2009
+Added Appendix C with some description about extending this implementation.
+
+26.08.2009
+Readers and Writers are now encapsulated in CommunicationObject, so now 
+documentation reflects that fact.
+
+
+Appendix B - Running.
+
+    How to run this library? First way is using command line arguments by using
+CommandLineLauncher class.
+    
+    Mandatory arguments:
+        -m      mode as combination of 1(peer), 2(client), 4(bootstrap 
+                server),8(diagnostics server), 16(eAndA server)
+        At least one port has to be used:
+            -tcp    portNumber
+            -udp    portNumber (only this one is supported at the moment)
+            -tls    portNumber
+            -dtls   portNumber
+    Additional arguments are:
+        -p      protocol name (currently Kademlia) 
+                (has to be used for bootstrap server and peer/client mode)
+        -id     unhashed ID of peer or client
+                (has to be used when one of this mode is used)
+        -h      hash algorithm to be used
+                (SHA-1, SHA-256, SHA-512, MD4, MD5 in bootstrap mode)
+        -o      ID of overlay (used in bootstrap server)
+        -hl     hash length (number of bytes)
+        -hb     hash base (used by bootstrap server)
+    Arguments used only because there's no STUN/TURN/ICE implementation ready:
+        -sra    Address discovered by STUN (will be used as server reflexive)
+        -srp    Port discovered by STUN (will be used as server reflexive)
+
+    So, when you want to run BootstrapServer you have to use those arguments:
+        -m 4 -udp port_number -p overlay_protocol_name -h hash_algorithm_name
+        -o overlay_id -hl hash_byte_length -hb hash_base
+        
+    In case of peer:
+        -p Kademlia -m 1 -udp port_number -id id -sra server_reflexive_ip_address 
+        -srp server_reflexive_port
+    
+    
+
+
+    Second way will be using config file.
+    
+    Third way will be using Android service.
+    
+    Probably there should be a way for running this for testing. Currently under
+discussion.
+
+Appendix C - How to extend?
+
+    This project was created with extensibility in mind. Main type of extension
+of P2PP is using other peer-to-peer topologies and algorithms. This chapter 
+covers this topic.
+
+    Let's assume that we wan't to extend P2PP using Chord protocol[6]. There is
+a set of things that have to be done in order to achieve this goal:
+
+    1.  Create protocol-specific subsclasses of servers (currently only 
+        BootstrapServer is supported and probably this won't change, because
+        P2PP isn't evolving anymore... RELOAD is its successor), peer and 
+        client. 
+    2.  Add protocol-specific subsclasses of NeighborTable and RoutingTable. 
+        You have to remember that NeighborTable wasn't used in Kademlia
+        implementation, so there's a need to check NeighborTable, because
+        it wasn't tested.
+    3.  If you want to use more P2PP messages than there are already 
+        implemented (chapter X (What's implemented) describes things that
+        are already implemented), you have to implement them. Same thing
+        refers to a situation when you want to add new types of messages. In 
+        both cases P2PPMessageFactory has to be edited for new types. 
+    4.  Create a place where above-cited classes are added to P2PPManager.
+        CommandLineLauncher is a good reference point.
+     
+    TODO what about hashes?
+    
+    So let's describe those points in details.
+    
+    1. 
+    It is suggested to name those subclasses using this scheme:
+    
+    ProtocolNameEntityName
+    
+    So when implementing Chord protocol, Peer subclass will be named ChordPeer
+and BootstrapServer will be ChordBootstrapServer. It's best to put them in
+strictly defined way - pl.edu.pjwstk.p2pp.protocolname. Of course this naming 
+scheme isn't obligatory.
+
+    a) Peer
+     
+    When subclassing Peer class, there is a set of methods that have to be 
+implemented:
+
+    public void join(byte[] overlayID, String overlayPeerAddress, 
+                     int overlayPeerPort);
+    public void leave();
+    public void lookup(byte contentType, byte contentSubtype, 
+                       byte[] resourceID, Owner owner);
+    public void publish(byte[] unhashedID, ResourceObject resourceObject);
+    public void query();
+    public void remove();
+    public int onRequest(Request request, boolean isReceived);
+    public PeerInfo getClosestTo(byte[] id);
+    public BigInteger getDistance(String unhashedKey1, 
+                                  String unhashedKey2) 
+        throws IllegalStateException;
+    public BigInteger getDistanceBetweenHashed(byte[] hashedKey1, 
+                                               byte[] hashedKey2) 
+        throws IllegalStateException;
+    public String[] getRoutingTableToString();        
+    protected void consume(Message message);
+    protected PeerInfo getNextHop(Request request);
+    protected PeerInfo getNextHopForResourceID(byte[] id);
+    protected boolean isBestKnownPeer(Request request);
+    public boolean isNodeAfterBootstrapping();
+    protected void onForwardingRequest(Request request);
+    public void onTimeSlot();
+    public void updateTables(PeerInfo peerInfo);
+    public void updateTables(Vector<PeerInfo> peerInfos);
+    
+    b) BootstrapServer
+    
+    When subclassing BootstrapServer class, there is a set of methods that have
+to be implemented:
+
+    protected void consume(Message message);
+    protected PeerInfo getNextHop(Request request);
+    protected PeerInfo getNextHopForResourceID(byte[] id);
+    public boolean isNodeAfterBootstrapping();
+    protected void onForwardingRequest(Request request);
+    public void onTimeSlot();
+    public void updateTables(PeerInfo peerInfo);
+    public void updateTables(Vector<PeerInfo> peerInfos);
+    
+    2. 
+    a) RoutingTable
+    
+    When subclassing RoutingTable class, there is a set of methods that have to
+be implemented:
+    
+    public void addPeerInfo(PeerInfo peerInfo);
+    public NeighborTable createNeighborTableForID(byte[] peerID);
+    public PeerInfo getClosestTo(byte[] id);
+    public String[] getEntriesDescription();
+    public PeerInfo getNextHop(byte[] id);
+    protected int getNumOfEntries();
+    public boolean isLocalPeerCloser(byte[] id, byte[] remoteId);
+    public void leaveReset();
+    public void onTimeSlot();
+    
+    b) NeighborTable
+    
+    3.
+    
+    4. 
+    
+    P2PPManager has to be created and used somewhere in your code
+    
+    
+    When adding new types of messages that have to be handled by entities,
+remember to do those things:
+
+    1. P2PPMessageFactory has to create objects of that class, because it is
+       used for creating objects basing on socket input. 
+    2. At least one type of entity will be handling this message, so 
+       canConsume(Message) isBestKnownPeer(Message) has to handle this new 
+       message type. For the first method, code has to be added to Peer class. 
+       For servers, add code to server class (not protocol-specific subclass).
+       Second method has to be implemented by protocol-specific subclasses.
+    3.
+       
+    When adding new types of resource objects, remember to those things:
+    
+    1. Add constructor's invocation to ResourceObject.create() method. It will 
+       be used by P2PPMessageFactory to create empty resource. 
+    2. 

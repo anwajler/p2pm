@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uml:Package xmi:version="2.1" xmlns:xmi="http://schema.omg.org/spec/XMI/2.1" xmlns:uml="http://www.eclipse.org/uml2/3.0.0/UML" xmi:id="_dVVu0YRWEd2fd7vRdjLuYg" name="Package">
+  <elementImport xmi:id="_dXBJ0IRWEd2fd7vRdjLuYg">
+    <importedElement xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Boolean"/>
+  </elementImport>
+  <elementImport xmi:id="_dXFbQIRWEd2fd7vRdjLuYg">
+    <importedElement xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+  </elementImport>
+  <elementImport xmi:id="_dXFbQYRWEd2fd7vRdjLuYg">
+    <importedElement xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#UnlimitedNatural"/>
+  </elementImport>
+  <elementImport xmi:id="_dXFbQoRWEd2fd7vRdjLuYg">
+    <importedElement xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+  </elementImport>
+  <packagedElement xmi:type="uml:Class" xmi:id="_eO2wwIRWEd2fd7vRdjLuYg" name="P2PPManager">
+    <ownedOperation xmi:id="_SC6GYIRYEd2fd7vRdjLuYg" name="onSend">
+      <ownedParameter xmi:id="_Vww4MIRYEd2fd7vRdjLuYg" direction="return"/>
+      <ownedParameter xmi:id="_VwxfQIRYEd2fd7vRdjLuYg" name="SendCommand"/>
+    </ownedOperation>
+    <ownedOperation xmi:id="_XGsJUIRYEd2fd7vRdjLuYg" name="onReceive">
+      <ownedParameter xmi:id="_YaodcIRYEd2fd7vRdjLuYg" direction="return"/>
+      <ownedParameter xmi:id="_YapEgIRYEd2fd7vRdjLuYg" name="ReceiveCommand"/>
+    </ownedOperation>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_6inhUIRWEd2fd7vRdjLuYg" name="P2PPEntity">
+    <ownedOperation xmi:id="_8d3tEIRWEd2fd7vRdjLuYg" name="onReceive">
+      <ownedParameter xmi:id="_9WaeoIRWEd2fd7vRdjLuYg" direction="return"/>
+      <ownedParameter xmi:id="_9WaeoYRWEd2fd7vRdjLuYg" name="ReceiveCommand"/>
+    </ownedOperation>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Association" xmi:id="_--hr8IRWEd2fd7vRdjLuYg" memberEnd="_--jhIIRWEd2fd7vRdjLuYg _--kIMYRWEd2fd7vRdjLuYg">
+    <ownedEnd xmi:id="_--jhIIRWEd2fd7vRdjLuYg" name="manager" type="_eO2wwIRWEd2fd7vRdjLuYg" association="_--hr8IRWEd2fd7vRdjLuYg">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_--kIMIRWEd2fd7vRdjLuYg" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_--jhIYRWEd2fd7vRdjLuYg" value="1"/>
+    </ownedEnd>
+    <ownedEnd xmi:id="_--kIMYRWEd2fd7vRdjLuYg" name="dst" type="_6inhUIRWEd2fd7vRdjLuYg" association="_--hr8IRWEd2fd7vRdjLuYg">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_--kvQYRWEd2fd7vRdjLuYg" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_--kvQIRWEd2fd7vRdjLuYg" value="1"/>
+    </ownedEnd>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_N0A5gIRXEd2fd7vRdjLuYg" name="SocketsContainer">
+    <ownedOperation xmi:id="_9hD9gIRYEd2fd7vRdjLuYg" name="getSocket">
+      <ownedParameter xmi:id="_-rHV0IRYEd2fd7vRdjLuYg" direction="return"/>
+    </ownedOperation>
+    <ownedOperation xmi:id="__OaQIIRYEd2fd7vRdjLuYg" name="getNextSocket">
+      <ownedParameter xmi:id="_AFu5sIRZEd2fd7vRdjLuYg" direction="return"/>
+    </ownedOperation>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_O-TiYIRXEd2fd7vRdjLuYg" name="ConnectionsThread"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="_VzppkIRXEd2fd7vRdjLuYg" name="WriterThread">
+    <generalization xmi:id="_vSpMcIRXEd2fd7vRdjLuYg" general="_nc5YMIRXEd2fd7vRdjLuYg"/>
+    <ownedOperation xmi:id="_zmzT0IRYEd2fd7vRdjLuYg" name="onSend">
+      <ownedParameter xmi:id="_0iSEoIRYEd2fd7vRdjLuYg" direction="return"/>
+      <ownedParameter xmi:id="_0iSrsIRYEd2fd7vRdjLuYg" name="SendCommand"/>
+    </ownedOperation>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_WJMbwIRXEd2fd7vRdjLuYg" name="ReaderThread">
+    <generalization xmi:id="_u62-kIRXEd2fd7vRdjLuYg" general="_nc5YMIRXEd2fd7vRdjLuYg"/>
+    <ownedOperation xmi:id="_3Y8IsIRYEd2fd7vRdjLuYg" name="setIncomingMessagesListener">
+      <ownedParameter xmi:id="_5_cQ4IRYEd2fd7vRdjLuYg" direction="return"/>
+    </ownedOperation>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Association" xmi:id="_YuJEwIRXEd2fd7vRdjLuYg" memberEnd="_YuJEwYRXEd2fd7vRdjLuYg _YuJr0oRXEd2fd7vRdjLuYg">
+    <ownedEnd xmi:id="_YuJEwYRXEd2fd7vRdjLuYg" name="provider" type="_O-TiYIRXEd2fd7vRdjLuYg" association="_YuJEwIRXEd2fd7vRdjLuYg">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_YuJr0YRXEd2fd7vRdjLuYg" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_YuJr0IRXEd2fd7vRdjLuYg" value="1"/>
+    </ownedEnd>
+    <ownedEnd xmi:id="_YuJr0oRXEd2fd7vRdjLuYg" name="dst" type="_N0A5gIRXEd2fd7vRdjLuYg" association="_YuJEwIRXEd2fd7vRdjLuYg">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_YuKS4YRXEd2fd7vRdjLuYg" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_YuKS4IRXEd2fd7vRdjLuYg" value="1"/>
+    </ownedEnd>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_nc5YMIRXEd2fd7vRdjLuYg" name="CommunicationThread"/>
+  <packagedElement xmi:type="uml:Association" xmi:id="_xJq_gIRXEd2fd7vRdjLuYg" memberEnd="_xJq_gYRXEd2fd7vRdjLuYg _xJsNoIRXEd2fd7vRdjLuYg">
+    <ownedEnd xmi:id="_xJq_gYRXEd2fd7vRdjLuYg" name="src" type="_N0A5gIRXEd2fd7vRdjLuYg" association="_xJq_gIRXEd2fd7vRdjLuYg">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_xJrmkYRXEd2fd7vRdjLuYg" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_xJrmkIRXEd2fd7vRdjLuYg" value="1"/>
+    </ownedEnd>
+    <ownedEnd xmi:id="_xJsNoIRXEd2fd7vRdjLuYg" name="dst" type="_nc5YMIRXEd2fd7vRdjLuYg" association="_xJq_gIRXEd2fd7vRdjLuYg">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_xJsNooRXEd2fd7vRdjLuYg" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_xJsNoYRXEd2fd7vRdjLuYg" value="1"/>
+    </ownedEnd>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Association" xmi:id="_5_ZDAIRXEd2fd7vRdjLuYg" memberEnd="_5_ZqEIRXEd2fd7vRdjLuYg _5_aRIIRXEd2fd7vRdjLuYg">
+    <ownedEnd xmi:id="_5_ZqEIRXEd2fd7vRdjLuYg" name="writer" type="_eO2wwIRWEd2fd7vRdjLuYg" association="_5_ZDAIRXEd2fd7vRdjLuYg">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_5_ZqEoRXEd2fd7vRdjLuYg" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_5_ZqEYRXEd2fd7vRdjLuYg" value="1"/>
+    </ownedEnd>
+    <ownedEnd xmi:id="_5_aRIIRXEd2fd7vRdjLuYg" name="writer" type="_VzppkIRXEd2fd7vRdjLuYg" association="_5_ZDAIRXEd2fd7vRdjLuYg">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_5_aRIoRXEd2fd7vRdjLuYg" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_5_aRIYRXEd2fd7vRdjLuYg" value="1"/>
+    </ownedEnd>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Association" xmi:id="_6XTMsIRXEd2fd7vRdjLuYg" memberEnd="_6XTMsYRXEd2fd7vRdjLuYg _6XUa0IRXEd2fd7vRdjLuYg">
+    <ownedEnd xmi:id="_6XTMsYRXEd2fd7vRdjLuYg" name="src" type="_WJMbwIRXEd2fd7vRdjLuYg" association="_6XTMsIRXEd2fd7vRdjLuYg">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_6XTzwYRXEd2fd7vRdjLuYg" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_6XTzwIRXEd2fd7vRdjLuYg" value="1"/>
+    </ownedEnd>
+    <ownedEnd xmi:id="_6XUa0IRXEd2fd7vRdjLuYg" name="liste" type="_eO2wwIRWEd2fd7vRdjLuYg" association="_6XTMsIRXEd2fd7vRdjLuYg">
+      <upperValue xmi:type="uml:LiteralUnlimitedNatural" xmi:id="_6XUa0oRXEd2fd7vRdjLuYg" value="1"/>
+      <lowerValue xmi:type="uml:LiteralInteger" xmi:id="_6XUa0YRXEd2fd7vRdjLuYg" value="1"/>
+    </ownedEnd>
+  </packagedElement>
+</uml:Package>

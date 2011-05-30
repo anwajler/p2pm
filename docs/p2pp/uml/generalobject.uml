@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<uml:Package xmi:version="2.1" xmlns:xmi="http://schema.omg.org/spec/XMI/2.1" xmlns:uml="http://www.eclipse.org/uml2/2.1.0/UML" xmi:id="_0oUr4FG7Ed27caCJmsJofQ" name="Package">
+  <elementImport xmi:id="_0pDEoFG7Ed27caCJmsJofQ">
+    <importedElement xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Boolean"/>
+  </elementImport>
+  <elementImport xmi:id="_0pDEoVG7Ed27caCJmsJofQ">
+    <importedElement xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#String"/>
+  </elementImport>
+  <elementImport xmi:id="_0pDEolG7Ed27caCJmsJofQ">
+    <importedElement xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#UnlimitedNatural"/>
+  </elementImport>
+  <elementImport xmi:id="_0pDEo1G7Ed27caCJmsJofQ">
+    <importedElement xmi:type="uml:PrimitiveType" href="pathmap://UML_LIBRARIES/UMLPrimitiveTypes.library.uml#Integer"/>
+  </elementImport>
+  <packagedElement xmi:type="uml:Class" xmi:id="_2EHUcFG7Ed27caCJmsJofQ" name="GeneralObject">
+    <ownedOperation xmi:id="_1jd0EF8lEd2xCtSj9DWYIQ" name="asBytes" isAbstract="true">
+      <ownedParameter xmi:id="_2blu4F8lEd2xCtSj9DWYIQ" direction="return"/>
+    </ownedOperation>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3tBzAFG7Ed27caCJmsJofQ" name="PLookup"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="_3-unAFG7Ed27caCJmsJofQ" name="DiagnosticOptions">
+    <generalization xmi:id="_8y1lEFJREd2Lspu6mkJq-Q" general="_2EHUcFG7Ed27caCJmsJofQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_4M_sgFG7Ed27caCJmsJofQ" name="Uptime">
+    <generalization xmi:id="_7xD_AFJREd2Lspu6mkJq-Q" general="_2EHUcFG7Ed27caCJmsJofQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_4bxvYFG7Ed27caCJmsJofQ" name="UnhashedID">
+    <generalization xmi:id="_7aocAFJREd2Lspu6mkJq-Q" general="_2EHUcFG7Ed27caCJmsJofQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_6siREFG7Ed27caCJmsJofQ" name="PeerID">
+    <generalization xmi:id="_6o9ugFJREd2Lspu6mkJq-Q" general="_2EHUcFG7Ed27caCJmsJofQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_7AwNkFG7Ed27caCJmsJofQ" name="RoutingTable">
+    <generalization xmi:id="_6A6QAFJREd2Lspu6mkJq-Q" general="_2EHUcFG7Ed27caCJmsJofQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_7dvrkFG7Ed27caCJmsJofQ" name="AddressInfo">
+    <generalization xmi:id="_7D-PgFJREd2Lspu6mkJq-Q" general="_2EHUcFG7Ed27caCJmsJofQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_7qQdkFG7Ed27caCJmsJofQ" name="Class7"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="_722IEFG7Ed27caCJmsJofQ" name="Class8"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="_8EvaIFG7Ed27caCJmsJofQ" name="Class9"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="_8bK9IFG7Ed27caCJmsJofQ" name="NeighborTable">
+    <generalization xmi:id="_5rO68FJREd2Lspu6mkJq-Q" general="_2EHUcFG7Ed27caCJmsJofQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_8vNTcFG7Ed27caCJmsJofQ" name="Class101"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="_9FMKgFG7Ed27caCJmsJofQ" name="ResourceID"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="_9WbrgFG7Ed27caCJmsJofQ" name="RequestOptions">
+    <generalization xmi:id="_8fADEFJREd2Lspu6mkJq-Q" general="_2EHUcFG7Ed27caCJmsJofQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_9qRNgFG7Ed27caCJmsJofQ" name="P2POptions">
+    <generalization xmi:id="_8KnugFJREd2Lspu6mkJq-Q" general="_2EHUcFG7Ed27caCJmsJofQ"/>
+  </packagedElement>
+  <packagedElement xmi:type="uml:Class" xmi:id="_99kkAFG7Ed27caCJmsJofQ" name="Class1011111"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="_-NSbAFG7Ed27caCJmsJofQ" name="Class10111111"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="_-nzMwFG7Ed27caCJmsJofQ" name="Class101111111"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="_-7tAMFG7Ed27caCJmsJofQ" name="Class1011111111"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="__MAGAFG7Ed27caCJmsJofQ" name="Class10111111111"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="__fGoMFG7Ed27caCJmsJofQ" name="Class101111111111"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="__sJlsFG7Ed27caCJmsJofQ" name="Class1011111111111"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="__7UDEFG7Ed27caCJmsJofQ" name="Class10111111111111"/>
+  <packagedElement xmi:type="uml:Class" xmi:id="_AKDpsFG8Ed27caCJmsJofQ" name="PeerInfo">
+    <generalization xmi:id="_6WpPcFJREd2Lspu6mkJq-Q" general="_2EHUcFG7Ed27caCJmsJofQ"/>
+  </packagedElement>
+</uml:Package>

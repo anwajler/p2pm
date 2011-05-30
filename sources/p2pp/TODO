@@ -1,0 +1,26 @@
+TransportManager:
+  * Should we trust TransportWorker to have it's own received-messages queue implemented or should it be an executor in
+   TransportManager using worker's synchronous receive method?
+  * Better flood protection. (?)
+
+P2PPManager:
+  * Make both udp and udp addresses possible.
+
+debug:
+  * Put MySQL reader/writer implementations to a contrib package.
+
+TransactionTable:
+  * Refactor.
+  * Goes berserk when gets message from a node with the same id.
+
+Kademlia:
+  * BootstrapRequest may contain number of bootstrap candidates node wishes to get.(?)
+
+SuperPeer:
+  * Multiple superpeers.
+
+P2PPMessageFactory:
+  * Refactor.
+
+ * Overlay support!
+ * Properties file.

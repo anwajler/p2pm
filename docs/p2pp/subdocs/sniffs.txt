@@ -1,0 +1,712 @@
+================================================================================
+|                                                                              |
+|                   Sniffs and analysis of packets sent/received               |
+|                         by reference implementation.                         |
+|                                                                              |
+|                                                              Maciej Skorupka |
+|                                                       s3874{at}pjwstk.edu.pl |
+================================================================================
+
+////////////////////////////////////////////////////////////////////////////////
+//                                                                            //
+//                              0.2                                           //
+//                                                                            //
+////////////////////////////////////////////////////////////////////////////////
+
+I.      UDP connecting to BootstrapServer with no connected peers.d
+
+1.      Peer starting.
+
+a)      sent (PeerIP-192.168.1.2, bootstrapIP-192.168.1.50).
+440002ff596abf0d000000000000002e000000000000002a01000004000000000300000b737a656c
+646f6e596f49440200000f0104000000000000001ba8c0a80102
+
+# 44 (01000100)
+    -> protocolVer1 01, request 00, A 0, P 1, R 0, 0->used in next field 
+# 00 (0 from previous byte and 00000000)
+    -> reserved 
+# 02 (00000010)
+    -> bootstrap 
+# ff (11111111)
+    -> ttl 255
+# 596abf0d
+    -> magic cookie
+# 00000000
+    -> transactionID 0
+# 0000002e
+    -> message length 46 (after common header)
+# 00000000 (always four bytes for bootstrap requests)
+    -> sourceID 0 
+# 00
+    -> object type 0 (PeerInfo)
+# 00 
+    -> A 0, B 0, reserved 000000
+# 002a
+    -> object length 42
+# 01
+    -> object type 1 (PeerID)
+# 00
+    -> A 0, B 0, reserved
+# 0004
+    -> object length 4
+# 00000000
+    -> peerID 0
+# 03
+    -> object type 3 (UnhashedID) 
+# 00
+    -> A 0, B 0, reserved
+# 000b
+    -> object length 11
+# 737a656c646f6e596f4944
+    -> szeldonYoID
+# 02
+    -> object type (AddressInfo)
+# 00
+    -> A 0, B 0, reserved
+# 000f
+    -> object length 15
+# 01
+    -> number of ICE candidates (1)
+# 04 (00000100)
+    -> R 0, 000 reserved, ip_ver 0100 (ipv4)
+# 00
+    -> foundation field of ICE 0
+# 00
+    -> componentID 0
+# 00000000
+    -> priority of address 0
+# 00 (00000000)
+    -> TT 00 (UDP), HT 00 (address of host??)
+# 1ba8
+    -> port 7080
+# c0a80102
+    -> peer address 192.168.1.2
+    
+message structure:
+    
+    (header)(PeerInfo(PeerID)(AddressInfo))
+    
+b)      received (PeerIP-192.168.1.2, bootstrapIP-192.168.1.50)
+74c802ff596abf0d000000000000006e00000000000000010000001b01000004000000010200000f
+0104000000000000001ba8c0a801320000003a0100001489c0b6be3a7bcc92252cc735758da97476
+d6640d0300000b737a656c646f6e596f49440200000f0104000000000000001ba8c0a80102050000
+0d01140202084b6164656d6c6961
+
+# 74 (0111 0100)
+    -> protocolVer1 01, responseACK 11, A 0, P 1, R 0, 0->used in next field
+
+# c8 (0 from previous byte, 11001000)
+    -> response code 200
+# 02
+    -> bootstrap 2
+# ff
+    -> ttl 255
+# 596abf0d
+    -> magic cookie
+# 00000000
+    -> transactionID 0
+# 0000006e
+    -> message length 110
+# 00000000
+    -> sourceID 0
+# 00000001
+    -> responseID 1
+# 00
+    -> object type (PeerInfo)
+# 00
+    -> A 0, B 0, reserved
+# 001b
+    -> message length 27
+# 01
+    -> object type 1 (PeerID)
+# 00
+    -> A 0, B 0, reserved
+# 0004
+    -> message length 4 
+# 00000001
+    -> peerID 1
+# 02
+    -> object type 2 (AddressInfo)
+# 00
+    -> A 0, B 0, reserved
+# 000f
+    -> object length 15
+# 01
+    -> number of ICE candidates 1
+# 04 (00000100)
+    -> R 0, reserved, ipv4
+# 00
+    -> foundation 0
+# 00
+    -> componentID 0
+# 00000000
+    -> priority 0 
+# 00
+    -> TT 0, HT 0
+# 1ba8
+    -> port 7080
+# c0a80132
+    -> ip 192.168.1.50
+# 00
+    -> object type (PeerInfo)
+# 00
+    -> A 0, B 0, reserved
+# 003a
+    -> 58
+# 01
+    -> object type (PeerID)
+# 00
+    -> A 0, B 0, reserved
+# 0014
+    -> object length 20
+# 89c0b6be3a7bcc92252cc735758da97476d6640d
+    -> peerID value
+# 03
+    -> object type 3 (UnhashedID)
+# 00
+    -> A 0, B 0, reserved
+# 000b
+    -> 11
+# 737a656c646f6e596f4944
+    -> szeldonYoID
+# 02
+    -> object type 2 (AddressInfo)
+# 00
+    -> A 0, B 0, reserved
+# 000f
+    -> object length 15
+# 0104000000000000001ba8c0a80102
+    -> addressinfo object
+# 05
+    -> object type 5 (P2POptions)
+# 00
+    -> A 0, B 0, reserved
+# 000d
+    -> object length 13
+# 01
+    -> hash algorithm 1 (SHA1)
+# 14
+    -> hash algorithm length (20)
+# 02
+    -> p2p algorithm 2 (Kademlia)
+# 02
+    -> base 2 (2)
+# 08
+    -> overlayID length (8)
+# 4b6164656d6c6961
+    -> overlayID value (Kademlia)
+
+
+
+c)      sent
+# 7c (0111 1100)
+    -> protocol 1, responseACK, A 1, P 1, R 0, 0->used in next field
+# c8
+    -> response code 200
+# 02
+    -> 2 (bootstrap)
+# ff
+    -> ttl 255
+# 596abf0d
+    -> magic cookie
+# 00000000
+    -> transactionID 0
+# 0000001f
+    -> message length 31
+# 00000000
+    -> sourceID 0
+# 00000001
+    -> responseID
+/** Part of this message that I'm not sure of because ACK seems (after reading 
+specification) to have only above data.*/
+# 00
+    -> object type 0 (PeerInfo)
+# 00
+    -> A 0, B 0, reserved
+# 001b
+    -> length 27
+# 01
+    -> object type 1 (PeerID)
+# 00
+    -> A 0, B 0, reserved
+# 0004
+    -> length 4
+# 00000000
+    -> peerID value 0
+# 02
+    -> object type (AddressInfo)
+# 00
+    -> A 0, B 0, reserved
+# 000f
+    -> length 15
+# 01
+    -> number of ICE candidates 1
+# 04 (00000100)
+    -> R 0, reserved 000, ipver 4
+# 00
+    -> foundation 0
+# 00
+    -> componentID 0
+# 00000000
+    -> priority 0
+# 00
+    -> TT 0, HT 0
+# 1ba8
+    -> port 7080
+# c0a80102
+    -> ip 192.168.1.2
+    
+    
+
+2.      Client starting.
+
+II.     UDP. Connecting to BootstrapServer with one connected Peer with one 
+        resource.
+
+1.      Our implementation (20081209) sends bootstrap.
+2.      Reference bootstrap server response.
+
+70c802ff596abf0d00000000000000a800000000000000010000001b01000004000000010200000f
+0104000000000000001ba8c0a8013200000000
+0000003601000014cf218297b3bc39936ba0a810e5
+2b777af9b66f860300000744454641554c540200000f0104000000000000108745c0a80132000000
+36010000145909d6d6182140fed20910763b13623030b5084a0300000744454641554c540200000f
+01040000000000000010f8c0a801320500000d01140202084b6164656d6c6961
+
+# 74 (0111 0000)
+    -> protocolVer1 01, responseACK 11, A 0, P 0, R 0, 0->used in next field
+
+# c8 (0 from previous byte, 11001000)
+    -> response code 200
+# 02
+    -> bootstrap 2
+# ff
+    -> ttl 255
+# 596abf0d
+    -> magic cookie
+# 00000000
+    -> transactionID 0
+# 000000a8
+    -> message length 168
+# 00000000
+    -> sourceID 0
+# 00000001
+    -> responseID 1
+# 00
+    -> object type (PeerInfo)
+# 00
+    -> A 0, B 0, reserved
+# 001b
+    -> message length 27
+# 01
+    -> object type 1 (PeerID)
+# 00
+    -> A 0, B 0, reserved
+# 0004
+    -> message length 4 
+# 00000001
+    -> peerID 1
+# 02
+    -> object type 2 (AddressInfo)
+# 00
+    -> A 0, B 0, reserved
+# 000f
+    -> object length 15
+# 01
+    -> number of ICE candidates 1
+# 04 (00000100)
+    -> R 0, reserved, ipv4
+# 00
+    -> foundation 0
+# 00
+    -> componentID 0
+# 00000000
+    -> priority 0 
+# 00
+    -> TT 0, HT 0
+# 1ba8
+    -> port 7080
+# c0a80132
+    -> ip 192.168.1.50
+# 00
+    -> object type (PeerInfo)
+# 00
+    -> A 0, B 0, reserved
+...
+
+
+
+III         UDP peer sends join and gets response.(reference implementation)
+1.      join
+440003ff596abf0d000000020000002f463fc5ce835541f358578c296df90b441f70b0ac0000002b
+01000014463fc5ce835541f358578c296df90b441f70b0ac0200000f0104000000000000001ba8a9
+fe0994
+
+# 44 (01000100)
+    -> protocolVer1 01, request 00, A 0, P 1, R 0, 0->used in next field
+# 00 
+    -> reserved
+# 03
+    -> Join
+# ff
+    -> TTL 255
+# 596abf0d
+    -> magic cookie
+# 00000002
+    -> transaction-ID
+# 0000002f
+    -> message length 47
+# 463fc5ce835541f358578c296df90b441f70b0ac
+    -> peerID (length 20 [determined at bootstrap])
+# 00
+    -> object type PeerInfo
+# 00
+    -> A 0, B 0, reserved
+# 002b
+    -> 
+
+2.      join response
+74c803ff596abf0d000000030000002f384c881def5715930d499f972aa12b3387df50df1eb6e802
+8b0c978963de4f73ab889677a9a7e48e0000002b010000141eb6e8028b0c978963de4f73ab889677
+a9a7e48e0200000f
+0104000000000000001ba883f702f1
+
+# 74 (0111 0100)
+    -> protocolVer1 01, responseACK 11, A 0, P 1, R 0, 0->used in next field
+# c8 (0 from previous byte, 11001000)
+    -> response code 200
+# 03
+    -> join 3
+# ff
+    -> TTL 255
+# 596abf0d
+    -> magic cookie
+# 00000003
+    -> transaction ID
+# 0000002f
+    -> message length -> 47
+# 384c881def5715930d499f972aa12b3387df50df
+    -> sourceID
+# 1eb6e8028b0c978963de4f73ab889677a9a7e48e
+    -> responseID
+# 00
+    -> PeerInfo
+# 00
+    -> A, B, reserved
+# 002b
+    -> object length 43
+# 01
+    -> PeerID
+# 00
+    -> A, B, reserved
+# 0014
+    -> object length 20
+# 1eb6e8028b0c978963de4f73ab889677a9a7e48e
+    -> PeerID value
+# 02
+    -> AddressInfo
+# 00
+    -> A, B, reserved
+# 000f
+    -> object length 15
+# 
+    
+IV          TCP communication between this implementation and bootstrap server on 
+            LAN.
+1.      bootstrap request
+2.      bootstrap response
+70c802ff596abf0d000000000000003400000000000000010000001b01000004000000010200000f
+0104000000000000001ba8c0a80132000000000500000d0114020208
+4b6164656d6c6961
+
+# 70 (0111 0000)
+    -> protocolVer1 01, responseACK 11, A 0, P 0, R 0, 0->used in next field
+# c8 (0 from previous byte, 11001000)
+    -> response code 200
+# 02
+    -> bootstrap 2
+# ff
+    -> TTL 255
+# 596abf0d
+    -> magic cookie
+# 00000000
+    -> transaction ID
+# 00000034
+    -> message length -> 52
+# 00000000
+    -> sourceID
+# 00000001
+    -> responseID
+# 00
+    -> peerInfo
+# 00
+    -> A, B, reserved
+# 001b
+    -> object length 27
+# 01
+    -> PeerID
+# 00
+    -> A, B, reserved
+# 0004
+    -> object length 4
+# 00000001
+    -> PeerID value
+# 02
+    -> AddressInfo
+# 00
+    -> A, B, reserved
+# 000f
+    -> object length 15
+# 01
+    -> Num 1
+# 04
+    -> R 0, Resv 0, IP v4
+# 00
+    -> Foundation
+# 00
+    -> ComponentID
+# 00000000
+    -> Priority
+# 00
+    -> TT 0, HT 0
+# 1ba8
+    -> port 7080
+# c0a80132
+    -> ip 192.168.1.50
+# 00
+    -> PeerInfo
+# 00
+    -> A B Reserved
+# 0000
+    -> object length 0
+# 05
+    -> P2POptions
+# 00
+    -> A B Reserved
+# 000d
+    -> object length 13
+# 01
+    -> hash algorithm SHA-1
+# 14
+    -> hash algorithm length 20
+# 02
+    -> P2P algorithm Kademlia
+# 02
+    -> base 2
+# 08
+    -> overlayID length 8
+# 4b6164656d6c6961
+    -> overlayID
+
+
+V       TCP communication between this implementation and bootstrap server on 
+        LAN.
+1.  bootstrap request
+400002ff596abf0d000000000000002b0000000000c0000001c000000000000004c0000000000000
+02c000000004000000000000000000c0a80104
+
+2.  bootstrap response
+70c802ff596abf0d000000000000050b00000000000000010000001b01000004000000010200000f
+0104000000000000001ba8803b13b9000000000000003701000014f8593875f474cdfba1a1eee4c1
+b437a491f6622b030000086649466251704a480200000f0104000000000000001ba8806f343d0000
+
+00370100001405d04b7ba63e7b2ea1cbf44773755e0030551c9f030000087579734e55614b790200
+000f0104000000000000001ba80c2e810f000000370100001465d303de45564a5339d71c29c8d4de
+975984f936030000084e726a71794263410200000f0104000000000000001ba880708b4800000037
+01000014bd95058ffd15b69da645ee6b227037cd0973c44f0300000858674f4e64696d6a0200000f
+0104000000000000001ba883d72d480000003701000014c4d28eeeca0e7b60042c60cf9f3f817cd5
+ad35c7030000086b597447684e77560200000f0104000000000000001ba8dbf3c911000000370100
+0014a166b96b0da855b83773be14ead7461d3bd09e11030000085a684353505077570200000f0104000000000000001ba889bd6112000000370100001474582b3a34364b4376aa4a8ce25f95967d1ab2930300000856454b536a7678660200000f0104000000000000001ba89c38fae20000003701000014b95caee1c1759c75fa435deacc4c0ede1e36ac28030000084c50625a546465450200000f0104000000000000001ba88118d31a000000370100001400d2f02615f45d539e235bc8d800c96b993dd75e030000086e536f776e536d740200000f0104000000000000001ba8dbf3c87100000037010000143ea5097dff57317f98a7a320b0fd8ac68a0986fd030000086354736a776e58770200000f0104000000000000001ba880d004c50000003701000014fb86aa68c615f64cfd6401cd36ce4a663c1cc32c030000086d48777a4d425a780200000f0104000000000000001ba88e96ee0c0000003701000014dd42281fc78f0f1c76318bd330c700ca620c20a6030000086b547268654a4c650200000f0104000000000000001ba8dcf58cc4000000370100001415109a0bae7d7d5b8ee9fc15243ae8f0a703c539030000085377615373674c790200000f0104000000000000001ba8801f010b0000003701000014e1f0137e385390b99ca91030a66e23bc298562b80300000843614775725651700200000f0104000000000000001ba8800a13340000003701000014156401319213429525b3059171aedcb3033332ad03000008424c7842634751590200000f0104000000000000001ba88189fdfd00000037010000142a120174b0147a2baeeee6375c4d41da9b86d278030000087a44544e78774c450200000f0104000000000000001ba880e338510000003701000014122fe741cbb27709676dd988e5383233dff016f703000008797179455a466d6e0200000f0104000000000000001ba84824704800000037010000141eb6e8028b0c978963de4f73ab889677a9a7e48e03000008654664444b6e50750200000f0104000000000000001ba883f702f10000003701000014fe97b58fd1e2b8b4164338bc913aa52a3d7065eb030000086b43724e7a76706b0200000f0104000000000000001ba886794007000000370100001467023160efe692d6e724f0661fd80af9d1427b0c030000087572514f54596b4f0200000f0104000000000000001ba8a05edcf1000000370100001424ec31fe12f3867853d00545c59942a8214c70d2030000084a47785a675750510200000f0104000000000000001ba881eda1c10500000d01140202084b6164656d6c6961
+
+# 70 (0111 0000)*
+    -> protocolVer1 01, responseACK 11, A 0, P 0, R 0, 0->used in next field
+# c8 (0 from previous byte, 11001000)*
+    -> response code 200
+# 02*
+    -> bootstrap 2
+# ff*
+    -> TTL 255
+# 596abf0d*
+    -> magic cookie
+# 00000000*
+    -> transaction ID
+# 0000050b*
+    -> message length -> 1291
+# 00000000*
+    -> sourceID
+# 00000001*
+    -> responseID
+# 00*
+    -> peerInfo
+# 00*
+    -> A, B, reserved
+# 001b*
+    -> object length 27
+# 01*
+    -> PeerID
+# 00*
+    -> A, B, reserved
+# 0004*
+    -> object length 4
+# 00000001*
+    -> PeerID value
+# 02*
+    -> AddressInfo
+# 00*
+    -> A, B, reserved
+# 000f*
+    -> object length 15
+# 01*
+    -> Num 1
+# 04*
+    -> R 0, Resv 0, IP v4
+# 00*
+    -> Foundation
+# 00*
+    -> ComponentID
+# 00000000*
+    -> Priority
+# 00*
+    -> TT 0, HT 0
+# 1ba8*
+    -> port 7080
+# 803b13b9*
+    -> ip 128.59.19.185
+# 00*
+    -> PeerInfo
+# 00*
+    -> A B Reserved
+# 0000*
+    -> object length 0
+# 00*
+    -> PeerInfo
+# 00*
+    -> A B Reserved
+# 0037*
+    -> object length 55
+# 01*
+    -> object type PeerID
+# 00*
+    -> A B Reserved
+# 0014*
+    -> object length 20
+# f8593875f474cdfba1a1eee4c1b437a491f6622b*
+    -> PeerID value
+# 03*
+    -> object type UnhashedID
+# 00*
+    -> A B reserved
+# 0008*
+    -> object length
+# 6649466251704a48*
+    -> UnhashedID value
+# 02*
+    -> object type AddressInfo
+# 00*
+    -> A B reserved
+# 000f*
+    -> object length 15
+# 01*
+    -> Num 1
+# 04*
+    -> R 0, Resv 0, IP v4
+# 00*
+    -> Foundation
+# 00*
+    -> ComponentID
+# 00000000*
+    -> Priority
+# 00*
+    -> TT 0, HT 0
+# 1ba8*
+    -> port 7080
+# 806f343d*
+    -> ip 128.111.52.61
+# 00*
+    -> object type PeerInfo
+# 00*
+    -> A B reserved
+.
+.
+.
+
+VI      TCP communication between this implementation and Salman's network.
+1. Salman's Join Response.
+
+001de08eac9d000e2eaffc48080045200557602240002c06925c803b13b9c0a802661ba8e1e5c830
+2b068f80823e8018005bf64d00000101
+080a36b6469d000b665374c803ff596abf0d000000010000
+050b00000000000000010000001b01000004000000010200000f0104000000000000001ba8803b13
+b9000000000000003701000014f8593875f474cdfba1a1eee4c1b437a491f6622b03000008664946
+6251704a480200000f0104000000000000001ba8806f343d000000370100001405d04b7ba63e7b2ea1cbf44773755e0030551c9f030000087579734e55614b790200000f0104000000000000001ba80c2e810f000000370100001465d303de45564a5339d71c29c8d4de975984f936030000084e726a71794263410200000f0104000000000000001ba880708b480000003701000014bd95058ffd15b69da645ee6b227037cd0973c44f0300000858674f4e64696d6a0200000f0104000000000000001ba883d72d480000003701000014c4d28eeeca0e7b60042c60cf9f3f817cd5ad35c7030000086b597447684e77560200000f0104000000000000001ba8dbf3c9110000003701000014a166b96b0da855b83773be14ead7461d3bd09e11030000085a684353505077570200000f0104000000000000001ba889bd6112000000370100001474582b3a34364b4376aa4a8ce25f95967d1ab2930300000856454b536a7678660200000f0104000000000000001ba89c38fae20000003701000014b95caee1c1759c75fa435deacc4c0ede1e36ac28030000084c50625a546465450200000f0104000000000000001ba88118d31a000000370100001400d2f02615f45d539e235bc8d800c96b993dd75e030000086e536f776e536d740200000f0104000000000000001ba8dbf3c87100000037010000143ea5097dff57317f98a7a320b0fd8ac68a0986fd030000086354736a776e58770200000f0104000000000000001ba880d004c50000003701000014fb86aa68c615f64cfd6401cd36ce4a663c1cc32c030000086d48777a4d425a780200000f0104000000000000001ba88e96ee0c0000003701000014dd42281fc78f0f1c76318bd330c700ca620c20a6030000086b547268654a4c650200000f0104000000000000001ba8dcf58cc4000000370100001415109a0bae7d7d5b8ee9fc15243ae8f0a703c539030000085377615373674c790200000f0104000000000000001ba8801f010b0000003701000014e1f0137e385390b99ca91030a66e23bc298562b80300000843614775725651700200000f0104000000000000001ba8800a13340000003701000014156401319213429525b3059171aedcb3033332ad03000008424c7842634751590200000f0104000000000000001ba88189fdfd00000037010000142a120174b0147a2baeeee6375c4d41da9b86d278030000087a44544e78774c450200000f0104000000000000001ba880e338510000003701000014122fe741cbb27709676dd988e5383233dff016f703000008797179455a466d6e0200000f0104000000000000001ba84824704800000037010000141eb6e8028b0c978963de4f73ab889677a9a7e48e03000008654664444b6e50750200000f0104000000000000001ba883f702f10000003701000014fe97b58fd1e2b8b4164338bc913aa52a3d7065eb030000086b43724e7a76706b0200000f0104000000000000001ba886794007000000370100001467023160efe692d6e724f0661fd80af9d1427b0c030000087572514f54596b4f0200000f0104000000000000001ba8a05edcf1000000370100001424ec31fe12f3867853d00545c59942a8214c70d2030000084a47785a675750510200000f0104000000000000001ba881eda1c10500000d01140202084b6164656d6c6961
+
+
+2.  Salman's LookupObject request.
+ 
+44000aff596abf0d000000010000006ccb99559e806024dde2665dc7b543e4d4546274440000002b
+01000014cb99559e806024dde2665dc7b543e4d4546274440200000f0104000000000000001ba8a9
+fe09940c00003906210b0000045354554e0000002b
+01000014cb99559e806024dde2665dc7b543e4
+d4546274440200000f0104000000000000001ba8a9fe0994
+
+# 44 (01000100)
+    -> protocolVer1 01, request 00, A 0, P 1, R 0, 0->used in next field
+# 00
+    -> 00 reserved
+# 0a
+    -> 10 LookupObject
+# ff
+    -> TTL 255
+# 596abf0d
+    -> magic cookie
+# 00000001
+    -> transactionID
+# 0000006c
+    -> message length 108
+# cb99559e806024dde2665dc7b543e4d454627444
+    -> sourceID
+# 00
+    -> object type - PeerInfo
+# 00
+    -> A 0, B 0, reserved
+# 002b
+    -> object length 43
+# 01000014cb99559e806024dde2665dc7b543e4d4546274440200000f0104000000000000001ba8
+  a9fe0994
+    -> PeerInfo value
+# 0c
+    -> object type RLookup
+# 00
+    -> A 0, B 0, reserved
+# 0039
+    -> object length 57
+# 06
+    -> content type - STUNPort
+# 21
+    -> content subtype (why 21?)
+# 0b
+    -> object type - ResourceID
+# 00
+    -> A 0, B 0, reserved
+# 0004
+    -> object length 4
+# 5354554e
+    -> resourceID value (STUN)
+# 00
+    -> object type - PeerInfo
+# 00
+    -> A 0, B 0, reserved
+# 002b
+    -> object length 43
+#
+
+VII.
+Salman's join response
+ 
+74c803ff596abf0d000000020000002f463fc5ce835541f358578c296df90b441f70b0ac5e4f1983
+c8b7a07ff7ad0050c28529c1bb625e5f (join response header)
+0000002b (PeerInfo object header[object_length=43])
+010000145e4f1983c8b7a07ff7ad0050c28529c1
+bb625e5f0200000f01040000000000000010f8c0a80132
+
+so JoinResponse isn't compatible with specification!
