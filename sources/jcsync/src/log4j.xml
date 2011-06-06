@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+    <appender name="console" class="org.apache.log4j.ConsoleAppender">
+        <param name="Target" value="System.out"/>
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d %-5p %c{1} - %m%n"/>
+        </layout>
+    </appender>
+    <appender name="sockets" class="org.apache.log4j.net.SocketAppender">
+        <param name="remoteHost" value="localhost"/>
+        <param name="port" value="4445"/>
+        <param name="locationInfo" value="true"/>
+        <!--<layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d %-5p %c{1} - %m%n"/>
+        </layout>-->
+    </appender>
+
+    <logger name="jcsync.core.wrapper.MessageTest">
+        <level value="debug"/>
+    </logger>
+
+    <logger name="jcsync.core.JCSyncCoreAlgorithm">
+        <level value="trace"/>
+    </logger>
+    <logger name="mainTest">
+        <level value="trace"/>
+    </logger>
+    <logger name="pl.edu.pjwstk.mteam.jcsync.collections.implementation.AbstractCollectionsManager">
+        <level value="trace"/>
+    </logger>
+    <logger name="pubsubwrapper.PubSubWrapper">
+        <level value="trace"/>
+    </logger>
+    <logger name="pubsubwrapper.P-BCuAlg">
+        <level value="trace"/>
+    </logger>
+    <logger name="pl.edu.pjwstk.mteam.pubsub.algorithm.implementation.DefaultAlgorithm">
+        <level value="trace"/>
+    </logger>
+    <logger name="pl.edu.pjwstk.mteam.jcsync.core.EventLocker">
+        <level value="trace"/>
+    </logger>
+    <logger name="pl.edu.pjwstk.mteam.pubsub.util.TransactionStateLogger">
+        <level value="trace"/>
+    </logger>
+    <logger name="pl.edu.pjwstk.mteam.pubsub.util.persistence.db.TopicDBConnection">
+        <level value="trace"/>
+    </logger>
+    <logger name="pl.edu.pjwstk.mteam.jcsync.core.concurrency.MethodInvoker">
+        <level value="trace"/>
+    </logger>
+
+    <root>
+        <priority value ="trace" />
+        <appender-ref ref="console" />
+        <appender-ref ref="sockets" />
+    </root>
+
+</log4j:configuration>

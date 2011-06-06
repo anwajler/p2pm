@@ -1,0 +1,107 @@
+
+<project name="JCSync" default="build_library" basedir=".">
+
+    <property name="project_name" value="jcsync"/>
+    <property name="jar_dest" location="${basedir}/build"/>
+    <property name="java_srcdir" location="${basedir}/src"/>
+    <property name="java_destdir" location="${basedir}/bin"/>
+    <property name="java_test_destdir" location="${basedir}/bin_test"/>
+    <property name="java_libdir" location="${basedir}/lib"/>
+    <property name="java_testdirs" location="${basedir}/tests"/>
+    <property name="pubSub_basedir" location="${basedir}/pubsub/trunk"/>
+
+    <path id="mteam.classpath">
+        <pathelement location="${java_destdir}"/>
+        <fileset dir="${java_libdir}" includes="*.jar"/>
+    </path>
+    <path id="classpath.test">
+        <pathelement location="${java_testdir}"/>
+        <fileset dir="${java_libdir}" includes="*.jar"/>
+        <pathelement location="${java_test_destdir}"/>
+    </path>
+
+    <target name="javac"  description="compiles sources" >
+        <echo>Compiling the sources...</echo>
+        <property name="version.num" value="1.00"/>
+          <buildnumber file="build.num"/>
+            <tstamp>
+              <format property="TODAY" pattern="yyyy-MM-dd HH:mm:ss" />
+            </tstamp>
+
+        <manifest file="MANIFEST.MF">
+          <attribute name="Built-By" value="${user.name}"/>
+          <attribute name="Implementation-Version" 
+                     value="${version.num}-b${build.number}"/>
+          <attribute name="Built-Date" value="${TODAY}"/> 
+        </manifest>
+        <javac srcdir="${java_srcdir}"
+	         destdir="${java_destdir}"
+                 classpathref="mteam.classpath"
+	  	/>
+    </target>
+    <target name="clean" description="cleans project">
+        <echo>=== Clearing project ===</echo>
+        <delete file="MANIFEST.MF"/>
+        <delete failonerror="false">
+            <fileset dir="${jar_dest}" includes="**/*"/>
+            <fileset dir="${java_destdir}" includes="**/*"/>
+            <fileset dir="${java_test_destdir}" includes="**/*"/>
+        </delete>
+    </target>
+    <target name="clean_copy" description="cleaning project and copying new jar library from pubsub project folder" depends="clean">
+        <echo>=== Clearing project and copying new libraries from PublishSubscribe basedir ===</echo>
+        <delete file="${java_libdir}/mteam.jar"/>
+        <delete file="${java_libdir}/pubsub.jar"/>
+        <copy file="${pubSub_basedir}/build/pubsub.jar" tofile="${java_libdir}/pubsub.jar" overwrite="true" />
+        <copy file="${pubSub_basedir}/build/mteam.jar" tofile="${java_libdir}/mteam.jar" overwrite="true" />
+    </target>
+
+    <target name="build_library"  description="creates ${project_name}" depends="javac">
+    <tstamp>
+              <format property="TODAY" pattern="yyyy-MM-dd HH:mm:ss" />
+            </tstamp>
+        <jar destfile="${jar_dest}/${project_name}.jar">
+            <zipfileset dir="${java_destdir}" includes="pl/edu/pjwstk/mteam/jcsync/**/*.class" prefix="" />
+            <manifest>
+              <attribute name="Built-By" value="${user.name}"/>
+              <attribute name="Implementation-Version" 
+                     value="${version.num}-b${build.number}"/>
+              <attribute name="Built-Date" value="${TODAY}"/>  
+             </manifest>
+        </jar>
+    </target>
+
+    <target name="compile-test">
+    <javac srcdir="${java_testdirs}"
+	         destdir="${java_test_destdir}"
+                 classpathref="mteam.classpath"
+	  	/>
+    </target>
+
+    <target name="test" depends="clean, build_library,compile-test">
+    <junit fork="yes" haltonfailure="false">
+	<formatter type="plain" usefile="false" />	
+      <classpath refid="classpath.test" />
+      <classpath refid="mteam.classpath" />
+      <formatter type="brief" usefile="false" />
+      <batchtest>
+        <fileset dir="${java_test_destdir}"/>
+      </batchtest>
+    </junit>
+
+  </target>
+
+    <target name="javadoc" description="o Create Javadocs for the demo">
+        <mkdir dir="${basedir}/specification/api"/>
+        <javadoc
+            destdir="${basedir}/specification/api"
+            additionalparam="-J-Dorg.apache.commons.attributes.javadoc.CATaglet.sources=${basedir}">
+            <taglet
+                name="org.apache.commons.attributes.javadoc.CATaglet"
+                path="${ant.home}/lib/commons-attributes-compiler-2.2.jar"
+             />
+            <fileset dir="${java_srcdir}/" includes="**/*.java" />
+        </javadoc>
+    </target>
+
+</project>

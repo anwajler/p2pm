@@ -1,0 +1,97 @@
+
+<project name="mteam" default="make_pubsub.jar" basedir=".">
+
+    <property name="project_name" value="mteam"/>
+    <property name="jar_dest" location="${basedir}/jar"/>
+    <property name="java_srcdir" location="${basedir}/src"/>
+    <property name="java_destdir" location="${basedir}/bin"/>
+    <property name="java_libdir" location="${basedir}/../../lib"/>
+
+    <path id="mteam.classpath">
+        <pathelement location="${java_destdir}"/>
+        <fileset dir="${java_libdir}" includes="*.jar"/>
+    </path>
+
+    <target name="javac"  description="compiles sources" >
+        <echo>Compiling the sources...</echo>
+         <property name="version.num" value="1.00"/>
+          <buildnumber file="build.num"/>
+            <tstamp>
+              <format property="TODAY" pattern="yyyy-MM-dd HH:mm:ss" />
+            </tstamp>
+
+        <manifest file="MANIFEST.MF">
+          <attribute name="Built-By" value="${user.name}"/>
+          <attribute name="Implementation-Version" 
+                     value="${version.num}-b${build.number}"/>
+          <attribute name="Built-Date" value="${TODAY}"/> 
+        </manifest>
+
+        <javac srcdir="${java_srcdir}"
+	         destdir="${java_destdir}"
+                 classpathref="mteam.classpath"
+	  	/>
+    </target>
+    <target name="clean" description="cleans project">
+        <echo>=== Clearing project ===</echo>
+        <delete file="MANIFEST.MF"/>
+        <delete failonerror="false">
+            <fileset dir="${jar_dest}" includes="**/*"/>
+            <fileset dir="${java_destdir}" includes="**/*"/>
+        </delete>
+    </target>
+
+    <target name="make_mteam.jar"  description="creates ${project_name}" depends="javac">
+            <tstamp>
+              <format property="TODAY" pattern="yyyy-MM-dd HH:mm:ss" />
+            </tstamp>
+        <jar jarfile="${jar_dest}/${project_name}_build_${build.number}.jar">                       
+            <fileset dir="${java_destdir}" 
+                includes="pl/edu/pjwstk/mteam/core/**/*.class"                
+             />                
+            <fileset dir="${java_destdir}" 
+                includes="pl/edu/pjwstk/mteam/p2p/**/*.class"
+             />
+             <manifest>
+              <attribute name="Built-By" value="${user.name}"/>
+              <attribute name="Implementation-Version" 
+                     value="${version.num}-b${build.number} "/> 
+              <attribute name="Built-Date" value="${TODAY}"/> 
+             </manifest>
+        </jar>
+	<copy file="build.num" tofile="${jar_dest}/mteam_build.num"/>
+	<copy file="MANIFEST.MF" tofile="${jar_dest}/mteam_MANIFEST.MF"/>
+    </target>
+
+    <target name="make_pubsub.jar"  description="pubsub.jar" depends="make_mteam.jar">
+              <tstamp>
+              <format property="TODAY" pattern="yyyy-MM-dd HH:mm:ss" />
+            </tstamp>
+        <jar destfile="${jar_dest}/pubsub_build_${build.number}.jar">
+            <zipfileset dir="${java_destdir}" includes="pl/edu/pjwstk/mteam/pubsub/**/*.class" excludes="pl/edu/pjwstk/mteam/pubsub/tests/**/*" prefix="" />
+            <manifest>
+              <attribute name="Built-By" value="${user.name}"/>
+              <attribute name="Implementation-Version" 
+                     value="${version.num}-b${build.number}"/>
+              <attribute name="Built-Date" value="${TODAY}"/>  
+             </manifest>
+        </jar>
+	<copy file="build.num" tofile="${jar_dest}/pubsub_build.num"/>
+	<copy file="MANIFEST.MF" tofile="${jar_dest}/pubsub_MANIFEST.MF"/>
+
+    </target>
+
+    <target name="javadoc" description="o Create Javadocs for the demo">
+        <mkdir dir="${basedir}/javadoc/"/>
+        <javadoc
+            destdir="${basedir}/javadoc/"
+            additionalparam="-J-Dorg.apache.commons.attributes.javadoc.CATaglet.sources=${basedir}">
+            <taglet
+                name="org.apache.commons.attributes.javadoc.CATaglet"
+                path="${ant.home}/lib/commons-attributes-compiler-2.2.jar"
+             />
+            <fileset dir="${java_srcdir}/" includes="**/*.java" />
+        </javadoc>
+    </target>
+
+</project>
