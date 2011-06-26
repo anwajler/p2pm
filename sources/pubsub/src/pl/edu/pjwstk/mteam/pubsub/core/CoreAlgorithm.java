@@ -138,7 +138,7 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
     /**
      * Initializes the appropriate Customizable Algorithm component.
      */
-    public void start() {
+    public void init() {
         this.debug_id = getNode().getID();
         setCustomizableAlgorithm();
         initCacheDBConnections();

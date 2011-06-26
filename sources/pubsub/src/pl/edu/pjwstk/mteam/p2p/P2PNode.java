@@ -98,7 +98,7 @@ public class P2PNode extends Node{
 				//starting transport layer listener for pub-sub communication
 				if(pubsubManager != null){
 					//Initialization of the appropriate Customizable Algorithm component
-					((CoreAlgorithm)pubsubManager).start();
+					((CoreAlgorithm)pubsubManager).init();
 					//Initialization of the publish-subscribe transport component
 					pubsubMsgListener.start();
 				}
