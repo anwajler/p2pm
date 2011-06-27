@@ -468,7 +468,13 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
 
     public boolean onDeliverResponse(PubSubResponse res) {
         //Transaction t = transactions.remove(res.getTransactionID());
-        Transaction t = this.transaction_logger.getTransaction(res.getTransactionID());
+        Transaction t = null;
+        try{
+         t = this.transaction_logger.getTransaction(res.getTransactionID());
+        }catch(IllegalArgumentException e){
+           t = null;
+           logger.error("Transaction: "+res.getTransactionID()+" - doesn't exists!");
+        }
         if (t != null) {
             //Stopping the timer associated with this transaction
             //t.terminate();

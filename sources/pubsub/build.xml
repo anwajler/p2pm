@@ -30,6 +30,7 @@
         <javac srcdir="${java_srcdir}"
 	         destdir="${java_destdir}"
                  classpathref="mteam.classpath"
+		 debug="on"
 	  	/>
     </target>
     <target name="clean" description="cleans project">
