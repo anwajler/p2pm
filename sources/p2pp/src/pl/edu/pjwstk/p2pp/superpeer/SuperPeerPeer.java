@@ -479,6 +479,7 @@ public class SuperPeerPeer extends Peer {
                     } else { // Super-peer doesn't have to join.
 
                         state = JOINED_NODE_STATE;
+                        callback.joinCallback();
 
                     }
 
