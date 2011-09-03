@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="pubsubtest">
+
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="distDir" value="dist"/>
+    <property name="name" value="pubsubtest"/>
+    <property name="package" value="pl.edu.pjwstk.mteam.pubsub.tests"/>
+
+    <path id="pubsubtest.classpath">
+        <pathelement location="bin"/>
+        <fileset dir="lib" includes="*.jar"/>
+    </path>
+
+    <path id="pubsubtest.sources">
+        <pathelement location="src"/>
+    </path>
+
+    <target name="init">
+        <mkdir dir="bin"/>
+        <mkdir dir="dist"/>
+    </target>
+
+
+    <target name="clean">
+        <delete dir="bin"/>
+        <delete dir="dist"/>
+        <delete dir="doc"/>
+        <delete dir="out"/>
+    </target>
+    
+    <target name="generate-doc">
+        <javadoc
+              destdir="doc/"
+              sourcepath="src"
+              packagenames="**.*" use="true"
+              windowtitle="${ant.project.name}" private="false"/>
+    </target>
+
+    <target depends="init" name="build">
+
+	<javac srcdir="src"
+	    destdir="bin"
+            classpath="${ant.project.name}.classpath"
+            classpathref="${ant.project.name}.classpath"
+            debug="on"
+        />
+
+    </target>
+
+    <target name="jar" depends="build">
+        <jar destfile="${distDir}/${name}.jar" compress="true">
+            <fileset dir="bin" excludes="test/**"/>
+            <manifest>
+                <attribute name="Built-By" value="${user.name}"/>
+                <attribute name="Implementation-Vendor" value="Polish-Japanese Institute of Information Technologies"/>
+                <attribute name="Implementation-Title" value="Publish-Subscribe Tests"/>
+                <attribute name="Implementation-Version" value="stable"/>
+                <attribute name="Main-Class" value="${package}.Main"/>
+            </manifest>
+        </jar>
+    </target>
+
+</project>

@@ -1,0 +1,21 @@
+11:31:32.696 INFO  [pl.edu.pjwstk.p2pp.launchers.CommandLineLauncher] - parsing starts
+11:31:32.708 INFO  [pl.edu.pjwstk.p2pp.debug.processor.DebugWriter] - DebugWriter started
+11:31:32.713 DEBUG [pl.edu.pjwstk.p2pp.debug.processor.subsystems.writers.RawTextWriter] - RawTextWriter initialized
+11:31:32.713 DEBUG [pl.edu.pjwstk.p2pp.debug.processor.subsystems.writers.RawTextWriter] - RawTextWriter started
+11:31:32.713 INFO  [pl.edu.pjwstk.p2pp.launchers.CommandLineLauncher] - P2PP starts in mode = BootstrapServer 
+11:31:32.718 DEBUG [pl.edu.pjwstk.p2pp.launchers.CommandLineLauncher] - Starting with SuperPeer protocol
+11:31:32.748 DEBUG [pl.edu.pjwstk.p2pp.P2PPManager] - Initializing P2PPManager with tcpPort=7080; udpPort=0; sslPort=0; tlsPort=0; encryptionKeys=null; encryptionPass=null
+11:31:32.750 TRACE [pl.edu.pjwstk.p2pp.entities.EntitiesSharedDataManager] - unhashedID=null
+11:31:32.754 DEBUG [pl.edu.pjwstk.p2pp.P2PPManager] - P2PPManager starting
+11:31:32.760 DEBUG [pl.edu.pjwstk.net.proto.TCP.TCPWorker] - Initializing TCPWorker
+11:31:32.764 DEBUG [pl.edu.pjwstk.net.proto.TCP.TCPServer] - Initializing TCPServer
+11:31:32.769 DEBUG [pl.edu.pjwstk.net.proto.TCP.TCPServer] - Starting TCPServer on: 0.0.0.0/0.0.0.0:7080
+11:31:32.772 TRACE [pl.edu.pjwstk.p2pp.entities.EntitiesSharedDataManager] - Adding TCP address 192.168.5.100
+11:31:32.772 DEBUG [pl.edu.pjwstk.p2pp.P2PPManager] - shared manager initiated
+11:31:32.773 DEBUG [pl.edu.pjwstk.p2pp.transport.TransportManager] - Starting TransportManager
+11:31:32.773 DEBUG [pl.edu.pjwstk.p2pp.P2PPManager] - P2PPManager started
+11:31:32.775 DEBUG [pl.edu.pjwstk.p2pp.P2PPManager] - P2PPManager starts in mode=BootstrapServer 
+11:31:32.777 INFO  [pl.edu.pjwstk.p2pp.launchers.CommandLineLauncher] - P2PPManager started at Wed Jul 20 11:31:32 CEST 2011
+11:32:03.799 TRACE [pl.edu.pjwstk.p2pp.entities.EntitiesSharedDataManager] - Filling PeerInfo with TCP AddressInfo header=[type=2; AB=00; reserved=00000000; length=0] value=[AddressInfo=[num=0, 0, reserved=000, ipVer=0100, foundation=0, componendID=0, priority=0, tt=0001, tt=0000, port=7080, address=192.168.5.100]]
+11:32:34.800 TRACE [pl.edu.pjwstk.p2pp.entities.EntitiesSharedDataManager] - Filling PeerInfo with TCP AddressInfo header=[type=2; AB=00; reserved=00000000; length=0] value=[AddressInfo=[num=0, 0, reserved=000, ipVer=0100, foundation=0, componendID=0, priority=0, tt=0001, tt=0000, port=7080, address=192.168.5.100]]
+11:33:05.810 TRACE [pl.edu.pjwstk.p2pp.entities.EntitiesSharedDataManager] - Filling PeerInfo with TCP AddressInfo header=[type=2; AB=00; reserved=00000000; length=0] value=[AddressInfo=[num=0, 0, reserved=000, ipVer=0100, foundation=0, componendID=0, priority=0, tt=0001, tt=0000, port=7080, address=192.168.5.100]]

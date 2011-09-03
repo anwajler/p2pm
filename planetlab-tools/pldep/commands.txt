@@ -1,0 +1,19 @@
+./pldep.py -m execute -a "{'command':'\"echo 0 & >/dev/null 2>&\"', 'timeout':0, 'ssh':True, 'ssh_user':'pjwstkple_p2pp', 'copy_id':True,}"
+
+./pldep.py -m execute -a "{'command':'\"scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r fedora.repo %s@%s:\"%(ssh_user,hostname)', 'timeout':0, 'ssh_user':'pjwstkple_p2pp',}"
+
+./pldep.py -m execute -a "{'command':'\"sudo cp fedora.repo /etc/yum.repos.d/\"', 'timeout':0, 'ssh':True, 'ssh_user':'pjwstkple_p2pp', 'copy_id':False,}"
+
+./pldep.py -m execute -a "{'command':'\"sudo yum -y update; sudo yum -y install java-1.7.0-icedtea mc\"', 'timeout':0, 'ssh':True, 'ssh_user':'pjwstkple_p2pp', 'copy_id':False,}"
+
+./pldep.py -m execute -a "{'command':'\"scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r pubsubtest %s@%s:\"%(ssh_user,hostname)', 'timeout':0, 'ssh_user':'pjwstkple_p2pp',}"
+
+./pldep.py -m execute -a "{'command':'\"scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r /tmp/P2PP %s@%s:\"%(ssh_user,hostname)', 'timeout':0, 'ssh_user':'pjwstkple_p2pp',}"
+
+./pldep.py -m execute -a "{'command':'\"cd pubsubtest && ./run.sh pubsubbasic %s 12345 148.81.140.193 7080\"%i', 'timeout':0, 'ssh':True, 'ssh_user':'pjwstkple_p2pp', 'copy_id':False,}"
+
+./pldep.py -m execute -a "{'command':'\"killall -9 java & >/dev/null 2>&1\"', 'timeout':30, 'ssh':True, 'ssh_user':'pjwstkple_p2pp', 'copy_id':False,}"&
+
+./pldep.py -m execute -a "{'command':'\"rm pubsubtest/logs/* & >/dev/null 2>&1\"', 'timeout':0, 'ssh':True, 'ssh_user':'pjwstkple_p2pp', 'copy_id':False,}"&
+
+./pldep.py -m execute -a "{'command':'\"cd pubsubtest && ./run.sh p2ppbasic %s 11245 148.81.140.193 7080 oid\"%i', 'timeout':0, 'ssh':True, 'ssh_user':'pjwstkple_p2pp', 'copy_id':False,}"
