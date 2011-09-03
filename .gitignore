@@ -1,2 +1,3 @@
 /sources/pubsub/bin/
-/lib/
+/planetlab-tools/tests/logs
+/sources/p2pp/logs/
