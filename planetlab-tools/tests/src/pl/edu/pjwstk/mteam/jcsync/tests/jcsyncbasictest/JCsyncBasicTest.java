@@ -1,4 +1,4 @@
-package pl.edu.pjwstk.mteam.pubsub.tests.tests.pubsubbasic;
+package pl.edu.pjwstk.mteam.jcsync.tests.jcsyncbasictest;
 
 import org.apache.log4j.Logger;
 import pl.edu.pjwstk.mteam.tests.events.EventManager;
@@ -10,11 +10,11 @@ import pl.edu.pjwstk.mteam.tests.tests.ITest;
 import java.util.Map;
 import pl.edu.pjwstk.mteam.pubsub.core.CoreAlgorithm;
 
-public class PubsubBasicTest extends Thread implements ITest, IEventSubscriber {
+public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
 
-    public static final Logger LOG = Logger.getLogger(PubsubBasicTest.class);
+    public static final Logger LOG = Logger.getLogger(JCsyncBasicTest.class);
 
-    private static final PubsubBasicTestRules rules = new PubsubBasicTestRules();
+    private static final JCSyncBasicTestRules rules = new JCSyncBasicTestRules();
     private static final String[] acceptedEvents = {PSNode.EVENT_ONJOIN,PSNode.EVENT_ONTOPICCREATE,PSNode.EVENT_ONTOPICSUBSCRIBE,
             PSNode.EVENT_ONPUBSUBERROR, PSNode.EVENT_ONTOPICNOTIFY, PSNode.EVENT_ONDELIVER};
 
@@ -24,7 +24,7 @@ public class PubsubBasicTest extends Thread implements ITest, IEventSubscriber {
     private TestState testState = TestState.UNCONNECTED;
     private CoreAlgorithm pubsubmgr;
 
-    public PubsubBasicTest(Map<String, Object> kwargs) {
+    public JCsyncBasicTest(Map<String, Object> kwargs) {
         setName("PubsubBasicTest");
         this.kwargs = kwargs;
         for (String acceptedEvent : acceptedEvents) {
@@ -185,10 +185,7 @@ public class PubsubBasicTest extends Thread implements ITest, IEventSubscriber {
 
     @Override
     public String getDescription() {
-        return("Basic PubSubTest: \n"
-                + "[1] try to subscribe to topic; \n"
-                + "[2] if not exists - create and subscribe; \n"
-                + "[done] if node succesfully subscribe to the topic.");
+        throw new UnsupportedOperationException("Not supported yet.");
     }
 
 }

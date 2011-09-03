@@ -224,6 +224,11 @@ public class P2ppBasicTest extends Thread implements ITest, IEventSubscriber {
         return rules.getFieldsRulesCount();
     }
 
+    @Override
+    public String getDescription() {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
 }
 
 enum TestState {
