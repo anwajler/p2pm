@@ -135,9 +135,9 @@ public class PubSubWrapper extends CoreAlgorithm{
 //        //    return super.onDeliverResponse(psr);
 //        //}
 //    }
-    @Override
-    public void start() {
-        super.start();
+    
+    public void init() {
+        super.init();
         super.algorithm.setCoreAlgorithm(this);
     }
 

@@ -40,6 +40,7 @@ public class CollectionLogger extends javax.swing.JFrame {
         jTextArea1.setColumns(20);
         jTextArea1.setEditable(false);
         jTextArea1.setRows(5);
+        jTextArea1.setAutoscrolls(true);
         jScrollPane1.setViewportView(jTextArea1);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -74,6 +75,7 @@ public class CollectionLogger extends javax.swing.JFrame {
 
     void addInfo(String string) {
         this.jTextArea1.insert(string, 0);
+        //this.jTextArea1.setCaretPosition(this.jTextArea1.getDocument().getLength());
     }
 
 }

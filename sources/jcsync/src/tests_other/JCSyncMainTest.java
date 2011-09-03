@@ -113,9 +113,9 @@ public class JCSyncMainTest {
                return true;
             }
         }, RoutingAlgorithm.SUPERPEER);
-        p2pnode.setServerReflexiveAddress("192.168.5.103");
+        p2pnode.setServerReflexiveAddress("127.0.0.1");
 		p2pnode.setServerReflexivePort(7080);
-		p2pnode.setBootIP("192.168.5.103");
+		p2pnode.setBootIP("127.0.0.1");
 		p2pnode.setBootPort(7080);
 		p2pnode.setUserName("node1zz");
 		p2pnode.setTcpPort(9090);
@@ -128,12 +128,12 @@ public class JCSyncMainTest {
     }
     
     public static void main(String []args){
-        if(args.length!=8){
-            log.error("Invalid arguments count, please specify all argumenst:\n" +
-                    "[node_name],[tcp_port],[udp_port],[server_reflexive_address],[server_reflexive_port],[boot_ip],[boot_port],[pub-sub_port]");
-        }else{
+//        if(args.length!=8){
+//            log.error("Invalid arguments count, please specify all argumenst:\n" +
+//                    "[node_name],[tcp_port],[udp_port],[server_reflexive_address],[server_reflexive_port],[boot_ip],[boot_port],[pub-sub_port]");
+//        }else{
             new JCSyncMainTest(args);
-        }
+        //}
     }
 
     private void run() {
@@ -203,7 +203,7 @@ public class JCSyncMainTest {
                     System.out.println(this.coll1.toString());
                 } else if((msg.compareTo(demo) == 0)){
                     for (int i = 0; i < 100; i++) {
-                        this.coll1.put(System.currentTimeMillis(), msg.toLowerCase());
+                        this.coll1.put(System.currentTimeMillis(), msg.toLowerCase()+""+i);
                         //this.core.DEBUG_publish("hashMap1", "test_message_node2".getBytes());
                     }
                 } else if((msg.compareTo(remove) == 0)){

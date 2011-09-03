@@ -111,9 +111,9 @@ public class Node2 {
                return true;
             }
         }, RoutingAlgorithm.SUPERPEER);
-        p2pnode.setServerReflexiveAddress("192.168.5.103");
+        p2pnode.setServerReflexiveAddress("127.0.0.1");
 		p2pnode.setServerReflexivePort(7080);
-		p2pnode.setBootIP("192.168.5.103");
+		p2pnode.setBootIP("127.0.0.1");
 		p2pnode.setBootPort(7080);
 		p2pnode.setUserName("zzz");
 		p2pnode.setTcpPort(6095);
@@ -135,12 +135,12 @@ public class Node2 {
     }
 
     public static void main(String[] args) {
-        if (args.length != 8) {
-            log.error("Invalid arguments count, please specify all argumenst:\n"
-                    + "[node_name],[tcp_port],[udp_port],[server_reflexive_address],[server_reflexive_port],[boot_ip],[boot_port],[pub-sub_port]");
-        } else {
+//        if (args.length != 8) {
+//            log.error("Invalid arguments count, please specify all argumenst:\n"
+//                    + "[node_name],[tcp_port],[udp_port],[server_reflexive_address],[server_reflexive_port],[boot_ip],[boot_port],[pub-sub_port]");
+//        } else {
             new Node2(args);
-        }
+       // }
     }
 
     private void run() {
@@ -221,7 +221,7 @@ public static String help = "?";
                     System.out.println(this.coll1.toString());
                 } else if((msg.compareTo(demo) == 0)){
                     for (int i = 0; i < 100; i++) {
-                        this.coll1.put(System.currentTimeMillis(), msg.toLowerCase());
+                        this.coll1.put(System.currentTimeMillis(), msg.toLowerCase()+""+i);
                     }
                 } else if((msg.compareTo(remove) == 0)){
                         this.coll1.remove(k1);
