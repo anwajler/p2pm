@@ -6,7 +6,7 @@ import pl.edu.pjwstk.mteam.tests.events.IEventSubscriber;
 import pl.edu.pjwstk.mteam.pubsub.tests.p2ppnode.P2ppNode;
 import pl.edu.pjwstk.mteam.pubsub.tests.p2ppnode.P2ppNodeCallback;
 import pl.edu.pjwstk.mteam.tests.rules.FieldRule;
-import pl.edu.pjwstk.mteam.pubsub.tests.tests.ITest;
+import pl.edu.pjwstk.mteam.tests.tests.ITest;
 import pl.edu.pjwstk.p2pp.ErrorInterface;
 import pl.edu.pjwstk.p2pp.P2PPManager;
 import pl.edu.pjwstk.p2pp.entities.Peer;

@@ -1,4 +1,5 @@
-package pl.edu.pjwstk.mteam.pubsub.tests;
+
+package pl.edu.pjwstk.mteam.jcsync.tests;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -6,7 +7,7 @@ import pl.edu.pjwstk.mteam.tests.tests.TestsFactory;
 import pl.edu.pjwstk.mteam.tests.tests.ITest;
 
 public class Main {
-
+    
     public static final Logger LOG = Logger.getLogger(Main.class);
 
     public static void main(final String[] args) {

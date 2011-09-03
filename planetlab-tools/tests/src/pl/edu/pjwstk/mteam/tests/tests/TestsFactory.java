@@ -1,4 +1,4 @@
-package pl.edu.pjwstk.mteam.pubsub.tests.tests;
+package pl.edu.pjwstk.mteam.tests.tests;
 
 import org.apache.log4j.Logger;
 import pl.edu.pjwstk.mteam.pubsub.tests.tests.p2ppbasic.P2ppBasicTest;

@@ -5,7 +5,7 @@ import pl.edu.pjwstk.mteam.tests.events.EventManager;
 import pl.edu.pjwstk.mteam.tests.events.IEventSubscriber;
 import pl.edu.pjwstk.mteam.pubsub.tests.psnode.PSNode;
 import pl.edu.pjwstk.mteam.tests.rules.FieldRule;
-import pl.edu.pjwstk.mteam.pubsub.tests.tests.ITest;
+import pl.edu.pjwstk.mteam.tests.tests.ITest;
 
 import java.util.Map;
 import pl.edu.pjwstk.mteam.pubsub.core.CoreAlgorithm;

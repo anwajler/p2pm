@@ -1,4 +1,4 @@
-package pl.edu.pjwstk.mteam.pubsub.tests.tests;
+package pl.edu.pjwstk.mteam.tests.tests;
 
 public interface ITest {
 
