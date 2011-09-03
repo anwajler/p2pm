@@ -10,6 +10,8 @@ public interface P2PInterface{
 		
 //wstawienie obiektu do sieci p2p
 	void insert(NetworkObject object);
+        
+        void sendMessage(String peerId, byte[] msg);
 	
 //usunięcie obiektu z sieci p2p
 	void remove(Object objectID);

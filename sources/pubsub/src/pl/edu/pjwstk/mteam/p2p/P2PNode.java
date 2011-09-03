@@ -28,6 +28,7 @@ import pl.edu.pjwstk.p2pp.kademlia.KademliaPeer;
 import pl.edu.pjwstk.p2pp.kademlia.KademliaRoutingTable;
 import pl.edu.pjwstk.p2pp.messages.requests.PublishObjectRequest;
 import pl.edu.pjwstk.p2pp.messages.requests.Request;
+import pl.edu.pjwstk.p2pp.messages.requests.SendMessageRequest;
 import pl.edu.pjwstk.p2pp.objects.AddressInfo;
 import pl.edu.pjwstk.p2pp.objects.P2POptions;
 import pl.edu.pjwstk.p2pp.objects.PeerInfo;
@@ -131,7 +132,7 @@ public class P2PNode extends Node{
 
 			@Override
 			public boolean onDeliverRequest(Request req, List<ResourceObject> objectList) {
-				logger.info("invoking onDeliverRequest");
+				//logger.info("invoking onDeliverRequest");
 				boolean result = true;
 				if(req instanceof PublishObjectRequest){
 					PublishObjectRequest preq = (PublishObjectRequest)req;
@@ -187,6 +188,32 @@ public class P2PNode extends Node{
 						}
 					}
 				}
+                                else if(req instanceof SendMessageRequest){
+                                    SendMessageRequest preq = (SendMessageRequest)req;
+                                    ResourceObject obj = preq.getMessageResourceObject();
+                                    if(obj.getContentType() == P2PPUtils.MESSAGE_CONTENT_TYPE){
+                                        byte protocol = ((MessageResourceObject)obj).getContentSubtype();
+                                        if(protocol == NetworkObject.TYPE_MESSAGEOBJECT && pubsubManager != null){
+							result = pubsubMsgListener.onDeliverMessage(((MessageResourceObject)obj).getMessageValue());
+							objectList.remove(0);
+							objectList.add(null);
+						}
+						else if(protocol != NetworkObject.TYPE_PUBSUB){
+							if(protocol == NetworkObject.TYPE_PROTOTRUST)
+								logger.trace("[P2PNode] Delivering prototrust message");
+							List<NetworkObject> msgObjects = new Vector<NetworkObject>();
+							msgObjects.add(new NetworkObject(obj.getContentSubtype(),
+									                         new String(obj.getUnhashedID()),
+									                         ((MessageResourceObject)obj).getMessageValue()));
+							for (NodeCallback listener : nodeCallbacks) {
+								result = listener.onDeliverRequest(msgObjects);
+								if (result == false)
+									break;
+							}
+							//result = nodeCallback.onDeliverRequest(msgObjects);
+						}
+                                    }
+                                }
 				return result;
 			}
 
@@ -514,6 +541,17 @@ public class P2PNode extends Node{
             }
         }
 	}
+        
+        public void sendMessage(String peerId, byte[] msg){
+            Vector<P2PPEntity> entities = node.getEntities();
+            for (P2PPEntity current : entities) {
+
+                if (current instanceof pl.edu.pjwstk.p2pp.entities.Node) {
+                    ((pl.edu.pjwstk.p2pp.entities.Node) current).sendMessage(peerId.getBytes(), " ", msg);
+                    break;
+                }
+            }
+        }
 
 	@Override
 	public void insert(NetworkObject object) {

@@ -1,5 +1,7 @@
 package pl.edu.pjwstk.mteam.core;
 
+import pl.edu.pjwstk.p2pp.util.P2PPUtils;
+
 /**
  * Class representing object, that can be stored in P2P network.
  * 
@@ -14,7 +16,8 @@ public class NetworkObject{
 	 * Object type used for storing tunneling publish-subscribe messages
 	 * inside P2P insert requests
 	 */
-	public static final int TYPE_PUBSUB = 7;
+	public static final int TYPE_PUBSUB = 6;//7;
+        public static final int TYPE_MESSAGEOBJECT = 0;// P2PPUtils.MESSAGE_CONTENT_TYPE;
 	public static final int TYPE_PROTOTRUST = 8;
 	
 	private int    type;

@@ -90,11 +90,16 @@ public class PubSubTransport implements MessageListener{
 	 * @param key Object key used by overlay routing algorithm. 
 	 */
 	public void sendThroughOverlay(PubSubMessage msg, String key){
-		logger.debug("Sending mesage through overlay....");
+		logger.debug("Sending mesage through overlay: source: "+msg.getSourceInfo().getName()+", destination: "+msg.getDestinationInfo().getName()+", msgType: "+msg.getType());
 		NetworkObject object = new NetworkObject(NetworkObject.TYPE_PUBSUB, 
 				                                 key, msg.encode());
 		node.insert(object);
 	}
+        
+        public void sendThroughOverlayMessage(PubSubMessage msg, String key){
+                logger.debug("Sending mesage through overlay sendMessage: source: "+msg.getSourceInfo().getName()+", destination: "+msg.getDestinationInfo().getName()+", msgType: "+msg.getType());
+		node.sendMessage(msg.getDestinationInfo().getName(), msg.encode());
+        }
 	
 	/**
 	 * Sends the message directly to specified node.
@@ -104,10 +109,13 @@ public class PubSubTransport implements MessageListener{
 	public boolean sendDirectly(PubSubMessage msg){
 		//logger.debug("Sending message directly....: "+msg.toString());
 		//return tcpWriter.sendMessage(msg);
-                logger.debug("Sending mesage through overlay....");
-		NetworkObject object = new NetworkObject(NetworkObject.TYPE_PUBSUB,
-				                                 msg.getTopicID(), msg.encode());
-		node.insert(object);
+                //--------------
+                //logger.debug("Sending mesage through overlay....");
+		//NetworkObject object = new NetworkObject(NetworkObject.TYPE_PUBSUB,
+		//		                                 msg.getTopicID(), msg.encode());
+		//node.insert(object);
+                //return true;
+                sendThroughOverlayMessage(msg, msg.getDestinationInfo().getID());
                 return true;
 	}
 	

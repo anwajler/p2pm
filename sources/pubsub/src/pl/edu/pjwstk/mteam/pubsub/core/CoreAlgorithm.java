@@ -467,6 +467,7 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
     }
 
     public boolean onDeliverResponse(PubSubResponse res) {
+        logger.debug("OnDeliverResponse, topicID: "+res.getTopicID()+", type: "+res.getResponseCode()+", source name: "+res.getSourceInfo().getName()+", destination name: "+res.getDestinationInfo().getName());
         //Transaction t = transactions.remove(res.getTransactionID());
         Transaction t = null;
         try{
@@ -593,9 +594,9 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
                 transport.sendThroughOverlay(msg, key);
                 return true;
             case PubSubTransport.ROUTING_DIRECT:
-                //return transport.sendDirectly(msg);
-                transport.sendThroughOverlay(msg, msg.getTopicID());
-                return true;
+                return transport.sendDirectly(msg);
+                //transport.sendThroughOverlay(msg, msg.getTopicID());
+                //return true;
             default:
                 return false;
         }

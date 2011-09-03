@@ -109,4 +109,8 @@ public abstract class PubSubResponse extends PubSubMessage{
 			e.printStackTrace();
 		}
 	}
+    @Override
+        public String toString(){
+            return "Source: "+getSourceInfo().getName();
+        }
 }

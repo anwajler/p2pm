@@ -13,13 +13,16 @@ public class DummyTransactionStateLogger implements TransactionStateLogger{
 
     private final Hashtable<Integer,Transaction> pendingTransactions;
     private final Hashtable<Integer,Transaction> completedTransactions;
+    private final Hashtable<Integer,Transaction> cancelledTransactions;
 
     public DummyTransactionStateLogger(){
         this.pendingTransactions = new Hashtable<Integer, Transaction>(100);
         this.completedTransactions = new Hashtable<Integer, Transaction>(100);
+        this.cancelledTransactions = new Hashtable<Integer, Transaction>(100);
     }
     
     public boolean addTransaction(Transaction t) {
+        log.debug("adding transaction with ID: "+t.toString());
         if(this.pendingTransactions.containsKey(t.getID())){
             log.fatal("Transacation with id: "+t.getID()+" already exist in pending queue");
             throw new IllegalArgumentException("Transaction exists");
@@ -47,10 +50,15 @@ public class DummyTransactionStateLogger implements TransactionStateLogger{
                 log.fatal("Transaction with ID: "+tID+" doesn't exist!");
                 throw new IllegalArgumentException("Transaction doesn't exist");
         }else{
+            t.terminateTransaction(code);
             log.trace("Transaction: "+tID+" marked with code:"+code);
             this.pendingTransactions.remove(tID);
-            t = null;
-            //this.completedTransactions.put(t.getID(), t);
+            if((code&Transaction.COMPLETED)==Transaction.COMPLETED){
+                this.completedTransactions.put(tID, t);
+            }
+            else if((code&Transaction.CANCELLED)==Transaction.CANCELLED){
+                this.cancelledTransactions.put(tID, t);
+            }
             log.trace("Pending transactions count: "+this.pendingTransactions.size());
             log.trace("Completed transactions count: "+this.completedTransactions.size());
             return true;
