@@ -135,7 +135,7 @@ public class AbstractCollectionsManager {
     public JCSyncAbstractCollection makeCollection(JCSyncCreateCollectionMethod method){
         JCSyncAbstractCollection collection = null;
         Class collectionClass = method.getCollectionClass();
-        Constructor c = getConstructor(registeredCollections.get(collectionClass), method.getParamTypes());
+        Constructor c = getConstructor(registeredCollections.get(collectionClass), method.getParamTypes());        
         log.debug("Creating new collection: "+method.getCollectionID()+" : "+method.getCollectionClass().getName());
         log.trace("\n"+method);
         try {

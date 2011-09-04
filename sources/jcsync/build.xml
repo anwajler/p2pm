@@ -6,7 +6,7 @@
     <property name="java_srcdir" location="${basedir}/src"/>
     <property name="java_destdir" location="${basedir}/bin"/>
     <property name="java_test_destdir" location="${basedir}/bin_test"/>
-    <property name="java_libdir" location="${basedir}/lib"/>
+    <property name="java_libdir" location="${basedir}/../../lib"/>
     <property name="java_testdirs" location="${basedir}/tests"/>
     <property name="pubSub_basedir" location="${basedir}/pubsub/trunk"/>
 

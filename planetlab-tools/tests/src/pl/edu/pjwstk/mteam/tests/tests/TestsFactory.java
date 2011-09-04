@@ -6,6 +6,7 @@ import pl.edu.pjwstk.mteam.pubsub.tests.tests.pubsubbasic.PubsubBasicTest;
 
 import java.util.Hashtable;
 import java.util.Map;
+import pl.edu.pjwstk.mteam.jcsync.tests.jcsyncbasictest.JCsyncBasicTest;
 
 public class TestsFactory {
 
@@ -56,6 +57,23 @@ public class TestsFactory {
 
             test = new PubsubBasicTest(kwargs);
 
+        }
+        else if(JCsyncBasicTest.isTestFromName(testName)){
+            int testArgsCount = JCsyncBasicTest.getArgsCount();
+
+            if (argsLength < testArgsCount+1) {
+                LOG.error(testName + " takes exactly " + testArgsCount + " arguments. " + (argsLength-1) + " given");
+                return null;
+            }
+
+            Map<String,Object> kwargs = new Hashtable<String,Object>() {{
+                put("nodeNumber", Integer.parseInt(args[1]));
+                put("port", Integer.parseInt(args[2]));
+                put("bootIP", args[3]);
+                put("bootPort", Integer.parseInt(args[4]));
+            }};
+
+            test = new JCsyncBasicTest(kwargs);
         }
 
         return test;

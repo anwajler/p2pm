@@ -314,6 +314,7 @@ public class JCSyncHashMap<K extends SOLogic, V extends SOLogic> extends java.ut
         throw new UnsupportedOperationException("Not supported yet.");
     }
 
+    @Override
     public Class getDeclaredClass() {
         return declaredClass;
     }
