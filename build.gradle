@@ -1,0 +1,48 @@
+dependsOnChildren()
+
+distDir = 'dist'
+
+allprojects {
+    apply plugin: 'java'
+    repositories {
+        flatDir(name: 'lib', dirs: "${rootProject.projectDir}/lib")
+        mavenCentral()
+    }
+}
+
+subprojects {
+
+    dependencies {
+        testCompile 'junit:junit:4.8.2'
+    }
+
+    jar {
+        manifest.attributes provider: 'gradle'
+    }
+
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.0'
+}
+
+task makeDist {
+    File dist = mkdir(distDir)
+}
+
+task explodedDist(dependsOn: [assemble,makeDist]) << {
+    subprojects.each { project ->
+        project.tasks.withType(Jar).each { archiveTask ->
+            ant.copy(file: archiveTask.archivePath, todir: distDir)
+        }
+    }
+}
+
+task dist(type: Jar, dependsOn: subprojects.assemble+makeDist) {
+    subprojects.each { project ->
+        from(project.configurations.archives.allArtifactFiles.collect { zipTree(it) })
+        if (it.archivePath.exists()) {
+            ant.copy(file: it.archivePath, todir: distDir)
+        }
+    }
+}
