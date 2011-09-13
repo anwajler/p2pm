@@ -1,1 +1,1 @@
-include 'sources/p2pp', 'sources/pubsub', 'sources/jcsync'
+include 'sources/p2pp', 'sources/pubsub', 'sources/jcsync', 'sources/p2pm-tests'

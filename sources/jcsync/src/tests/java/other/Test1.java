@@ -47,6 +47,10 @@ public class Test1 {
             logger.info(" - OnOverlayError invoked.....");
         }
 
+        public void onOverlayError(Node node, Object sourceID, int errorCode, int code2) {
+            logger.info(" - OnOverlayError invoked.....");
+        }
+
         public void onJoin(Node node) {
             logger.info(" - OnJoin invoked.....");
         }
@@ -54,6 +58,14 @@ public class Test1 {
         public void onUserLookup(Node node, Object userInfo) {
             NodeInfo info = (NodeInfo) userInfo;
             logger.info(" - OnUserLookup result: " + info.getIP() + ":" + info.getPort());
+        }
+
+        public void onTopicCreate(Node node, Object topicID, int code) {
+            logger.info(" - onTopicCreate for topic '" + topicID + "' callback invoked");
+        }
+
+        public void onTopicNotify(Node node, Object topicId, byte[] message, boolean code) {
+
         }
 
         public void onTopicRemove(Node node, Object topicID) {
@@ -79,8 +91,16 @@ public class Test1 {
         }
 
         @Override
+        public void onPubSubError(Node node, Object topicID, byte operationType, int errorCode, int code2) {
+            logger.info(" - OnPubSubError for topic '" + topicID + "' callback invoked");
+        }
+
         public void onTopicNotify(Node node, Object topicID, byte[] message) {
             logger.info(" - onTopicNotify for topic '" + topicID + "' callback invoked");
+        }
+
+        public void onTopicSubscribe(Node node, Object topicID, int code) {
+            logger.info(" - onTopicSubscribe for topic '" + topicID + "' callback invoked with code=" + code);
         }
 
         @Override

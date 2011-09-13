@@ -3,17 +3,16 @@ apply plugin: 'java'
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
 
-List p2pp = [
+p2pmtests = [
     ":commons-cli:1.1",
     ":commons-dbcp:1.2.2",
     ":commons-pool:1.5.4",
-    ":log4j:1.2.16",
+    ":log4j:*",
     ":mysql-connector-java:5.1.10-bin",
-    ":junit:4.9",
 ]
 
 dependencies {
 
-    compile p2pp
+    compile project(':sources/p2pp'), project(':sources/pubsub'), project(':sources/jcsync'), p2pmtests
 
 }
