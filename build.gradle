@@ -65,18 +65,20 @@ task zipSources(type: Zip) {
     include 'docs/**/*', 'sources/**/*'
 }
 
-task uploadToSF(dependsOn: [explodedDist,dist,zipDocs,zipSources]) << {
-    def console = System.console()
-    def user = console.readLine("\n%s: ", 'Please enter the username')
-    def pass = console.readPassword('%s: ', 'Please enter the password')
-    print ":$user:$pass:"
-    ant.taskdef(name: 'scp', classname: 'org.apache.tools.ant.taskdefs.optional.ssh.Scp', classpath: configurations.scpTask.asPath)
-    ant.scp(todir: "${user as String},p2pm@frs.sourceforge.net:/home/pfs/project/p/p2/p2pm/jars/", password: pass as String, verbose: 'true') {
-        fileset(dir: "$buildDir/libs/", includes: '*.jar')
-        fileset(dir: "$buildDir/exploded/", includes: '*.jar')
-    }
-    ant.scp(todir: "${user as String},p2pm@frs.sourceforge.net:/home/pfs/project/p/p2/p2pm/", password: pass as String, trust: 'true', verbose: 'true') {
-        fileset(dir: "$buildDir/distributions", includes: '*.zip')
+task uploadToSF(dependsOn: [explodedDist,dist,zipDocs,zipSources]) {
+    description = 'Upload jars, sources and docs to SourceForge'
+    doLast {
+        def console = System.console()
+        def user = console.readLine("\n%s: ", 'Please enter the username')
+        def pass = console.readPassword('%s: ', 'Please enter the password')
+        ant.taskdef(name: 'scp', classname: 'org.apache.tools.ant.taskdefs.optional.ssh.Scp', classpath: configurations.scpTask.asPath)
+        ant.scp(todir: "${user as String},p2pm@frs.sourceforge.net:/home/pfs/project/p/p2/p2pm/", password: pass as String, trust: 'true', verbose: 'true') {
+            fileset(dir: "$buildDir/distributions", includes: '*.zip')
+        }
+        ant.scp(todir: "${user as String},p2pm@frs.sourceforge.net:/home/pfs/project/p/p2/p2pm/jars/", password: pass as String, verbose: 'true') {
+            fileset(dir: "$buildDir/exploded/", includes: '*.jar')
+            fileset(dir: "$buildDir/libs/", includes: '*.jar')
+        }
     }
 }
 
