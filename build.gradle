@@ -1,6 +1,14 @@
 dependsOnChildren()
-
 distDir = 'dist'
+
+configurations {
+    scpTask
+}
+
+dependencies {
+    scpTask 'org.apache.ant:ant-jsch:1.8.2', 'jsch:jsch:0.1.29'
+}
+
 
 allprojects {
     apply plugin: 'java'
@@ -22,32 +30,57 @@ subprojects {
 
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '1.0-milestone-4'
-}
 
-task makeDist {
-    onlyIf {
-        !(new File(distDir)).exists()
-    }
-    doLast {
-        File dist = mkdir(distDir)
-    }
-}
-
-task explodedDist(dependsOn: [assemble,makeDist]) << {
+task explodedDist(dependsOn: assemble) << {
+    description = 'Builds jar for each project'
     subprojects.each { project ->
         project.tasks.withType(Jar).each { archiveTask ->
-            ant.copy(file: archiveTask.archivePath, todir: distDir)
+            ant.copy(file: archiveTask.archivePath, todir: "$buildDir/exploded")
         }
     }
 }
 
-task dist(type: Jar, dependsOn: subprojects.assemble+makeDist) {
+task dist(type: Jar, dependsOn: subprojects.assemble) {
+    description = 'Build one jar including all projects'
     subprojects.each { project ->
         from(project.configurations.archives.allArtifactFiles.collect { zipTree(it) })
         if (it.archivePath.exists()) {
-            ant.copy(file: it.archivePath, todir: distDir)
+            ant.copy(file: it.archivePath, todir: "$buildDir/libs")
         }
     }
+}
+
+//jar << { tasks.dist.execute() }
+
+
+task zipDocs(type: Zip) {
+    classifier = 'docs'
+    from "$projectDir/docs"
+    include '**/*'
+}
+
+task zipSources(type: Zip) {
+    classifier = 'sources'
+    from projectDir
+    include 'docs/**/*', 'sources/**/*'
+}
+
+task uploadToSF(dependsOn: [explodedDist,dist,zipDocs,zipSources]) << {
+    def console = System.console()
+    def user = console.readLine("\n%s: ", 'Please enter the username')
+    def pass = console.readPassword('%s: ', 'Please enter the password')
+    print ":$user:$pass:"
+    ant.taskdef(name: 'scp', classname: 'org.apache.tools.ant.taskdefs.optional.ssh.Scp', classpath: configurations.scpTask.asPath)
+    ant.scp(todir: "${user as String},p2pm@frs.sourceforge.net:/home/pfs/project/p/p2/p2pm/jars/", password: pass as String, verbose: 'true') {
+        fileset(dir: "$buildDir/libs/", includes: '*.jar')
+        fileset(dir: "$buildDir/exploded/", includes: '*.jar')
+    }
+    ant.scp(todir: "${user as String},p2pm@frs.sourceforge.net:/home/pfs/project/p/p2/p2pm/", password: pass as String, trust: 'true', verbose: 'true') {
+        fileset(dir: "$buildDir/distributions", includes: '*.zip')
+    }
+}
+
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.0-milestone-4'
 }
