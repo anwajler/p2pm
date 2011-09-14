@@ -31,7 +31,7 @@ subprojects {
 }
 
 
-task explodedDist(dependsOn: assemble) << {
+task explodedDist(dependsOn: subprojects.assemble) << {
     description = 'Builds jar for each project'
     subprojects.each { project ->
         project.tasks.withType(Jar).each { archiveTask ->
@@ -50,7 +50,7 @@ task dist(type: Jar, dependsOn: subprojects.assemble) {
     }
 }
 
-//jar << { tasks.dist.execute() }
+jar << { tasks.dist.execute() }
 
 
 task zipDocs(type: Zip) {
@@ -75,7 +75,7 @@ task uploadToSF(dependsOn: [explodedDist,dist,zipDocs,zipSources]) {
         ant.scp(todir: "${user as String},p2pm@frs.sourceforge.net:/home/pfs/project/p/p2/p2pm/", password: pass as String, trust: 'true', verbose: 'true') {
             fileset(dir: "$buildDir/distributions", includes: '*.zip')
         }
-        ant.scp(todir: "${user as String},p2pm@frs.sourceforge.net:/home/pfs/project/p/p2/p2pm/jars/", password: pass as String, verbose: 'true') {
+        ant.scp(todir: "${user as String},p2pm@frs.sourceforge.net:/home/pfs/project/p/p2/p2pm/jars/", password: pass as String, trust: 'true', verbose: 'true') {
             fileset(dir: "$buildDir/exploded/", includes: '*.jar')
             fileset(dir: "$buildDir/libs/", includes: '*.jar')
         }
