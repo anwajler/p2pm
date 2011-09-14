@@ -10,6 +10,7 @@ public class P2ppNode extends P2PNode{
     
     public P2ppNode(NodeCallback callback,P2PNode.RoutingAlgorithm algName ){
         super(callback, algName);
+        super.enableDebug();
     }
     public String getUserId(){
         return super.getUserName();

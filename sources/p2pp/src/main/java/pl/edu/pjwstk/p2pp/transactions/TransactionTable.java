@@ -554,6 +554,23 @@ public class TransactionTable {
         return false;
     }
 
+    public void removeForPeerID(byte[] peerID) {
+        ByteArrayWrapper wrappedPeerID = new ByteArrayWrapper(peerID);
+        this.historyOfResponseTransactions.remove(wrappedPeerID);
+        this.responseTransactionsMap.remove(wrappedPeerID);
+        Collection<Long> transactionsToRemove = new LinkedList<Long>();
+        for (Map.Entry<Long,Transaction> reqTrans : this.requestTransactionsMap.entrySet()) {
+            Long id = reqTrans.getKey();
+            Transaction transaction = reqTrans.getValue();
+            if (Arrays.equals(transaction.getSourceID(), peerID)) {
+                transactionsToRemove.add(id);
+            }
+        }
+        for (Long id : transactionsToRemove) {
+            this.requestTransactionsMap.remove(id);
+        }
+    }
+
     /**
      * Resets transactions counter. Resets history and response and request transactions. Indication transactions aren't
      * deleted, because ACK for LeaveIndication may arrive.

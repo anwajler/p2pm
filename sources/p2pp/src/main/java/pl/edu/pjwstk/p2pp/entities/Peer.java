@@ -17,13 +17,13 @@ import pl.edu.pjwstk.p2pp.util.Arrays;
 public abstract class Peer extends Node {
 
         /** Manager of resources. TODO maybe move it to Node class. */
-	protected ResourceManager resourceManager = new ResourceManager();
+	final protected ResourceManager resourceManager = new ResourceManager();
 
 	public Peer() {
 		super();
 	}
 
-        public abstract Byte getRoutingAlgorithm();
+    public abstract Byte getRoutingAlgorithm();
 
 	@Override
 	protected boolean canConsume(Message receivedMessage) {

@@ -93,6 +93,11 @@ public abstract class BootstrapServer extends P2PPEntity {
         return this.bootstrapCandidates.containsKey(wrappedID);
     }
 
+    protected void removeBootrappedCandidate(PeerInfo peerInfo) {
+        ByteArrayWrapper wrappedID = new ByteArrayWrapper(peerInfo.getPeerID().getPeerIDBytes());
+        this.bootstrapCandidates.remove(wrappedID);
+    }
+
     /**
      * Adds PeerInfo object describing bootstrap candidate.
      *
@@ -101,7 +106,7 @@ public abstract class BootstrapServer extends P2PPEntity {
     protected void saveBootstrapCandidate(PeerInfo peerInfo) {
         ByteArrayWrapper wrappedID = new ByteArrayWrapper(peerInfo.getPeerID().getPeerIDBytes());
         if (this.bootstrapCandidates.containsKey(wrappedID)) {
-            if (LOG.isDebugEnabled()) LOG.debug("Tried to bootstrap a peer that was already bootstrapped");
+            LOG.warn("Tried to bootstrap a peer that was already bootstrapped");
         } else {
             this.bootstrapCandidates.put(wrappedID, peerInfo);
         }

@@ -2,6 +2,7 @@ package pl.edu.pjwstk.mteam.p2pm.tests.tests.tests.pubsubbasic;
 
 import org.apache.log4j.Logger;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import pl.edu.pjwstk.mteam.p2pm.tests.core.events.EventManager;
@@ -17,13 +18,12 @@ public class PubsubBasicTest extends Thread implements ITest, IEventSubscriber {
 
     private static final PubsubBasicTestRules rules = new PubsubBasicTestRules();
     private static final String[] acceptedEvents = {PSNode.EVENT_ONJOIN,PSNode.EVENT_ONTOPICCREATE,PSNode.EVENT_ONTOPICSUBSCRIBE,
-            PSNode.EVENT_ONPUBSUBERROR, PSNode.EVENT_ONTOPICNOTIFY, PSNode.EVENT_ONDELIVER};
+            PSNode.EVENT_ONPUBSUBERROR, PSNode.EVENT_ONTOPICNOTIFY, PSNode.EVENT_ONDELIVER, PSNode.EVENT_ONOVERLAYERROR};
 
     private Map<String,Object> kwargs;
 
     private PSNode psNode;
     private TestState testState = TestState.UNCONNECTED;
-    private CoreAlgorithm pubsubmgr;
 
     public PubsubBasicTest(Map<String, Object> kwargs) {
         setName("PubsubBasicTest");
@@ -74,9 +74,7 @@ public class PubsubBasicTest extends Thread implements ITest, IEventSubscriber {
         this.psNode.init();
 
         //snooze(30000*nodeNumber);
-        
-        
-       
+
         this.psNode.networkJoin();
         // See handleEvent()
 
@@ -90,15 +88,14 @@ public class PubsubBasicTest extends Thread implements ITest, IEventSubscriber {
         while (this.testState != TestState.SUBSCRIBED) snooze(1000);
 
         this.psNode.publish("topicID", ("Message from node #" + nodeNumber).getBytes());
-        
-//        while (true) {
-//            try {
-//                sleep(1000);
-//            } catch (Throwable e) {
-//                break;
-//            }
-//        }
-        snooze(5000);
+
+        while (true) {
+            try {
+                sleep(1000);
+            } catch (Throwable e) {
+                break;
+            }
+        }
 
         return true;
     }
@@ -159,6 +156,12 @@ public class PubsubBasicTest extends Thread implements ITest, IEventSubscriber {
                 LOG.debug(this.psNode.getUserId() + ": New event in topic " + topicID + ": " + new String(message));
             }
 
+        } else if (PSNode.EVENT_ONOVERLAYERROR.equals(eventType)) {
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug(this.psNode.getUserId() + ": overlay error " + Arrays.asList(eventData));
+            }
+
         }
 
         if (LOG.isTraceEnabled()) {
@@ -184,7 +187,6 @@ public class PubsubBasicTest extends Thread implements ITest, IEventSubscriber {
         return rules.getFieldsRulesCount();
     }
 
-    @Override
     public String getDescription() {
         return("Basic PubSubTest: \n"
                 + "[1] try to subscribe to topic; \n"

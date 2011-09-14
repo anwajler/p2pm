@@ -144,7 +144,7 @@ public class SuperPeerBootstrapServer extends BootstrapServer {
             byte[] ownPeerId = new byte[4];
             ownPeerId[3] = 1;
 
-            if (isBoostrappedCandidate(requestingPeerInfo)) {
+            /*if (isBoostrappedCandidate(requestingPeerInfo)) {
 
                 if (LOG.isDebugEnabled()) {
                     StringBuilder strb = new StringBuilder("Node has already been bootstrapped unhashedID=");
@@ -163,7 +163,7 @@ public class SuperPeerBootstrapServer extends BootstrapServer {
 
                 transactionTable.createTransactionAndFill(response, transactionListener, requestingPeerInfo.getAddressInfos(), ownPeerId, peerID);
 
-            } else {
+            } else {*/
 
                 BootstrapResponse response = request.createResponse(Response.RESPONSE_CODE_OK_BITS_ARRAY, sharedManager.getPeerInfo(false, false),
                         sharedManager.getOptions(), peerID);
@@ -207,7 +207,7 @@ public class SuperPeerBootstrapServer extends BootstrapServer {
                     transactionTable.createTransactionAndFill(ipr, transactionListener, superPeerInfo.getAddressInfos(), ownPeerId, peerID);
                 }*/
 
-            }
+            //}
 
         } else if (message instanceof LeaveIndication) {
 
@@ -248,7 +248,8 @@ public class SuperPeerBootstrapServer extends BootstrapServer {
 	public void onTimeSlot() {
 		transactionTable.onTimeSlot(this);
 
-        Date nowDate = new Date();
+        // Suppose for a time they are always available
+        /*Date nowDate = new Date();
         if ((nowDate.getTime() - this.lastPeerLookup.getTime())/1000 > NodeTimers.PEER_LOOKUP_BOOTSTRAP_TIMER_SECONDS) {
 
             PeerInfo ownPeerInfo = sharedManager.getPeerInfo(false, false);
@@ -281,6 +282,7 @@ public class SuperPeerBootstrapServer extends BootstrapServer {
                             }
 
                             removeSuperPeer(spBAW);
+                            removeBootrappedCandidate(spPI);
 
                         }
 
@@ -298,7 +300,7 @@ public class SuperPeerBootstrapServer extends BootstrapServer {
             }
 
             this.lastPeerLookup = nowDate;
-        }
+        }*/
 	}
 
     @Override
@@ -307,6 +309,15 @@ public class SuperPeerBootstrapServer extends BootstrapServer {
 
     @Override
     public void updateTables(Vector<PeerInfo> peerInfos) {
+    }
+
+    @Override
+    protected void saveBootstrapCandidate(PeerInfo peerInfo) {
+        ByteArrayWrapper wrappedID = new ByteArrayWrapper(peerInfo.getPeerID().getPeerIDBytes());
+        if (this.bootstrapCandidates.containsKey(wrappedID)) {
+            LOG.warn("Bootstrapped a peer that was already bootstrapped in the past");
+        }
+        this.bootstrapCandidates.put(wrappedID, peerInfo);
     }
 }
 
@@ -320,7 +331,9 @@ class SuperPeerEntry {
     }
 
     public void addPopulation(PeerInfo pi) {
-        this.population.add(pi);
+        if (!this.population.contains(pi)) {
+            this.population.add(pi);
+        }
     }
 
     public void removePopulation(PeerInfo pi) {

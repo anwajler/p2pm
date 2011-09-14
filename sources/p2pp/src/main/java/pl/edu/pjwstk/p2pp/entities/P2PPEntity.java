@@ -145,7 +145,11 @@ public abstract class P2PPEntity {
             boolean mayBeConsumed = generalAnalysis((P2PPMessage) message);
 
             if (mayBeConsumed) {
-                consume(message);
+                try {
+                    consume(message);
+                } catch (Throwable e) {
+                    LOG.error("Error while consuming " + message, e);
+                }
             }
         }
         return consumed;

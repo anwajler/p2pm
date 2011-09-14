@@ -26,6 +26,7 @@ public class PSNode {
     public static final String EVENT_ONPUBSUBERROR = "psnode.onpubsuberror";
     public static final String EVENT_ONTOPICNOTIFY = "psnode.ontopicnotify";
     public static final String EVENT_ONDELIVER = "psnode.ondeliver";
+    public static final String EVENT_ONOVERLAYERROR = "psnode.ondeliver";
 
     private String userId;
     private int port;

@@ -1,5 +1,7 @@
 .gradle/
 build/
+dist/
+out/
 sources/jcsync/build/
 sources/p2pp/build/
 sources/pubsub/build/

@@ -27,7 +27,12 @@ task wrapper(type: Wrapper) {
 }
 
 task makeDist {
-    File dist = mkdir(distDir)
+    onlyIf {
+        !(new File(distDir)).exists()
+    }
+    doLast {
+        File dist = mkdir(distDir)
+    }
 }
 
 task explodedDist(dependsOn: [assemble,makeDist]) << {

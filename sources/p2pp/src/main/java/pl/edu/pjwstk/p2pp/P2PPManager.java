@@ -540,8 +540,8 @@ public class P2PPManager {
                 int size = entities.size();
                 for (int i = 0; i < size; i++) {
                     P2PPEntity current = entities.get(i);
-                    boolean consumed = current.onReceive(message);
                     current.writeDebugInformation(message, true);
+                    //boolean consumed = current.onReceive(message);
                     /*// if current entity consumed given message, other entities aren't informed
                     if (consumed) {
                         break;

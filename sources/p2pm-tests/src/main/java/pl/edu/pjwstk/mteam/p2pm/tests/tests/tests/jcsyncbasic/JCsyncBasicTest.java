@@ -84,14 +84,16 @@ public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
     public boolean test() {
 
         if (!verifyKwargs()) {
-            LOG.error("BasicTest cannot run with given arguments: " + this.kwargs);
+            LOG.error("JCSyncBasicTest cannot run with given arguments: " + this.kwargs);
             return false;
         }
+
         setCurrTimeMillis();
+
         this.p2pNode = initLayer(this.kwargs);
         if (this.p2pNode == null) return false;
+
         JCSyncCoreAlgorithm.init(this.p2pNode, this.p2pNode.getTcpPort() + 1);
-        //this.p2pNode.init();
         this.p2pNode.networkJoin();
         // See handleEvent()
 
@@ -121,16 +123,14 @@ public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
             }
         }
 
-        //this.p2pNode.publish("topicID", ("Message from node #" + this.p2pNode.getUserId()).getBytes());
-
-//        while (true) {
-//            try {
-//                sleep(1000);
-//            } catch (Throwable e) {
-//                break;
-//            }
-//        }
-        snooze(5000);
+        while (true) {
+            try {
+                sleep(1000);
+            } catch (Throwable e) {
+                break;
+            }
+        }
+        //snooze(5000);
 
         return true;
     }
@@ -159,7 +159,6 @@ public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
         if (PSNode.EVENT_ONJOIN.equals(eventType)) {
 
             this.testState = TestState.JOINED;
-            //this.psNode.subscribe("topicID", -1);
 
         } else if (PSNode.EVENT_ONTOPICCREATE.equals(eventType)) {
 
@@ -272,7 +271,6 @@ public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
         JCSyncHashMap coll_HS;
         try {
             coll = createCollection(collName, declaredCollectionClass, (Parameter[]) null);
-            testState = TestState.CREATEDCOLLECTION;
             setNextTimeMillis();
             logOperationTime("create collection: " + collName);
         } catch (CollectionExistException ex) {
@@ -287,14 +285,15 @@ public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
         try {
             coll_HS = (JCSyncHashMap) coll;
         } catch (Exception e) {
-            LOG.error("[TestError] Invalid collection type,found " + coll.getDeclaredClass().getName() + " , reuired: " + declaredCollectionClass.getName());
+            LOG.error("[TestError] Invalid collection type,found " + coll.getDeclaredClass().getName() + " , required: " + declaredCollectionClass.getName());
             return false;
         }
         if (coll_HS.getcollectionID().getID().compareTo(collName) != 0) {
-            LOG.error("[TestError] Invalid collection name,found " + coll_HS.getcollectionID().getID() + " , reuired: " + collName);
+            LOG.error("[TestError] Invalid collection name,found " + coll_HS.getcollectionID().getID() + " , required: " + collName);
         }
         this.collection = coll_HS;
         this.collection.addStateListener(collectionListener);
+        this.testState = TestState.CREATEDCOLLECTION;
         return true;
     }
 

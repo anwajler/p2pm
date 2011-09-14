@@ -53,6 +53,7 @@ public class SuperPeerPeer extends Peer {
     private final Map<PeerID, PeerInfo> peerIndex = new ConcurrentHashMap<PeerID,PeerInfo>();
     private final Map<ResourceID,PeerInfo> resourceIndex = new ConcurrentHashMap<ResourceID,PeerInfo>();
     private final Map<PeerInfo,Collection<ResourceID>> reverseResourceIndex = new ConcurrentHashMap<PeerInfo,Collection<ResourceID>>();
+    private Date lastSuperPeerLookup = new Date();
 
     private final TransactionListener joinTransactionListener = new TransactionListener() {
 
@@ -88,8 +89,8 @@ public class SuperPeerPeer extends Peer {
                         public Object getValue() {return value;}
                         public void setValue(Object value) {this.value = value;}
                     };
-                    error.setValue(((LookupObjectRequest) request).getResourceLookup());
-                    callback.errorCallback(error, P2PPNodeCallback.RESOURCE_LOOKUP_ERROR_CODE);
+                    error.setValue((JoinRequest) request);
+                    callback.errorCallback(error, P2PPNodeCallback.JOIN_ERROR_CODE);
                 }
 
             } catch (Throwable e) {
@@ -127,7 +128,7 @@ public class SuperPeerPeer extends Peer {
                             transactionTable.createTransactionAndFill(lookupObjectRequest, lookupObjectTransactionListener, peerInfo.getAddressInfos(),
                                     ownPeerID, peerInfo.getPeerID().getPeerIDBytes());
 
-                        }  else if (responseCode == Response.RESPONSE_CODE_NOT_FOUND) {
+                        } else if (responseCode == Response.RESPONSE_CODE_NOT_FOUND) {
 
                             callback.onDeliverRequest(request, new ArrayList<ResourceObject>());
 
@@ -1207,11 +1208,11 @@ public class SuperPeerPeer extends Peer {
                 */
                 case JOINED_NODE_STATE: {
 
-                    if (bootstrapCandidates.size() == 0) {
-                        Date nowDate = new Date();
-                        if ((nowDate.getTime() - this.lastPeerLookup.getTime()) / 1000 >= NodeTimers.PEER_LOOKUP_BOOTSTRAP_TIMER_SECONDS) {
+                    Date nowDate = new Date();
 
-                            PeerInfo ownPeerInfo = sharedManager.getPeerInfo(true, true);
+                    if (bootstrapCandidates.size() == 0) { // I am Supper-Peer
+
+                        if ((nowDate.getTime() - this.lastPeerLookup.getTime()) / 1000 >= NodeTimers.PEER_LOOKUP_BOOTSTRAP_TIMER_SECONDS) {
 
                             for (Map.Entry<PeerID, PeerInfo> pEntry : this.peerIndex.entrySet()) {
 
@@ -1257,6 +1258,8 @@ public class SuperPeerPeer extends Peer {
                                                 }
                                             }
 
+                                            transactionTable.removeForPeerID(pID.getPeerIDBytes());
+
                                         }
 
                                     }
@@ -1265,16 +1268,86 @@ public class SuperPeerPeer extends Peer {
 
                                 byte[] ownPeerId = sharedManager.getPeerIDAsBytes();
 
+                                PeerInfo ownPeerInfo = sharedManager.getPeerInfo(true, true);
+
                                 LookupPeerRequest request = new LookupPeerRequest(P2PPMessage.P2PP_PROTOCOL_VERSION_1, false, true, false, (byte) 255, null,
                                         ownPeerId, GlobalConstants.isOverReliable, false, null, ownPeerInfo);
 
                                 transactionTable.createTransactionAndFill(request, lookupPeerTransactionListener, pPI.getAddressInfos(), ownPeerId,
-                                        pPI.getPeerID().getPeerIDBytes());
+                                        pID.getPeerIDBytes());
 
                             }
 
                             this.lastPeerLookup = nowDate;
                         }
+
+                    } else {
+
+                        if ((nowDate.getTime() - this.lastSuperPeerLookup.getTime()) / 1000 >= NodeTimers.PEER_LOOKUP_BOOTSTRAP_TIMER_SECONDS) {
+
+                            synchronized (this.resourceManager) {
+                                final List<ResourceObject> resources = this.resourceManager.getAllResourceObjects();
+                                if (resources != null && !resources.isEmpty()) {
+                                    ResourceObject resource = resources.get(0);
+
+                                    TransactionListener lookupIndexTransactionListener = new TransactionListener() {
+                                        public void transactionEnded(byte[] transactionID, byte transactionState, byte TransactionType, Request request,
+                                                                     Response response, TransactionTable transactionTable, P2PPEntity node) {
+                                            try {
+                                                if (transactionState == Transaction.TERMINATED_STATE) {
+                                                    if (response instanceof LookupIndexResponse) {
+                                                        int responseCode = response.getResponseCodeAsInt();
+                                                        if (responseCode == Response.RESPONSE_CODE_NOT_FOUND) {
+                                                            if (LOG.isDebugEnabled()) LOG.debug("Super-Peer doesn't have my resources. Republishing");
+                                                            for (ResourceObject r : resources) {
+                                                                publish(r.getUnhashedID(), r);
+                                                            }
+                                                        }
+                                                    } else if (response instanceof NextHopResponse) {
+                                                        if (LOG.isDebugEnabled()) LOG.debug("Received next hop response for lookup index");
+                                                        NextHopResponse nextHopResponse = (NextHopResponse) response;
+                                                        PeerInfo nextHop = nextHopResponse.getPeerInfo();
+                                                        transactionTable.createTransactionAndFill(request, this, nextHop.getAddressInfos(),
+                                                                sharedManager.getPeerIDAsBytes(), nextHop.getPeerID().getPeerIDBytes());
+                                                    }
+                                                } // if transaction ended with an error
+                                                else {
+                                                    ErrorInterface error = new ErrorInterface() {
+                                                        private Object value;
+                                                        public Object getValue() {return value;}
+                                                        public void setValue(Object value) {this.value = value;}
+                                                    };
+                                                    error.setValue(((LookupIndexRequest) request).getResourceLookup());
+                                                    callback.errorCallback(error, P2PPNodeCallback.RESOURCE_LOOKUP_ERROR_CODE);
+                                                }
+                                            } catch (Throwable e) {
+                                                StringBuilder strb = new StringBuilder("Error while processing transaction in lookupIndexTransactionListener transactionID=");
+                                                strb.append(ByteUtils.byteArrayToHexString(transactionID));
+                                                strb.append(" transactionState=").append(transactionState).append(" request=").append(request).append(" response=").append(response);
+                                                strb.append(" transactionTable=").append(transactionTable).append(" nodeState=").append(node.getState());
+                                                LOG.error(strb.toString(), e);
+                                            }
+                                        }
+                                    };
+
+                                    if (LOG.isDebugEnabled()) LOG.debug("Checking Super-Peer for my resources");
+
+                                    RLookup resourceLookup = new RLookup(resource.getContentType(), resource.getContentSubtype(), resource.getResourceID(), resource.getOwner());
+                                    PeerInfo ownPeerInfo = sharedManager.getPeerInfo(true, true);
+                                    byte[] ownPeerID = ownPeerInfo.getPeerID().getPeerIDBytes();
+                                    LookupIndexRequest request = new LookupIndexRequest(P2PPMessage.P2PP_PROTOCOL_VERSION_1, false, true, false, (byte) 255, null,
+                                            ownPeerID, GlobalConstants.isOverReliable, false, null, sharedManager.getPeerInfo(true, true), resourceLookup);
+                                    PeerInfo nextHop = routingTable.getNextHop(resourceLookup.getResourceID().getResourceID());
+                                    if (nextHop != null) {
+                                        transactionTable.createTransactionAndFill(request, lookupIndexTransactionListener, nextHop.getAddressInfos(), ownPeerID,
+                                            nextHop.getPeerID().getPeerIDBytes());
+                                    }
+
+                                }
+                            }
+                            this.lastSuperPeerLookup = nowDate;
+                        }
+
                     }
 
                     break;
@@ -1414,6 +1487,10 @@ public class SuperPeerPeer extends Peer {
         if (indication instanceof LeaveIndication) {
 
             Collection<ResourceID> resourceIDs = this.reverseResourceIndex.get(peerInfo);
+
+            if (resourceIDs == null) {
+                LOG.warn("Received leave indication from already removed peer " + peerInfo);
+            }
 
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Peer received LeaveIndication from " + peerID + ". Removing it and it's " + resourceIDs.size() + " resources");
