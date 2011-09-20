@@ -6,4 +6,4 @@ for lib in build/libs/*.jar ; do
   LIBS="${LIBS}:$lib"
 done
 
-java -server -Xmx512m -Dfile.encoding=UTF-8 -cp $LIBS pl.edu.pjwstk.p2pp.launchers.CommandLineLauncher $*
+java -server -Xmx512m -Dfile.encoding=UTF-8 -cp $LIBS pl.edu.pjwstk.mteam.p2pm.tests.tests.Main $*
