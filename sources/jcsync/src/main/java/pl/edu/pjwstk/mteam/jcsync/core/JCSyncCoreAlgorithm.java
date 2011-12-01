@@ -65,7 +65,7 @@ public final class JCSyncCoreAlgorithm extends AbstractCoreAlgorithm implements 
         this.eventLocker = new WeakConsistencyModel();
     }
 
-    public static JCSyncCoreAlgorithm getInstance() {
+    public synchronized static JCSyncCoreAlgorithm getInstance() {
         if(!isInitialised) return null;
         //if (networkLayer.isConnected()) {
             instance = networkLayer.getJCSyncCore();
@@ -99,73 +99,78 @@ public final class JCSyncCoreAlgorithm extends AbstractCoreAlgorithm implements 
         this.customAlg = alg;
     }
 
+    @Override
     public void finalize() throws Throwable {
     }
 
     /**
-     *
-     * @param request
+     * {@inheritDoc} 
      */
+    @Override
     protected boolean onDeliverCreateCollectionIndication(JCSyncCreateCollectionIndication req) {
         this.collections.put(req.getCollectionID(), AbstractCollectionsManager.getInstance().makeCollection((JCSyncCreateCollectionMethod) req.getDetailedMethod()));
-        this.networkLayer.collectionCreated(req.getCollectionID(), req.getTransactionID_(), JCSyncConstans.J_RESP_GENERAL_SUCCESS);        
+        this.networkLayer.collectionCreated(req.getCollectionID(), req.getTransactionIdOfRequest(), JCSyncConstans.J_RESP_GENERAL_SUCCESS);        
         this.eventLocker.runEventInvoker(req.getCollectionID());
         return true;
     }
 
-    /**
-     *
-     * @param operation
-     */
-    protected boolean onDeliverOperation(JCSyncMessage operation) {
-        return false;
-    }
+//    /**
+//     *
+//     * @param operation
+//     */
+//    protected boolean onDeliverOperation(JCSyncMessage operation) {
+//        return false;
+//    }
+//
+//    /**
+//     *
+//     * @param notify
+//     */
+//    protected boolean onDeliverNotify(JCSyncMessage notify) {
+//        return false;
+//    }
 
     /**
-     *
-     * @param notify
+     * {@inheritDoc} 
      */
-    protected boolean onDeliverNotify(JCSyncMessage notify) {
-        return false;
-    }
-
-    /**
-     *
-     * @param response
-     */
+    @Override
     protected boolean onDeliverCreateCollectionResponse(JCSyncMessage response) {
         return false;
     }
 
     /**
-     *
-     * @param response
+     * {@inheritDoc} 
      */
+    @Override
     protected boolean onDeliverOperationResponse(JCSyncMessage response) {
         return false;
     }
 
     /**
-     *
-     * @param operation
+     * {@inheritDoc} 
      */
+    @Override
     protected boolean requestReadOperation(JCSyncMessage operation) {
         return false;
     }
 
     /**
-     *
-     * @param operation
+     * {@inheritDoc} 
      */
+    @Override
     protected boolean requestWriteOperation(JCSyncMessage operation) {
         return false;
     }
-
+    /**
+     * {@inheritDoc} 
+     */
     @Override
     protected boolean onDeliverResponse(JCSyncMessage msg) {
         return false;
     }
-
+    /**
+     * {@inheritDoc} 
+     */
     @Override
     public int requestCreateCollection(JCSyncCreateCollectionMethod op, boolean subscribe_if_exists, EventInvoker.InvokerType type, ConsistencyModel model) throws CollectionExistException {
         if (!this.collections.containsKey(op.getCollectionID())) {
@@ -225,7 +230,9 @@ public final class JCSyncCoreAlgorithm extends AbstractCoreAlgorithm implements 
         return 0;
     }
 
-
+    /**
+     * {@inheritDoc} 
+     */
     @Override
     public Object publishWriteOperation(JCSyncMethod operation) {
         Transaction trans = new Transaction(null, this.networkLayer.getTopic(operation.getCollectionID()));
@@ -238,6 +245,7 @@ public final class JCSyncCoreAlgorithm extends AbstractCoreAlgorithm implements 
         }
     }
 
+    @Override
     public JCSyncAbstractCollection getCollection(String id) {
         return this.collections.get(id);
     }
@@ -247,8 +255,11 @@ public final class JCSyncCoreAlgorithm extends AbstractCoreAlgorithm implements 
     }
 
 
-
-    private boolean onDeliverInvokeMethodIndication(JCSyncInvokeMethodIndication jcs) {
+    /**
+     * {@inheritDoc} 
+     */
+    @Override
+    protected boolean onDeliverInvokeMethodIndication(JCSyncInvokeMethodIndication jcs) {
         //only sent to MethodInvoker        
         JCSyncWriteMethod wm = (JCSyncWriteMethod) jcs.getDetailedMethod();
         Object retVal;
@@ -267,7 +278,10 @@ public final class JCSyncCoreAlgorithm extends AbstractCoreAlgorithm implements 
         }
         return false;
     }
-
+    
+    /**
+     * {@inheritDoc} 
+     */
     @Override
     public void invoke(JCSyncInvokeMethodIndication jcs) {
         JCSyncWriteMethod wm = (JCSyncWriteMethod) jcs.getDetailedMethod();
@@ -281,13 +295,13 @@ public final class JCSyncCoreAlgorithm extends AbstractCoreAlgorithm implements 
 
             //if (coll != null) {
                 ArrayList<JCSyncCollectionStateListener> listeners = coll.getListeners();
-                if (this.eventLocker.onDeliverWriteResults(jcs.getCollectionID(), jcs.getTransactionID_(), 0, retVal)) {
+                if (this.eventLocker.onDeliverWriteResults(jcs.getCollectionID(), jcs.getTransactionIdOfRequest(), 0, retVal)) {
                     for (int i = 0; i < listeners.size(); i++) {
-                        listeners.get(i).onLocalStateUpdated(coll, wm);
+                        listeners.get(i).onLocalStateUpdated(coll, wm,retVal);
                     }
                 } else {
                     for (int i = 0; i < listeners.size(); i++) {
-                        listeners.get(i).onRemoteStateUpdated(coll, wm);
+                        listeners.get(i).onRemoteStateUpdated(coll, wm,retVal);
                     }
                 }
             //}
@@ -305,6 +319,7 @@ public final class JCSyncCoreAlgorithm extends AbstractCoreAlgorithm implements 
         return this.networkLayer.iAmRoot(collectionID);
     }
 
+    @Override
     public void onDeliverJCSyncMessage(JCSyncMessageCarrier req) {
         short msgType = req.getInternalMessage().getMessageType();
         boolean iAmRoot = iAmRoot(req.getCollectionID());

@@ -7,7 +7,9 @@ import pl.edu.pjwstk.mteam.jcsync.core.JCSyncCoreAlgorithm;
 import pl.edu.pjwstk.mteam.jcsync.core.messages.JCSyncInvokeMethodIndication;
 
 /**
- *
+ * The implementation of the <tt>EventInvoker</tt> that provides events queuing.
+ * All of delivered methods to invoke is passed to the queue, 
+ * which ensures that all methods will be invoked in orderly manner.  
  * @author Piotr Bucior
  * @version 1.0
  */
@@ -25,6 +27,12 @@ public class QueuedEventInvoker extends EventInvoker {
         eventConsumers_group.setMaxPriority(Thread.MAX_PRIORITY - 1);
     }
 
+    /**
+     * Create new instance of <tt>QueuedEventInvoker</tt> with given arguments.
+     * @param coll collection on which the invoker will works
+     * @param collID collection ID
+     * @param type <tt>EventInvoker</tt> type
+     */
     public QueuedEventInvoker(JCSyncAbstractCollection coll, String collID, InvokerType type) {
         super(coll, collID, type);
         this.events_queue = new PriorityBlockingQueue<JCSyncInvokeMethodIndication>(500,new Comparator<JCSyncInvokeMethodIndication>() {

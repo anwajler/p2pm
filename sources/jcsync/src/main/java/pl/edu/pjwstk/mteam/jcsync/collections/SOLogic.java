@@ -6,7 +6,7 @@ import java.util.Observable;
 /**
  * The "Shared-Object Logic" class provide features which are needed to
  * proper work in overlay notification about the changes inside all of them.
- * <b>All of the collection objects (keys, values) must inherit this class.</b>
+ * <b>All of the collection objects (keys, values) must inherit this class if that motion is required.</b>
  *
  * 
  * @author Piotr Bucior

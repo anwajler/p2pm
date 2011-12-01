@@ -18,10 +18,36 @@ import pl.edu.pjwstk.mteam.jcsync.lang.reflect.JCSyncMethod;
 public class JCSyncCreateCollectionRequest extends JCSyncMessage {
     private JCSyncCreateCollectionMethod creationDetails;
     
+    /**
+     * called after decoding message from byte array.
+     * @param src object that represents information about the source of this 
+     * message.{@link pl.edu.pjwstk.mteam.core.NodeInfo NodeInfo} 
+     * as a used object type.
+     * @param dst object that represents information about the destination of this 
+     * message.{@link pl.edu.pjwstk.mteam.core.NodeInfo NodeInfo} 
+     * as a used object type.
+     * @param collID collection identifier
+     * @param transID current transaction
+     * @param method object holds all information required to create collection
+     * @param publisher publisher name
+     */
     public JCSyncCreateCollectionRequest(Object src, Object dst, String collID, int transID, String publisher){
         super(src, dst, collID, transID, JCSyncConstans.JCSYNC_CREATE_COLLECTION_REQUEST, publisher);
 
     }
+    /**
+     * new instance is created by using this constructor when the message is prepared to send
+     * @param src object that represents information about the source of this 
+     * message.{@link pl.edu.pjwstk.mteam.core.NodeInfo NodeInfo} 
+     * as a used object type.
+     * @param dst object that represents information about the destination of this 
+     * message.{@link pl.edu.pjwstk.mteam.core.NodeInfo NodeInfo} 
+     * as a used object type.
+     * @param collID collection identifier
+     * @param transID current transaction
+     * @param publisher publisher name     
+     * @param method object that holds all information required to create collection
+     */
     public JCSyncCreateCollectionRequest(Object src, Object dst, String collID, int transID, JCSyncCreateCollectionMethod method, String publisher){
         super(src, dst, collID, transID, JCSyncConstans.JCSYNC_CREATE_COLLECTION_REQUEST, publisher);
         this.creationDetails = method;

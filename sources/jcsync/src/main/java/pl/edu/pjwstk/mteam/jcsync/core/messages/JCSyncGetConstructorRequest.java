@@ -1,8 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
-
 package pl.edu.pjwstk.mteam.jcsync.core.messages;
 
 
@@ -17,11 +12,24 @@ import pl.edu.pjwstk.mteam.jcsync.core.JCSyncConstans;
 import pl.edu.pjwstk.mteam.jcsync.lang.reflect.JCSyncMethod;
 
 /**
- *
- * @author pb
+ * This message is used to get the constructor for the subscribed collection 
+ * from another node.
+ * @author Piotr Bucior
  */
 public class JCSyncGetConstructorRequest  extends JCSyncMessage {
 
+    /**
+     * create new instance by given params.
+     * @param src object that represents information about the source of this 
+     * message.{@link pl.edu.pjwstk.mteam.core.NodeInfo NodeInfo} 
+     * as a used object type.
+     * @param dst object that represents information about the destination of this 
+     * message.{@link pl.edu.pjwstk.mteam.core.NodeInfo NodeInfo} 
+     * as a used object type.
+     * @param collID collection identifier
+     * @param transID current transaction
+     * @param pbl publisher name
+     */
     public JCSyncGetConstructorRequest(Object src, Object dst, String collID, int transID, String pbl) {
         super(src, dst, collID, transID, JCSyncConstans.JCSYNC_GET_CONSTRUCTOR_REQUEST, pbl);
 

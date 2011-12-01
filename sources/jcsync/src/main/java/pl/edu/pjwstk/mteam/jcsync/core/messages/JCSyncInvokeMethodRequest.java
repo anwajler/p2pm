@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package pl.edu.pjwstk.mteam.jcsync.core.messages;
 
 import java.io.ByteArrayInputStream;
@@ -16,17 +12,42 @@ import pl.edu.pjwstk.mteam.jcsync.lang.reflect.JCSyncMethod;
 
 /**
  *
- * @author pb
+ * @author Piotr Bucior
  */
 public class JCSyncInvokeMethodRequest extends JCSyncMessage {
 
     private JCSyncMethod methodDetails;
 
+    /**
+     * Used when the message is decoded from the byte array
+       * @param src object that represents information about the source of this 
+     * message.{@link pl.edu.pjwstk.mteam.core.NodeInfo NodeInfo} 
+     * as a used object type.
+     * @param dst object that represents information about the destination of this 
+     * message.{@link pl.edu.pjwstk.mteam.core.NodeInfo NodeInfo} 
+     * as a used object type.
+     * @param collID collection identifier
+     * @param transID current transaction
+     * @param pbl publisher name
+     */
     public JCSyncInvokeMethodRequest(Object src, Object dst, String collID, int transID, String pbl) {
         super(src, dst, collID, transID, JCSyncConstans.JCSYNC_INVOKE_WRITE_METHOD_REQ, pbl);
 
     }
 
+    /**
+     * called when the message is prepared to send
+     * @param src object that represents information about the source of this 
+     * message.{@link pl.edu.pjwstk.mteam.core.NodeInfo NodeInfo} 
+     * as a used object type.
+     * @param dst object that represents information about the destination of this 
+     * message.{@link pl.edu.pjwstk.mteam.core.NodeInfo NodeInfo} 
+     * as a used object type.
+     * @param collID collection identifier
+     * @param transID current transaction
+     * @param method object that holds all information about method to invoke
+     * @param pbl publisher name     
+     */
     public JCSyncInvokeMethodRequest(Object src, Object dst, String collID, int transID, JCSyncMethod method, String pbl) {
         super(src, dst, collID, transID, JCSyncConstans.JCSYNC_INVOKE_WRITE_METHOD_REQ, pbl);
         this.methodDetails = method;

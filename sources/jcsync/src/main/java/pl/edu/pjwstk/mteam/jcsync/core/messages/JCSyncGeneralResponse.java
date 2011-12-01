@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package pl.edu.pjwstk.mteam.jcsync.core.messages;
 
 import java.io.ByteArrayInputStream;
@@ -9,23 +5,32 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import pl.edu.pjwstk.mteam.core.NodeInfo;
 import pl.edu.pjwstk.mteam.jcsync.core.JCSyncConstans;
 import pl.edu.pjwstk.mteam.jcsync.lang.reflect.JCSyncMethod;
 
 /**
  *
- * @author pb
+ * @author Piotr Bucior
  */
 public class JCSyncGeneralResponse extends JCSyncMessage {
 
     private short respCode;
     private short methodDetails;
 
+    /**
+     * 
+     * @param src object that represents information about the source of this 
+     * message.{@link pl.edu.pjwstk.mteam.core.NodeInfo NodeInfo} 
+     * as a used object type.
+     * @param dst object that represents information about the destination of this 
+     * message.{@link pl.edu.pjwstk.mteam.core.NodeInfo NodeInfo} 
+     * as a used object type.
+     * @param collID collection identifier
+     * @param transID current transaction
+     * @param respCode response code assigned to this message
+     * @param details determines for which message type the response is
+     * @param publisher publisher name
+     */
     public JCSyncGeneralResponse(Object src, Object dst, String collID, int transID, short respCode, short details, String publisher) {
         super(src, dst, collID, transID, JCSyncConstans.JCSYNC_GENERIC_RESPONSE, publisher);
         this.respCode = respCode;

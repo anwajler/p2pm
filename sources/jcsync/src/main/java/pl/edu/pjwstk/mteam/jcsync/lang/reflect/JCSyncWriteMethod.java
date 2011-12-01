@@ -3,7 +3,7 @@ package pl.edu.pjwstk.mteam.jcsync.lang.reflect;
 import java.io.Serializable;
 
 /**
- *
+ * keeps all information to invoke method such as generic method name, its arguments.
  * @author Piotr Bucior
  * @version 1.0
  */
@@ -12,6 +12,13 @@ public class JCSyncWriteMethod extends JCSyncMethod implements Serializable{
     private Class collectionClass;
     private Parameter[] params = null;    
 
+    /**
+     * create new method with given arguments
+     * @param collID collection ID for which the method is created
+     * @param collClass collection class for which the method is created
+     * @param methodName generic method name (from Java Reflective API)
+     * @param params variable count of parameters
+     */
     public JCSyncWriteMethod(String collID, Class collClass, String methodName, Parameter... params){
         super(collID, WRITE_OPERATION);
         this.methodGenericName = methodName;
@@ -48,15 +55,27 @@ public class JCSyncWriteMethod extends JCSyncMethod implements Serializable{
             sb = null;
         }
     }
+    /**
+     * returns generic method name
+     */
     public String getGenericMethodName(){
         return this.methodGenericName;
     }
+    /**
+     * returns collection class for which the method is created
+     */
     public Class getDeclaredClass(){
         return this.collectionClass;
     }
+    /**
+     * returns given parameters as array
+     */
     public Parameter[] getParameters(){
         return this.params;
     }
+    /**
+     * returns method arguments classes types as array
+     */
     public Class[] getParamTypes(){
         Class[] param_types;
         if(params==null) param_types = null;
@@ -68,6 +87,9 @@ public class JCSyncWriteMethod extends JCSyncMethod implements Serializable{
         }
         return param_types;
     }
+    /**
+     * returns arguments values classes as array
+     */
     public Object [] getParamValues(){
         Object[] param_values;
         if(params==null) param_values = null;

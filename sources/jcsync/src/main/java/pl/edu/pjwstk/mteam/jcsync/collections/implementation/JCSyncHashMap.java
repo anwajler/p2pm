@@ -16,6 +16,7 @@ import pl.edu.pjwstk.mteam.jcsync.lang.reflect.JCSyncCreateCollectionMethod;
 import pl.edu.pjwstk.mteam.jcsync.lang.reflect.JCSyncMethod;
 import java.util.HashMap;
 import java.util.ArrayList;
+import pl.edu.pjwstk.mteam.jcsync.collections.CollectionMethodInvokingLogic;
 import pl.edu.pjwstk.mteam.jcsync.collections.JCSyncAbstractCollection;
 import pl.edu.pjwstk.mteam.jcsync.collections.SOLogic;
 import pl.edu.pjwstk.mteam.jcsync.lang.reflect.JCSyncWriteMethod;
@@ -23,10 +24,12 @@ import pl.edu.pjwstk.mteam.jcsync.lang.reflect.Parameter;
 import pl.edu.pjwstk.mteam.pubsub.core.Topic;
 
 /**
+ * @param <K> 
+ * @param <V> 
  * @author Piotr Bucior
  * @version 1.0
  */
-public class JCSyncHashMap<K extends SOLogic, V extends SOLogic> extends java.util.HashMap implements JCSyncAbstractCollection {
+public class JCSyncHashMap<K extends SOLogic, V extends SOLogic> extends java.util.HashMap implements JCSyncAbstractCollection,CollectionMethodInvokingLogic {
 
     private final static AbstractCollectionsManager cM = AbstractCollectionsManager.getInstance();
     private HashMap collection;
@@ -39,7 +42,14 @@ public class JCSyncHashMap<K extends SOLogic, V extends SOLogic> extends java.ut
     private volatile long operationID = 0;
     /**
      * Constructs an empty HashMap with the default initial capacity (16) and the default load factor (0.75).
-     * @param id collection identifier in P2P overlay.
+     * @param collectionID 
+     * @param collectionConstructor 
+     * @param jcsDetails 
+     * @param params 
+     * @throws InstantiationException 
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     * @throws IllegalArgumentException  
      */
     protected JCSyncHashMap(Topic collectionID, Constructor collectionConstructor, JCSyncCreateCollectionMethod jcsDetails, Object... params) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         this.collectionID_ = collectionID.getID();
@@ -82,7 +92,9 @@ public class JCSyncHashMap<K extends SOLogic, V extends SOLogic> extends java.ut
     /**
      *
      * @param method
+     * @return  
      */
+    @Override
     public Object readOperation(JCSyncMethod method) {
         return null;
     }
@@ -90,7 +102,10 @@ public class JCSyncHashMap<K extends SOLogic, V extends SOLogic> extends java.ut
     /**
      *
      * @param method
+     * @return 
+     * @throws Exception  
      */
+    @Override
     public Object writeOperation(JCSyncWriteMethod method) throws Exception {
         try {
             return JCSyncHashMap.cM.requestOperation(method, collectionID_);
@@ -98,22 +113,135 @@ public class JCSyncHashMap<K extends SOLogic, V extends SOLogic> extends java.ut
         }
     }
 
+    /**
+     * 
+     */
     protected void unlockRead() {
     }
 
+    /**
+     * 
+     */
     protected void unlockWrite() {
     }
 
+    /**
+     * 
+     * @return
+     */
     public HashMap test_getCollection() {
         return this.collection;
     }
 
+    /**
+     * 
+     * @return
+     */
     public String test_getCollectionID_() {
         return this.collectionID_;
     }
 
     public pl.edu.pjwstk.mteam.pubsub.core.Topic getcollectionID() {
         return (Topic) collectionIdentifier;
+    }
+    public AbstractCollectionsManager getCollectionManager() {
+        return cM;
+    }
+
+    public Constructor getConstructor(String genericName) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    public Method getMethod(String genericName) {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public Class getDeclaredClass() {
+        return declaredClass;
+    }
+
+    @Override
+    public Object invokeMethod(Method m,long operationID, boolean localOperation, Object... params) throws Exception {
+        try{
+        return m.invoke(this.collection, params);
+        }finally{
+            this.operationID = operationID;
+        }
+    }
+
+    @Override
+    public int size() {
+        return this.collection.size();
+    }
+
+    public void addStateListener(JCSyncCollectionStateListener lst) {
+        if (!this.listeners.contains(lst)) {
+            this.listeners.add(lst);
+        }
+    }
+
+    public boolean removeStateListener(JCSyncCollectionStateListener lst) {
+        return this.listeners.remove(lst);
+    }
+
+    public ArrayList<JCSyncCollectionStateListener> getListeners() {
+        ArrayList<JCSyncCollectionStateListener> r = new ArrayList<JCSyncCollectionStateListener>();
+        r.addAll(this.listeners);
+        return r;
+    }
+
+//    public void setConstructorMethod(JCSyncCreateCollectionMethod method) {
+//        this.constructorDetails = method;
+//    }
+    public JCSyncCreateCollectionMethod getConstructorDetails() {
+        return this.constructorDetails;
+    }
+    private byte[] raw_data;
+
+    public byte[] serialize() {
+        ByteArrayOutputStream ostream = new ByteArrayOutputStream();
+        //DataOutputStream dtstr = new DataOutputStream(ostream);
+        ObjectOutputStream ostr = null;
+        raw_data = null;
+        try {
+            ostr = new ObjectOutputStream(ostream);
+            ostr.writeObject(this.collection);
+            raw_data = ostream.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                ostream.close();
+            } catch (IOException ex) {
+            }
+            ostream = null;
+            ostr = null;
+        }
+        return raw_data;
+    }
+    public final void deserialize(byte[] data) {
+        ByteArrayInputStream istream = new ByteArrayInputStream(data);
+        ObjectInputStream ostr_ = null;
+        try {
+            ostr_ = new ObjectInputStream(istream);
+            this.collection = (HashMap) ostr_.readObject();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally{
+            try {
+                if(ostr_!=null)
+                ostr_.close();
+            } catch (IOException ex) {
+            }
+            istream = null;
+            ostr_ = null;
+        }
+    }
+
+    public long getCurrentOperationID() {
+        return this.operationID;
     }
 
     // ================================================
@@ -137,6 +265,7 @@ public class JCSyncHashMap<K extends SOLogic, V extends SOLogic> extends java.ut
     /**
      * Returns a shallow copy of this HashMap instance: the keys and values themselves are not cloned.
      * @return shallow copy of this hashmap
+     * @deprecated 
      */
     @Override
     @Deprecated
@@ -279,7 +408,9 @@ public class JCSyncHashMap<K extends SOLogic, V extends SOLogic> extends java.ut
         }
     }
     //TODO implement all below methods
-
+    /**
+     * @inheritDoc 
+     */
     @Override
     public Object remove(Object key) {
         try {
@@ -300,104 +431,5 @@ public class JCSyncHashMap<K extends SOLogic, V extends SOLogic> extends java.ut
         } finally {
             this.unlockRead();
         }
-    }
-
-    public AbstractCollectionsManager getCollectionManager() {
-        return cM;
-    }
-
-    public Constructor getConstructor(String genericName) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    public Method getMethod(String genericName) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public Class getDeclaredClass() {
-        return declaredClass;
-    }
-
-    public Object invokeMethod(Method m,long operationID, boolean localOperation, Object... params) throws Exception {
-        try{
-        return m.invoke(this.collection, params);
-        }finally{
-            this.operationID = operationID;
-        }
-    }
-
-    @Override
-    public int size() {
-        return this.collection.size();
-    }
-
-    public void addStateListener(JCSyncCollectionStateListener lst) {
-        if (!this.listeners.contains(lst)) {
-            this.listeners.add(lst);
-        }
-    }
-
-    public boolean removeStateListener(JCSyncCollectionStateListener lst) {
-        return this.listeners.remove(lst);
-    }
-
-    public ArrayList<JCSyncCollectionStateListener> getListeners() {
-        ArrayList<JCSyncCollectionStateListener> r = new ArrayList<JCSyncCollectionStateListener>();
-        r.addAll(this.listeners);
-        return r;
-    }
-
-//    public void setConstructorMethod(JCSyncCreateCollectionMethod method) {
-//        this.constructorDetails = method;
-//    }
-    public JCSyncCreateCollectionMethod getConstructorDetails() {
-        return this.constructorDetails;
-    }
-    private byte[] raw_data;
-
-    public byte[] serialize() {
-        ByteArrayOutputStream ostream = new ByteArrayOutputStream();
-        //DataOutputStream dtstr = new DataOutputStream(ostream);
-        ObjectOutputStream ostr = null;
-        raw_data = null;
-        try {
-            ostr = new ObjectOutputStream(ostream);
-            ostr.writeObject(this.collection);
-            raw_data = ostream.toByteArray();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                ostream.close();
-            } catch (IOException ex) {
-            }
-            ostream = null;
-            ostr = null;
-        }
-        return raw_data;
-    }
-    public final void deserialize(byte[] data) {
-        ByteArrayInputStream istream = new ByteArrayInputStream(data);
-        ObjectInputStream ostr_ = null;
-        try {
-            ostr_ = new ObjectInputStream(istream);
-            this.collection = (HashMap) ostr_.readObject();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        finally{
-            try {
-                if(ostr_!=null)
-                ostr_.close();
-            } catch (IOException ex) {
-            }
-            istream = null;
-            ostr_ = null;
-        }
-    }
-
-    public long getCurrentOperationID() {
-        return this.operationID;
-    }
+    }    
 }

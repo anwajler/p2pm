@@ -172,13 +172,24 @@ public class JCSyncMainTest {
             }
             this.coll1.addStateListener(new JCSyncCollectionStateListener() {
 
-                public void onRemoteStateUpdated(JCSyncAbstractCollection collection, JCSyncMethod details) {
+                public void onRemoteStateUpdated(JCSyncAbstractCollection collection, JCSyncMethod details,Object retVal) {
                     logger.addInfo("************ ON REMOTE UPDATE: \noperationID: "+coll1.getCurrentOperationID()+"\nDetails:"
                             +((JCSyncWriteMethod)details).toString()+"\n");
+                    
+                    String collectionID = collection.getcollectionID().getID();
+                    
+                    if(details.getType()==JCSyncMethod.WRITE_OPERATION){
+			String methodName = ((JCSyncWriteMethod)details).getGenericMethodName();
+                        Parameter[] params = ((JCSyncWriteMethod)details).getParameters();
+                        Object returnedValue = retVal;
+			
+                    }
+                    String methodName ="";
+                    logger.addInfo("Collection "+collection.getcollectionID().getID()+ "updated, details");
 
                 }
 
-                public void onLocalStateUpdated(JCSyncAbstractCollection collection, JCSyncMethod details) {
+                public void onLocalStateUpdated(JCSyncAbstractCollection collection, JCSyncMethod details,Object retVal) {
                     logger.addInfo("************ ON LOCAL  UPDATE: \noperationID: "+coll1.getCurrentOperationID()+"\nDetails:"
                             +((JCSyncWriteMethod)details).toString()+"\n");
                 }

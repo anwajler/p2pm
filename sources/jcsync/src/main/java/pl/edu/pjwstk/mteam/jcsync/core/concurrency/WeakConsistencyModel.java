@@ -2,9 +2,9 @@ package pl.edu.pjwstk.mteam.jcsync.core.concurrency;
 
 import java.util.HashMap;
 import java.util.concurrent.Semaphore;
-import pl.edu.pjwstk.mteam.jcsync.collections.JCSyncAbstractCollection;
 
 /**
+ * <tt>ConsistencyModel</tt> implementation
  * @author Piotr Bucior
  * @version 1.0
  */
@@ -15,6 +15,9 @@ public class WeakConsistencyModel extends ConsistencyModel {
     private static final HashMap<Key, Locker> writeLockers = new HashMap<Key, Locker>(100);
     private static final HashMap<String, EventInvoker> invokers = new HashMap<String, EventInvoker>(25);
 
+    /**
+     * blank constructor
+     */
     public WeakConsistencyModel() {
         super();
     }

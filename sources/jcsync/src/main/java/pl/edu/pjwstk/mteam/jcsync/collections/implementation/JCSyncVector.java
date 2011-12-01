@@ -4,6 +4,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Vector;
+import pl.edu.pjwstk.mteam.jcsync.collections.CollectionMethodInvokingLogic;
 import pl.edu.pjwstk.mteam.jcsync.collections.JCSyncCollectionStateListener;
 import pl.edu.pjwstk.mteam.jcsync.lang.reflect.JCSyncCreateCollectionMethod;
 import pl.edu.pjwstk.mteam.jcsync.lang.reflect.JCSyncMethod;
@@ -16,7 +17,7 @@ import pl.edu.pjwstk.mteam.pubsub.core.Topic;
  * @author Piotr Bucior
  * @version 1.0
  */
-    public class JCSyncVector extends java.util.Vector implements JCSyncAbstractCollection {
+    public class JCSyncVector extends java.util.Vector implements JCSyncAbstractCollection,CollectionMethodInvokingLogic {
         private final static AbstractCollectionsManager cM = AbstractCollectionsManager.getInstance();
         private final Vector collection;
         private final String collectionID_;
@@ -31,6 +32,7 @@ import pl.edu.pjwstk.mteam.pubsub.core.Topic;
             this.collection = (Vector) collectionConstructor.newInstance(params);
         }
 
+    @Override
 	public void finalize() throws Throwable {
 		super.finalize();
 	}
@@ -38,6 +40,7 @@ import pl.edu.pjwstk.mteam.pubsub.core.Topic;
 	 * 
 	 * @param method
 	 */
+    @Override
 	public Object  readOperation(JCSyncMethod method){
             return null;
 	}
@@ -46,6 +49,7 @@ import pl.edu.pjwstk.mteam.pubsub.core.Topic;
 	 * 
 	 * @param method
 	 */
+    @Override
 	public Object writeOperation(JCSyncWriteMethod method){
             return null;
 	}

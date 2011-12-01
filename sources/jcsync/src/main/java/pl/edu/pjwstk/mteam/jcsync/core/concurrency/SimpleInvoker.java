@@ -10,12 +10,20 @@ import pl.edu.pjwstk.mteam.jcsync.core.JCSyncCoreAlgorithm;
 import pl.edu.pjwstk.mteam.jcsync.core.messages.JCSyncInvokeMethodIndication;
 
 /**
- *
+ * The implementation of the <tt>EventInvoker</tt> don't provide any queuing/ordering mechanism.
+ * In this implementation methods are executed immediately after the transfer to this class.
+ * 
  * @author Piotr Bucior
  * @version 1.0
  */
 public class SimpleInvoker extends EventInvoker{
 
+    /**
+     * Create new instance of <tt>SimpleEventInvoker</tt> with given arguments.
+     * @param coll collection on which the invoker will works
+     * @param collID collection ID
+     * @param type <tt>EventInvoker</tt> type
+     */
     public SimpleInvoker(JCSyncAbstractCollection coll, String collID, InvokerType type){
         super(coll, collID, type);
     }

@@ -5,10 +5,12 @@
 
 package pl.edu.pjwstk.mteam.jcsync.persistence.db;
 
+import pl.edu.pjwstk.mteam.jcsync.persistence.CollectionStateLogger;
+
 /**
  *
  * @author pb
  */
-public class DBCollectionStateLogger {
+public class DBCollectionStateLogger implements CollectionStateLogger{
 
 }
