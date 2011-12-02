@@ -26,12 +26,12 @@ public class DefaultCustomisableAlgorithm extends CustomisableAlgorithm {
     }
 
 
-    @Override
+    
     protected boolean onDeliverOperation(JCSyncMessage operation) {
         return false;
     }
 
-    @Override
+    
     protected boolean onDeliverNotify(JCSyncMessage notify) {
        return false;
     }
@@ -87,6 +87,11 @@ public class DefaultCustomisableAlgorithm extends CustomisableAlgorithm {
 
     @Override
     public int requestCreateCollection(JCSyncCreateCollectionMethod op, boolean subscribe_if_exist, InvokerType type, ConsistencyModel model) throws CollectionExistException {
+        throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    protected boolean onDeliverInvokeMethodIndication(JCSyncInvokeMethodIndication imi) {
         throw new UnsupportedOperationException("Not supported yet.");
     }
     /**
