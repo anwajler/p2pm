@@ -8,17 +8,17 @@ import pl.edu.pjwstk.mteam.p2pm.tests.tests.tests.jcsyncbasic.JCsyncBasicTest;
 
 /**
  *
- * @author pb
+ * @author Piotr Bucior
  */
 public class JCSyncBasicTestCollectionListener implements JCSyncCollectionStateListener {
 
     @Override
-    public void onRemoteStateUpdated(JCSyncAbstractCollection collection, JCSyncMethod details) {
+    public void onRemoteStateUpdated(JCSyncAbstractCollection collection, JCSyncMethod details, Object retVal) {
         EventManager.getInstance().addEventToQueue(JCsyncBasicTest.EVENT_JCSYNC_ON_REMOTE_UPDATE, details);
     }
 
     @Override
-    public void onLocalStateUpdated(JCSyncAbstractCollection collection, JCSyncMethod details) {
+    public void onLocalStateUpdated(JCSyncAbstractCollection collection, JCSyncMethod details, Object retVal) {
         EventManager.getInstance().addEventToQueue(JCsyncBasicTest.EVENT_JCSYNC_ON_LOCAL_UPDATE, details);
     }
     
