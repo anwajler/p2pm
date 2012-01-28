@@ -119,7 +119,9 @@ public abstract class Node implements P2PInterface{
 	 */
 	public Node(NodeCallback nCallback){
 		nodeCallbacks = new Vector<NodeCallback>();
-		nodeCallbacks.add(nCallback);
+                if(nCallback!=null){
+                    nodeCallbacks.add(nCallback);
+                }
 		pubsubManager = null;
 	}
 
@@ -225,6 +227,7 @@ public abstract class Node implements P2PInterface{
 	}
 
 	public void addCallback(NodeCallback nCallback){
+            if(nCallback!=null)
 		nodeCallbacks.add(nCallback);
 	}
 

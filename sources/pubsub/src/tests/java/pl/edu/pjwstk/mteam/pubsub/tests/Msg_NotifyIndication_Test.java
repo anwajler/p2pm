@@ -29,13 +29,16 @@ public class Msg_NotifyIndication_Test {
 		 * In case of AC modification message contains byte representation of new AC 
 		 * rules (ac.encode() method may be used)
 		 */
-		NotifyIndication req = new NotifyIndication(
-				 new NodeInfo("peer id", "10.69.40.111", 
-				 "tiia", 9070),
-				 new NodeInfo("peer id2", "10.69.40.222", 
-				 "tiia2", 9072), "Software developement",
-				 PubSubConstants.EVENT_REMOVETOPIC, null, true,
-				 new User("tiia"));
+//		NotifyIndication req = new NotifyIndication(
+//				 new NodeInfo("peer id", "10.69.40.111", 
+//				 "tiia", 9070),
+//				 new NodeInfo("peer id2", "10.69.40.222", 
+//				 "tiia2", 9072), "Software developement",
+//				 (short)PubSubConstants.EVENT_REMOVETOPIC, null, true,
+//				 new User("tiia"));
+                NotifyIndication req = new NotifyIndication(new NodeInfo("peer id", "10.69.40.111","tiia", 9070),
+                        new NodeInfo("peer id2", "10.69.40.222", "tiia2", 9072), 
+                        "Software developement", PubSubConstants.EVENT_REMOVETOPIC, null, true, new User("tiia"), 0);
 		
 		byte[] msgbytes = req.encode();
 		
@@ -56,7 +59,7 @@ public class Msg_NotifyIndication_Test {
 		                        "\tTopic id = "+received.getTopicID());
 		messageTestLogger.debug("\nPublish-subscribe notify message data:"+"\n"+
 				                "\tIs Historical = "+((NotifyIndication)received).isHistorical()+"\n"+
-                                "\tEvent type = "+PubSubConstants.STR_EVENT[((NotifyIndication)received).getEventType()]+"\n"+
+                                "\tEvent type = "+PubSubConstants.STR_EVENT.get(((NotifyIndication)received).getEventType())+"\n"+
                                 "\tPublisher's name = "+((NotifyIndication)received).getPublisher()+"\n"+
                                 "\tMessage = "+new String(((NotifyIndication)received).getMessage()));
 	}
@@ -70,7 +73,7 @@ public class Msg_NotifyIndication_Test {
 				 new NodeInfo("peer id2", "10.69.40.222", 
 				 "tiia2", 9072), "Software developement",
 				 PubSubConstants.EVENT_CUSTOM, eventMessage.getBytes(), false,
-				 new User("ziuta"));
+				 new User("ziuta"),1);
 		
 		byte[] msgbytes = req.encode();
 		
@@ -92,7 +95,7 @@ public class Msg_NotifyIndication_Test {
 		                        "\tTopic id = "+received.getTopicID());
 		messageTestLogger.trace("\nPublish-subscribe notify message data:"+"\n"+
 				                "\tIs Historical = "+((NotifyIndication)received).isHistorical()+"\n"+
-                                "\tEvent type = "+PubSubConstants.STR_EVENT[((NotifyIndication)received).getEventType()]+"\n"+
+                                "\tEvent type = "+PubSubConstants.STR_EVENT.get(((NotifyIndication)received).getEventType())+"\n"+
                                 "\tPublisher's name = "+((NotifyIndication)received).getPublisher()+"\n"+
                                 "\tMessage = "+new String(((NotifyIndication)received).getMessage()));
 	}

@@ -16,10 +16,10 @@ import pl.edu.pjwstk.p2pp.util.ByteUtils;
 public class SuperPeerRoutingTable extends RoutingTable {
 
     private Logger logger = org.apache.log4j.Logger.getLogger(SuperPeerRoutingTable.class);
-
+    
     List<PeerInfo> peers = new ArrayList<PeerInfo>();
 
-
+    
     @Override
     public void addPeerInfo(PeerInfo peerInfo) {
         if (peerInfo != null) {
@@ -104,7 +104,7 @@ public class SuperPeerRoutingTable extends RoutingTable {
 
     @Override
     public PeerInfo getNextHop(byte[] id) {
-        logger.setLevel(Level.TRACE);
+        //logger.setLevel(Level.TRACE);
         if (logger.isTraceEnabled()) {
             logger.trace("getNextHop() invoked with id=" + ByteUtils.byteArrayToHexString(id));
         }

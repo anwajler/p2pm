@@ -66,7 +66,7 @@ public class NodeInfo extends GeneralNodeInfo implements Serializable{
 	
 	public boolean equals(Object compareWith){
 		NodeInfo ninf = (NodeInfo)compareWith;
-		if(getID().equals(ninf.getID()))
+		if(getID().compareTo(ninf.getID())==0)
 			return true;
 		return false;
 	}

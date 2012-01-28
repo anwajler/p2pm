@@ -58,7 +58,7 @@ public class Msg_PublishRequest_Test{
 		                        "\tTopic id = "+received.getTopicID());
 		messageTestLogger.trace("\nPublish-subscribe publish message data:"+"\n"+
                                 "\tTransaction id = "+((PublishRequest)received).getTransactionID()+"\n"+
-                                "\tEvent type = "+PubSubConstants.STR_EVENT[((PublishRequest)received).getEventType()]+"\n"+
+                                "\tEvent type = "+PubSubConstants.STR_EVENT.get(((PublishRequest)received).getEventType())+"\n"+
                                 "\tPublisher's name = "+((PublishRequest)received).getPublisher()+"\n"+
                                 "\tMessage = "+new String(((PublishRequest)received).getMessage()));
 	}
@@ -95,7 +95,7 @@ public class Msg_PublishRequest_Test{
 		                        "\tTopic id = "+received.getTopicID());
 		messageTestLogger.trace("\nPublish-subscribe publish message data:"+"\n"+
                                 "\tTransaction id = "+((PublishRequest)received).getTransactionID()+"\n"+
-                                "\tEvent type = "+PubSubConstants.STR_EVENT[((PublishRequest)received).getEventType()]+"\n"+
+                                "\tEvent type = "+PubSubConstants.STR_EVENT.get(((PublishRequest)received).getEventType())+"\n"+
                                 "\tPublisher's name = "+((PublishRequest)received).getPublisher()+"\n"+
                                 "\tMessage = "+new String(((PublishRequest)received).getMessage()));
 	}

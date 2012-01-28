@@ -122,5 +122,25 @@ public class NodeCallback implements pl.edu.pjwstk.mteam.core.NodeCallback {
         LOG.info("onTopicSubscribe for topic '" + topicID + "' callback invoked (" + arg2 + ")");
         EventManager.getInstance().addEventToQueue(PSNode.EVENT_ONTOPICSUBSCRIBE, topicID);
     }
+
+    @Override
+    public void onTopicNotify(Node node, Object topicID, byte[] message, boolean historical, short eventType) {
+        //throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void onTopicUnsubscribe(Node node, Object topicID, int respCode) {
+        //throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void onPubSubError(Node node, Object topicID, short operationType, int errorCode) {
+        //throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
+    public void onPubSubError(Node node, Object topicID, short operationType, int errorCode, int transID) {
+        //throw new UnsupportedOperationException("Not supported yet.");
+    }
     
 }

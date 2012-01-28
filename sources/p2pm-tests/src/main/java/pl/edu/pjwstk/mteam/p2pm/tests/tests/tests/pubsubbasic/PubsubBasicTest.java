@@ -12,6 +12,7 @@ import pl.edu.pjwstk.mteam.p2pm.tests.core.tests.ITest;
 import pl.edu.pjwstk.mteam.p2pm.tests.tests.psnode.PSNode;
 import pl.edu.pjwstk.mteam.pubsub.core.CoreAlgorithm;
 
+
 public class PubsubBasicTest extends Thread implements ITest, IEventSubscriber {
 
     public static final Logger LOG = Logger.getLogger(PubsubBasicTest.class);

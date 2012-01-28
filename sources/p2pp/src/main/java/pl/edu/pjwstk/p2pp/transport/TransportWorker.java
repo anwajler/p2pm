@@ -21,7 +21,7 @@ import pl.edu.pjwstk.p2pp.util.AbstractMessageFactory;
 public class TransportWorker<ProtocolWorkerObject extends ProtocolControl & ProtocolReader & ProtocolWriter> implements ProtocolControl{
 	private final static Logger LOG = Logger.getLogger(TransportWorker.class);
 
-    private final ThreadPoolExecutor sendExecutor = new ThreadPoolExecutor(10, 10, 5, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(20));
+    private final ThreadPoolExecutor sendExecutor = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1000));
 
 	protected Vector<AbstractMessageFactory> messageFactories = new Vector<AbstractMessageFactory>();
 	//private MessageStorage messageStorage;

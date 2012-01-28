@@ -38,11 +38,8 @@ public class StarTopology extends TopologyManager {
 	 *         topic history.
 	 */
 	public boolean onDeliverSubscribe(SubscribeRequest req, Topic t) {
-		if(t.isTopicRoot()){
-	        t.addSubscriber(req.getSourceInfo());
-	        pubsubManager.sendResponse(PubSubConstants.RESP_SUCCESS, req, t);
-	        logger.info("Subscriber '"+req.getSourceInfo()+
-	        		    "' accepted for topic '"+t.getID()+"'.....\n");
+		if(t.isTopicRoot(super.pubsubManager.getNodeInfo().getID())){
+	        
 	        return true;
 		}
 	    else{

@@ -34,7 +34,7 @@ public class InterestConditions extends RuleSet{
 		ByteArrayInputStream istr = new ByteArrayInputStream(bytes);
 		DataInputStream dtstr = new DataInputStream(istr);
 		
-		rules = new Hashtable<Byte, Rule>();
+		rules = new Hashtable<Short, Rule>();
 		
 		try {
 			int ruleNum = dtstr.readInt();

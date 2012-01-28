@@ -21,9 +21,13 @@ public class SendTask extends Thread {
             if (LOG.isTraceEnabled()) {
                 LOG.trace("SendTask started for " + this.message + " on " + this.writer.getClass().toString());
             }
-
-            boolean success = this.writer.SendMessage(this.message);
-
+            boolean success = false;
+            try{
+             success = this.writer.SendMessage(this.message);
+            }catch(NullPointerException e){
+                LOG.error("An error occurred for message: "+this.message.toString(), e);
+                
+            }
             if (success) {
                 if (LOG.isDebugEnabled()) {
                     StringBuilder strb = new StringBuilder("Transport object sends message ");
@@ -39,7 +43,7 @@ public class SendTask extends Thread {
             }
 
         } catch (Throwable e) {
-            LOG.error("Error while running SendTask for " + this.message + " on " + this.writer.getClass().getSimpleName());
+            LOG.error("Error while running SendTask for " + this.message + " on " + this.writer.getClass().getSimpleName(),e);
         }
     }
 

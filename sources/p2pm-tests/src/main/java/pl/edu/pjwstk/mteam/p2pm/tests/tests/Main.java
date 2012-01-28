@@ -2,6 +2,7 @@ package pl.edu.pjwstk.mteam.p2pm.tests.tests;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.apache.log4j.RollingFileAppender;
 import pl.edu.pjwstk.mteam.p2pm.tests.core.tests.ITest;
 import pl.edu.pjwstk.mteam.p2pm.tests.core.tests.TestsFactory;
 
@@ -9,7 +10,7 @@ public class Main {
 
     public static final Logger LOG = Logger.getLogger(Main.class);
 
-    public static void main(final String[] args) {
+    public static void main(final String[] args) {        
 
         if (args.length == 1) {
             LOG.error("Name of the test must be specified as the first argument");
@@ -25,6 +26,7 @@ public class Main {
         if (test != null) {
 
             LOG.info(test.test());
+            System.exit(0);
 
         } else {
 

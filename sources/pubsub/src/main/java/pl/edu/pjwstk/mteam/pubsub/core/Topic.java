@@ -1,11 +1,11 @@
 package pl.edu.pjwstk.mteam.pubsub.core;
 
-import pl.edu.pjwstk.mteam.pubsub.logging.Logger;
-
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.apache.log4j.Logger;
 import pl.edu.pjwstk.mteam.core.NodeInfo;
 import pl.edu.pjwstk.mteam.pubsub.accesscontrol.AccessControlRules;
 
@@ -73,7 +73,7 @@ public class Topic{
 
         protected Vector<String> neighbournsIDs;
         private NodeInfo proposedNewRoot = null;
-        private volatile int operationID = 0;
+        private AtomicInteger operationID = new AtomicInteger(0);
 
 //    @Override
 //    protected void finalize() throws Throwable {
@@ -106,7 +106,7 @@ public class Topic{
 	}
         public Topic(String topicID, int latestOperationID){
             this(topicID);
-            this.operationID = latestOperationID;
+            this.operationID = new AtomicInteger(latestOperationID);
         }
 	
 	public String getID(){
@@ -156,7 +156,9 @@ public class Topic{
 	 * @return Identifiers of all the children subscribed for this topic.
 	 */
 	public Vector<String> getChildren(){
-		return childrenIds;
+            Vector<String> retVal = new Vector<String>();
+            retVal.addAll(this.childrenIds);
+		return retVal;            
 	}
 	
 	/**
@@ -180,6 +182,7 @@ public class Topic{
 //			if(oldPrnt.removeTopic(this))
 //				parents.remove(parentId);
 //		}
+                
 		//setting new parent
 		if(parent != null){
 			parentId = parent.getID();
@@ -195,6 +198,10 @@ public class Topic{
 		else{
 			parentId = null;
 		}
+                //remove parentID from children list
+//                if(this.childrenIds.contains(parent.getID())){
+//                    this.childrenIds.remove(parent.getID());
+//                }
 	}
     public void setGrandParent(NodeInfo grandParentNodeInfo) {
         //removing topic reference to old parent
@@ -262,11 +269,13 @@ public class Topic{
 		acRules = ac;
 	}
 	
-	public boolean isTopicRoot(){
+	public boolean isTopicRoot(String id){
 		boolean result = false;
 		if(parentId == null){
 			result = true;
-		}
+		}else if(parentId.compareTo(id)==0){
+                    result = true;
+                }
 		return result;
 	}
 	
@@ -299,12 +308,16 @@ public class Topic{
 		if(forRemoval != null){
 			//removing from this topic children list 
 			childrenIds.remove(id);
-			if(forRemoval.removeTopic(this)){
-				/* there are no more topics, this node is child for, 
-				 * so it can be removed
-				 */
-				children.remove(id);
-			}
+                        /*
+                         * BUGFIX - there is no able to work with two instances 
+                         * of PUB-SUB in one JVM when this blok is active 
+                         */
+//			if(forRemoval.removeTopic(this)){
+//				/* there are no more topics, this node is child for, 
+//				 * so it can be removed
+//				 */
+//				children.remove(id);
+//			}
 		}
 		if(childrenIds.size() == 0)
 			return true;
@@ -346,7 +359,7 @@ public class Topic{
 
             return "\n***TOPIC:\n   id =\t"+getID()+
 		       "\n   owner =\t"+getOwner()+
-                       "\n   is root =\t"+isTopicRoot()+
+                       "\n   is root =\t"+isTopicRoot("")+
 		       "\n   parent =\t"+getParent()+
                        "\n ======== CACHE ========= "+
                        "\n grandparent:\t"+this.getGrandParent()+
@@ -417,9 +430,25 @@ public class Topic{
     }
 
     public synchronized int getCurrentOperationID() {
-        return this.operationID;
+        return this.operationID.get();
     }
-    public void increaseCurrentOperation(){
-        this.operationID++;
+    public synchronized int increaseCurrentOperation(String nodeName,int opID){
+        int retVal = 0;
+        if(opID == -10){
+            retVal = this.operationID.incrementAndGet();         
+            if(logger.isTraceEnabled())
+                logger.trace(nodeName+":"+this.id+" operation ID+=1 to value:"+this.operationID);
+            return retVal;
+        }else{
+            if(opID>=this.operationID.get()){
+                this.operationID.set(opID);
+                if(logger.isTraceEnabled())
+                    logger.trace(nodeName+":"+this.id+" operation ID set to value:"+this.operationID);
+            }else{
+                logger.debug(nodeName+":"+this.id+" received indication with older operationID: (current="+this.operationID+"), received:"+opID);
+            }
+        }
+        retVal = this.operationID.get();
+        return retVal;
     }
 }

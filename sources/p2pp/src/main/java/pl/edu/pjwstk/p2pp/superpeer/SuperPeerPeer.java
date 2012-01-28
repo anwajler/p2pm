@@ -1105,6 +1105,9 @@ public class SuperPeerPeer extends Peer {
         } catch (NoSuchAlgorithmException e) {
             LOG.error("No algorithm!");
         }
+        catch(Exception ex){
+            LOG.error("An error occurred:", ex);
+        }
     }
 
     @Override

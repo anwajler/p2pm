@@ -97,7 +97,7 @@ public class PubSubTransport implements MessageListener{
 	}
         
         public void sendThroughOverlayMessage(PubSubMessage msg, String key){
-                logger.debug("Sending mesage through overlay sendMessage: source: "+msg.getSourceInfo().getName()+", destination: "+msg.getDestinationInfo().getName()+", msgType: "+msg.getType());
+                logger.info("Sending mesage through overlay sendMessage: source: "+msg.getSourceInfo().getName()+", destination: "+msg.getDestinationInfo().getName()+", msgType: "+msg.getType());
 		node.sendMessage(msg.getDestinationInfo().getName(), msg.encode());
         }
 	
@@ -130,7 +130,7 @@ public class PubSubTransport implements MessageListener{
 	 */
         
 	public boolean onDeliverMessage(byte[] msgBytes) {
-                PubSubMessage msg;
+                PubSubMessage msg = null;
                 try{msg = PubSubMessage.parseMessage(msgBytes);
                 if(msg instanceof PubSubRequest){
 	       return pubsubManager.onDeliverRequest((PubSubRequest)msg);
@@ -141,6 +141,10 @@ public class PubSubTransport implements MessageListener{
 		else{
 	       return pubsubManager.onDeliverResponse((PubSubResponse)msg);  
                 }
+                }
+                catch(Exception e){
+                    logger.fatal(node.getUserName()+": An error occurred while processing message for topic: "+msg.getTopicID(), e);
+                    return false;
                 }finally{
                     msg = null;
                     msgBytes = null;

@@ -40,12 +40,7 @@ public class TreeTopology extends TopologyManager {
 	 */
 	public boolean onDeliverSubscribe(SubscribeRequest req, Topic t) {
 		NodeInfo whereToForward = pubsubManager.whereToForwardRequest(t, req);
-		if(whereToForward == null){
-			t.addSubscriber(req.getSourceInfo());
-			pubsubManager.sendResponse(PubSubConstants.RESP_SUCCESS, req, t);
-	        logger.info("Subscriber '"+req.getSourceInfo()+
-	            	    "' accepted by "+pubsubManager.getNodeInfo()+
-	            		" ('"+t.getID()+"').....\n");
+		if(whereToForward == null){			
 	        return true;
 		}
 		else if(whereToForward.equals(t.getParent().getNodeInfo())){

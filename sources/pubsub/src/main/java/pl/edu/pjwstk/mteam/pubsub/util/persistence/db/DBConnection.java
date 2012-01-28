@@ -126,7 +126,7 @@ public class DBConnection {
 //        }
     }
 
-    synchronized void insertPublishNotify(int operationID, String topicID, byte eventType, boolean historical, String message, String publisher, byte[] details) throws SQLException {
+    synchronized void insertPublishNotify(int operationID, String topicID, short eventType, boolean historical, String message, String publisher, byte[] details) throws SQLException {
         checkConnection();
         PS_INSERT_NOTIFY_INDICATION.setInt(1, operationID);
         PS_INSERT_NOTIFY_INDICATION.setString(2, topicID);

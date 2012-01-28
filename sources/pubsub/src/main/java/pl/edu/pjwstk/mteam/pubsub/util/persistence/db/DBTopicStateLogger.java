@@ -21,13 +21,14 @@ public class DBTopicStateLogger implements pl.edu.pjwstk.mteam.pubsub.util.persi
      * @param operationID
      * @param ni
      */
-    public void onDeliverPublishIndication(int operationID, NotifyIndication ni) {
+    public boolean onDeliverPublishIndication(String nodeName,int operationID, NotifyIndication ni) {
         log.trace("Storing NotifyIndication: "+ni.toString());
         try{
         DBConnection.getConnection().insertPublishNotify(operationID, ni.getTopicID(),ni.getEventType(), ni.isHistorical(),new String(ni.getMessage()),ni.getPublisher(),ni.encode());
         }catch(Exception e){
             e.printStackTrace();
         }
+        return true;
     }
 
     public NotifyIndication getPublishOperation(String topicID, int opID) {

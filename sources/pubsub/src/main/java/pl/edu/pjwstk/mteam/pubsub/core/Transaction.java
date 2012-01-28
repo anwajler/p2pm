@@ -158,8 +158,10 @@ public class Transaction{
 	public String toString(){
 		String msg = "transaction "+getID();//+" ("+getOperation()+"): ";
 		Iterator<Operation> iter = operations.iterator();
-		while(iter.hasNext()){
-			msg += "'"+PubSubConstants.STR_OPERATION[((Operation)iter.next()).getType()]+"' ";
+		Operation op;
+                while(iter.hasNext()){
+                    op = iter.next();
+			msg += "'"+PubSubConstants.STR_OPERATION.get(op.getType())+"-("+PubSubConstants.STR_EVENT.get(op.getEvent().getType())+")' ";
 		}
 		return msg;
 	}

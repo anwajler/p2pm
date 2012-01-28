@@ -1,5 +1,7 @@
 package pl.edu.pjwstk.mteam.pubsub.core;
 
+import java.io.EOFException;
+
 /**
  * Class representing single event defined for operation. Stores information 
  * about event type and other type-dependent properties.   
@@ -10,30 +12,38 @@ public class Event{
 	/**
 	 * Event type. Types used by publish-subscribe are: ALL, MODIFYAC, REMOVETOPIC, CUSTOM.
 	 */
-	private byte type;
+	private short type;
 	
 	/**
 	 * Creates new event of a specified type.
 	 * @param eType Event type. Value 0 is reserved for {@link PubSubConstants#EVENT_ALL}.
 	 */
-	public Event(byte eType){
+	public Event(short eType){
 		type = eType;
 	}
 	
-	public Event(byte[] bytes){
-		type = bytes[0];
+	public Event(byte[] bytes) throws EOFException{
+            if(bytes.length==2){
+                int x1 = bytes[0] & 0xff;
+                int x2 = bytes[1] & 0xff;
+                if ((x1 | x2) < 0)
+                throw new EOFException();
+                type =  (short)((x1 << 8) + (x2 << 0));
+            }else type = bytes[0];
 	}
 	
 	/**
 	 * @return Event type.
 	 */
-	public byte getType(){
+	public short getType(){
 		return type;
 	}
 	
 	public byte[] encode(){
-		byte[] bytes = {type};
-		return bytes;
+            byte [] result = new byte[2];
+		result[0] = (byte)((type >>> 8) & 0xFF);
+                result[1] = (byte)((type >>> 0) & 0xFF);
+		return result;
 	}
 	
 	public String toString(){

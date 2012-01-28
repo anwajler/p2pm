@@ -45,7 +45,7 @@ public class Operation{
 	/**
 	 * Operation type
 	 */
-	protected byte type;
+	protected short type;
 	/**
 	 * Some user defined identifier
 	 */
@@ -57,7 +57,7 @@ public class Operation{
 	/**
 	 * Events, that can be connected with this operation
 	 */
-	protected Hashtable<Byte, Event> events;
+	protected Hashtable<Short, Event> events;
 	/**
 	 * Operation date
 	 */
@@ -70,11 +70,11 @@ public class Operation{
 	 * @param oUser User performing operation.
 	 * @param oEvents list of events defined for this operation.
 	 */
-	public Operation(byte oType, String oID, User oUser, Vector<Event> oEvents){
+	public Operation(short oType, String oID, User oUser, Vector<Event> oEvents){
 		type = oType;
 		id = oID;
 		user = oUser;
-		events = new Hashtable<Byte, Event>();
+		events = new Hashtable<Short, Event>();
 		for(int i=0; i<oEvents.size(); i++){
 			Event e = oEvents.get(i);
 			addEvent(e);
@@ -98,7 +98,7 @@ public class Operation{
 			dtstr.read(tID);
 			id = new String(tID);
 			byte eventNumber = dtstr.readByte();
-			events = new Hashtable<Byte, Event>();
+			events = new Hashtable<Short, Event>();
 			for(int i=0; i<eventNumber; i++){
 				int eventByteLen = dtstr.readInt();
 				byte[] encEvent = new byte[eventByteLen];
@@ -123,14 +123,14 @@ public class Operation{
 		type = oType;
 		id = oID;
 		user = oUser;
-		events = new Hashtable<Byte, Event>();
+		events = new Hashtable<Short, Event>();
 		addEvent(oEvent);
 	}
 	
 	/**
 	 * @return Operation type
 	 */
-	public byte getType(){
+	public short getType(){
 		return type;
 	}
 	
@@ -161,10 +161,10 @@ public class Operation{
 	 * @param eventType Type of requested event
 	 * @return Event of specified type or <code>null</code> if such event doesn't exist
 	 */
-	public Event getEvent(byte eventType){
+	public Event getEvent(short eventType){
 		Event result = null;
 		try{
-			result = events.get(new Byte(eventType));
+			result = events.get(new Short(eventType));
 		}catch(NullPointerException e){
 			return result;
 		}

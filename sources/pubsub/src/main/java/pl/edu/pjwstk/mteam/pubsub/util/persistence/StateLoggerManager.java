@@ -10,10 +10,10 @@ import pl.edu.pjwstk.mteam.pubsub.util.persistence.dummy.DummyTransactionStateLo
  * @version 1.0
  */
 public class StateLoggerManager {
-    private static TransactionStateLogger ts_logger;
-    private static TopicStateLogger t_logger;
+    private TransactionStateLogger ts_logger;
+    private TopicStateLogger t_logger;
 
-    public static TopicStateLogger getTopicStateLogger(){
+    public TopicStateLogger getTopicStateLogger(){
         if(t_logger==null){
             //t_logger = new DBTopicStateLogger();
             t_logger = new DummyTopicStateLogger();
@@ -21,7 +21,7 @@ public class StateLoggerManager {
         return t_logger;
     }
 
-    public static TransactionStateLogger getTransactionStateLogger(){
+    public TransactionStateLogger getTransactionStateLogger(){
         if(ts_logger==null){
             ts_logger = new DummyTransactionStateLogger();
         }

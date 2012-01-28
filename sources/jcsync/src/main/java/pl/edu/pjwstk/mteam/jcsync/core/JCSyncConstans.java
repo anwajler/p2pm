@@ -99,6 +99,8 @@ public class JCSyncConstans {
      * <p>informs that the transport error has occurred
      */
     public static final short J_ERR_TRANSPORT_ERROR = 904; // == 11-100-01000
+    
+    public static final short J_ERR_OBJECT_NOT_EXISTS = 905;
 
 
 

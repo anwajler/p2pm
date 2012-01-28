@@ -52,4 +52,16 @@ public class UnsubscribeRequest extends PubSubRequest{
 	public void parse(byte[] stream, int offset){
 		super.parse(stream, offset);
 	}
+        @Override
+        public String toString(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("UnsubscribeRequest");
+        sb.append(", topicID: ");
+        sb.append(getTopicID());
+        sb.append(", transID: ");
+        sb.append(getTransactionID());
+        sb.append(", sourceName: ");
+        sb.append(getSourceInfo().getName());
+        return sb.toString();
+    }
 }

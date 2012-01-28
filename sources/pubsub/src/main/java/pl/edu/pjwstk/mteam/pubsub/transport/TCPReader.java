@@ -101,7 +101,8 @@ public class TCPReader extends Thread {
     public synchronized void setRunning(boolean b) {
         isRunning = b;
         try {
-            socket.close();
+            if(socket!=null)
+                socket.close();
         } catch (IOException e) {
         }
     }

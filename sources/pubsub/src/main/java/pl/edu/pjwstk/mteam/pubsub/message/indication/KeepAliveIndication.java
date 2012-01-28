@@ -20,7 +20,7 @@ public class KeepAliveIndication extends PubSubIndication {
         /*
          * The type of keep alive indication
          */
-        byte keepAliveType;
+        short keepAliveType;
         /*
          * Normal KeepAliveIndication
          */
@@ -53,7 +53,7 @@ public class KeepAliveIndication extends PubSubIndication {
         public int getTransactionID(){
             return this.transID;
         }        
-        public byte getKeepAliveType(){
+        public short getKeepAliveType(){
             return this.keepAliveType;
         }
         public void setFailedNode(NodeInfo fail){
@@ -72,7 +72,7 @@ public class KeepAliveIndication extends PubSubIndication {
             byte[] header = super.encode();
             dtstr.write(header);
             dtstr.writeInt(this.transID);
-            dtstr.writeByte(this.keepAliveType);
+            dtstr.writeShort(this.keepAliveType);
             if(this.keepAliveType == KEEP_ALIVE_PARENT_FAILS){
                 ostr_ = new ObjectOutputStream(ostr);
                 ostr_.writeObject(this.failedNode);
@@ -109,7 +109,7 @@ public class KeepAliveIndication extends PubSubIndication {
             //super.parse(stream, offset);
             //istream.skip(super.getByteLength());
             this.transID = dtstr.readInt();
-            this.keepAliveType = dtstr.readByte();
+            this.keepAliveType = dtstr.readShort();
             if(this.keepAliveType == KEEP_ALIVE_PARENT_FAILS){
                 ostr_ = new ObjectInputStream(dtstr);
                 this.failedNode = (NodeInfo) ostr_.readObject();

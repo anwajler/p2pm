@@ -161,13 +161,19 @@ public class TopologyCacheUpdateRequest extends PubSubRequest {
     @Override
     public String toString(){
         StringBuilder sb = new StringBuilder();
-        sb.append("TopicID: "+getTopicID()+
-                ", Internal EventType: "+operations[getEventType()]+
-                " , source: "+ getSourceInfo()+
-                ", destination: "+getDestinationInfo()+
-                ", g-parent: "+getGrandParentNodeInfo()+
-                ", parent: "+getParentNodeInfo()+
-                ", involved nodes: "+getInvolvedNodeInfos());
+              sb
+                .append("TopicID: ")
+                .append(getTopicID())
+                .append(", Internal EventType: ")
+                .append(operations[getEventType()])
+                .append(" , source: ")
+                .append(getSourceInfo().getName())
+                .append(", destination: ")
+                .append(getDestinationInfo().getName())
+                .append(", g-parent: ")
+                .append(getGrandParentNodeInfo().getName())
+                .append(", parent: ").append(getParentNodeInfo().getName())
+                .append(", involved nodes: ").append(getInvolvedNodeInfos());
         return sb.toString();
 
     }

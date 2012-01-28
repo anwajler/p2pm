@@ -107,30 +107,35 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
             newTopic.addSubscriber(subscribers.get(i).getNodeInfo());
         }
         getCoreAlgorithm().addTopic(newTopic);
-        logger.trace("Topic '" + req.getTopicID() + "' successfully created....");
+        logger.trace(getCoreAlgorithm().getNodeInfo().getName()+": Topic '" + req.getTopicID() + "' successfully created....");
         getCoreAlgorithm().sendResponse(PubSubConstants.RESP_SUCCESS, req, newTopic);
     }
 
     @Override
-    public void onDeliverNotify(NotifyIndication ind, Topic t) {        
+    public void onDeliverNotify(NotifyIndication ind, Topic t) {
         getCoreAlgorithm().forwardToChildren(ind, t);
     }
 
     @Override
     public void onDeliverPublish(PublishRequest req, Topic t) {
-        if (t.isTopicRoot()) {
+        logger.debug(getCoreAlgorithm().getNodeInfo().getName() + "(onDeliverPublish) - invoked with: " + req);
+        if (t.isTopicRoot(getCoreAlgorithm().getNodeInfo().getID())) {
             getCoreAlgorithm().sendResponse(PubSubConstants.RESP_SUCCESS, req, t);
             /*
              * Message destination is default, because it will be filled in by
              * the forwardToChild method.
              */
+
             NotifyIndication notify = new NotifyIndication(
                     getCoreAlgorithm().getNodeInfo(),
                     new NodeInfo(""), t.getID(),
                     req.getEventType(), req.getMessage(), false,
-                    new User(req.getPublisher()), t.getCurrentOperationID() + 1);
+                    new User(req.getPublisher()), t.increaseCurrentOperation(getCoreAlgorithm().getNodeInfo().getName(),-10));
+            logger.debug(getCoreAlgorithm().getNodeInfo().getName() + "(onDeliverPublish) - preparing to send NotifyIndication: " + notify);
             getCoreAlgorithm().forwardToChildren(notify, t);
+
         } else {
+            logger.debug(getCoreAlgorithm().getNodeInfo().getName() + "(onDeliverPublish) - forwarding request to parent node: " + req);
             getCoreAlgorithm().forwardToParent(req, t);
         }
     }
@@ -139,12 +144,20 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
     public void onDeliverUnsubscribe(UnsubscribeRequest req, Topic t) {
         //TODO: this part is not compatible with the new version of the specification
         Subscriber s = t.getChild(req.getSourceInfo().getID());
+        if(s==null){
+            s = t.getParent();
+            if(s!=null){
+                if(!s.getNodeInfo().equals(req.getSourceInfo())){
+                    s = null;
+                }
+            }
+        }
         if (s == null) {
-            logger.debug(req.getSourceInfo() + "is not a '" + t.getID() + "' subscriber - can't "
-                    + PubSubConstants.STR_OPERATION[PubSubConstants.OPERATION_UNSUBSCRIBE]);
+            logger.debug(getCoreAlgorithm().getNodeInfo().getName()+":"+req.getSourceInfo() + "is not a '" + t.getID() + "' subscriber - can't "
+                    + PubSubConstants.STR_OPERATION.get(PubSubConstants.OPERATION_UNSUBSCRIBE));
             getCoreAlgorithm().sendResponse(PubSubConstants.RESP_DOESNOTEXIST, req, t);
         } else {
-            logger.debug("Removing " + req.getSourceInfo() + " from '" + t.getID() + "subscribers...");
+            logger.debug(getCoreAlgorithm().getNodeInfo().getName()+":Removing " + req.getSourceInfo() + " from '" + t.getID() + "subscribers...");
             t.removeSubscriber(req.getSourceInfo().getID());
             getCoreAlgorithm().sendResponse(PubSubConstants.RESP_SUCCESS, req, t);
             /*
@@ -173,37 +186,41 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
 
     @Override
     public void onDeliverCreateTopicResponse(PubSubResponse res, Transaction t) {
-        logger.trace("Completing " + t + "...");
+        logger.trace(getCoreAlgorithm().getNodeInfo().getName()+": Completing " + t + "...");
         /*
          * CreateTopic may me associated also with subscribing to a topic, and if it
          * is so - 'onTopicSubscribe' callback invocation is needed
          */
         if (res.getResponseCode() == PubSubConstants.RESP_SUCCESS) {
+            //add new topic before calling any nodeCallback
+            Topic topic = getCoreAlgorithm().getTopic(t.getTopic().getID());
+            if (topic == null) {
+                topic = t.getTopic();
+                topic.setParent(res.getSourceInfo());
+                getCoreAlgorithm().addTopic(topic);
+                /* TODO: [DHT-based] For unstructured networks also insert
+                 *       the SUBSCRIPTIONINFO object
+                 */
+            }
             Iterator<Operation> operations = t.getOperations().iterator();
             while (operations.hasNext()) {
                 Operation o = operations.next();
                 switch (o.getType()) {
                     case PubSubConstants.OPERATION_CREATETOPIC:
-                        logger.trace("Invoking callback for " + PubSubConstants.STR_OPERATION[o.getType()]);
+                        logger.trace("Invoking callback for: " + res.getTopicID() + "@" + PubSubConstants.STR_OPERATION.get(t.getOperation().getType())
+                                + " , respCode: " + res.getResponseCode());
                         for (NodeCallback listener : getCoreAlgorithm().getNode().getCallbacks()) {
-						listener.onTopicCreate(getCoreAlgorithm().getNode(), o.getID(),res.getTransactionID());
-					}
+                            listener.onTopicCreate(getCoreAlgorithm().getNode(), o.getID(), res.getTransactionID());
+                        }
                         //getCoreAlgorithm().getNode().getCallback().onTopicCreate(getCoreAlgorithm().getNode(), o.getID(), res.getTransactionID());
                         break;
                     case PubSubConstants.OPERATION_SUBSCRIBE:
-                        Topic topic = getCoreAlgorithm().getTopic(t.getTopic().getID());
-                        if (topic == null) {
-                            topic = t.getTopic();
-                            topic.setParent(res.getSourceInfo());
-                            getCoreAlgorithm().addTopic(topic);
-                            /* TODO: [DHT-based] For unstructured networks also insert
-                             *       the SUBSCRIPTIONINFO object
-                             */
-                        }
-                        logger.trace("Invoking callback for " + PubSubConstants.STR_OPERATION[o.getType()]);
+
+                        logger.trace("Invoking callback for: " + res.getTopicID() + "@" + PubSubConstants.STR_OPERATION.get(t.getOperation().getType())
+                                + " , respCode: " + res.getResponseCode());
                         for (NodeCallback listener : getCoreAlgorithm().getNode().getCallbacks()) {
-						listener.onTopicSubscribe(getCoreAlgorithm().getNode(), o.getID(),res.getTransactionID());
-					}
+                            listener.onTopicSubscribe(getCoreAlgorithm().getNode(), o.getID(), res.getTransactionID());
+                        }
 
                         //getCoreAlgorithm().getNode().getCallback().onTopicSubscribe(getCoreAlgorithm().getNode(), o.getID(), res.getTransactionID());
                         break;
@@ -211,14 +228,15 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
             }
         } else {
             t.getTopic().removeSubscriber(getCoreAlgorithm().getNodeInfo().getID());
-            logger.trace("Invoking ONERROR callback for '" + t.getOperation().getID() + "': "
-                    + res.getResponseCode());
+            logger.trace("Invoking onPubSubError callback for: " + res.getTopicID() + "@"
+                    + PubSubConstants.STR_OPERATION.get(t.getOperation().getType())
+                    + " , respCode: " + res.getResponseCode());
             for (NodeCallback listener : getCoreAlgorithm().getNode().getCallbacks()) {
-				listener.onPubSubError(getCoreAlgorithm().getNode(),
+                listener.onPubSubError(getCoreAlgorithm().getNode(),
                         t.getOperation().getID(),
                         PubSubConstants.OPERATION_CREATETOPIC,
                         NodeError.TOPICEXISTSERR, res.getTransactionID());
-			}
+            }
 //            getCoreAlgorithm().getNode().getCallback().onPubSubError(getCoreAlgorithm().getNode(),
 //                    t.getOperation().getID(),
 //                    PubSubConstants.OPERATION_CREATETOPIC,
@@ -231,17 +249,17 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
         int respcode = res.getResponseCode();
         if (respcode == PubSubConstants.RESP_FORBIDDEN
                 || respcode == PubSubConstants.RESP_DOESNOTEXIST) {
-            logger.trace("Invoking onPubSubError callback for the "
-                    + PubSubConstants.STR_OPERATION[t.getOperation().getType()]
-                    + " operation (" + respcode + ")");
+            logger.trace("Invoking onPubSubError callback for: " + res.getTopicID() + "@"
+                    + PubSubConstants.STR_OPERATION.get(t.getOperation().getType())
+                    + " , respCode: " + respcode);
             switch (respcode) {
                 case PubSubConstants.RESP_FORBIDDEN:
                     for (NodeCallback listener : getCoreAlgorithm().getNode().getCallbacks()) {
-					listener.onPubSubError(getCoreAlgorithm().getNode(),
-	                        res.getTopicID(),
-	                        t.getOperation().getType(),
-	                        NodeError.AUTHERR);
-				}
+                        listener.onPubSubError(getCoreAlgorithm().getNode(),
+                                res.getTopicID(),
+                                t.getOperation().getType(),
+                                NodeError.AUTHERR, t.getID());
+                    }
 
 //                    getCoreAlgorithm().getNode().getCallback().onPubSubError(getCoreAlgorithm().getNode(),
 //                            res.getTopicID(),
@@ -250,11 +268,11 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
                     break;
                 case PubSubConstants.RESP_DOESNOTEXIST:
                     for (NodeCallback listener : getCoreAlgorithm().getNode().getCallbacks()) {
-					listener.onPubSubError(getCoreAlgorithm().getNode(),
-	                        res.getTopicID(),
-	                        t.getOperation().getType(),
-	                        NodeError.NOSUCHTOPICERR);
-				}
+                        listener.onPubSubError(getCoreAlgorithm().getNode(),
+                                res.getTopicID(),
+                                t.getOperation().getType(),
+                                NodeError.NOSUCHTOPICERR, t.getID());
+                    }
 
 //                    getCoreAlgorithm().getNode().getCallback().onPubSubError(getCoreAlgorithm().getNode(),
 //                            res.getTopicID(),
@@ -268,9 +286,9 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
              * Do not invoke callback here - it will be invoked after receiving the notify
              * message
              */
-            logger.trace(PubSubConstants.STR_OPERATION[t.getOperation().getType()] + " "
-                    + PubSubConstants.STR_EVENT[t.getOperation().getEvent().getType()]
-                    + " event for '" + t.getTopic().getID() + "' operation accepted");
+            logger.trace(PubSubConstants.STR_OPERATION.get(t.getOperation().getType()) + " "
+                    + PubSubConstants.STR_EVENT.get(t.getOperation().getEvent().getType())
+                    + " event (" + t.getOperation().getEvent().getType() + ") for " + t.getTopic().getID() + "' operation accepted");
         }
     }
 
@@ -280,31 +298,34 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
         byte needToBeStored = 0;
         if (respcode == PubSubConstants.RESP_SUCCESS) {
             Topic topic =
-                            getCoreAlgorithm().getTopicStateLogger().getTopic(res.getTopicID());
-            if(topic == null) {
+                    getCoreAlgorithm().getTopicStateLogger().getTopic(res.getTopicID());
+            if (topic == null) {
                 needToBeStored = 1;
                 topic = t.getTopic();
-            }else{
+                topic.setParent(res.getSourceInfo());
+                if (needToBeStored == 1) {
+                    getCoreAlgorithm().addTopic(topic, true);
+                } else {
+                    getCoreAlgorithm().addTopic(topic, false);
+                }
+                topic.addSubscriber(getCoreAlgorithm().getNodeInfo());
+            } else {
                 //add itself as subscriber
                 topic.addSubscriber(getCoreAlgorithm().getNodeInfo());
             }
-                topic.setAccessControlRules(((StandardResponse) res).getAccessControlRules());
-                topic.setParent(res.getSourceInfo());
-                if(needToBeStored==1){
-                    getCoreAlgorithm().addTopic(topic, true);
-                }else{
-                    getCoreAlgorithm().addTopic(topic, false);
-                }
-            
+            topic.setAccessControlRules(((StandardResponse) res).getAccessControlRules());
+
+
+
             /* TODO: [DHT-based] For unstructured networks also insert
              *       the SUBSCRIPTIONINFO object
              */
-            logger.trace("Invoking callback for " + PubSubConstants.STR_OPERATION[t.getOperation().getType()]);
+            logger.trace("Invoking callback for: " + res.getTopicID() + "@" + PubSubConstants.STR_OPERATION.get(t.getOperation().getType()));
             for (NodeCallback listener : getCoreAlgorithm().getNode().getCallbacks()) {
-				listener.onTopicSubscribe(getCoreAlgorithm().getNode(), t.getOperation().getID());
-			}
+                listener.onTopicSubscribe(getCoreAlgorithm().getNode(), t.getOperation().getID());
+            }
 
-           // getCoreAlgorithm().getNode().getCallback().onTopicSubscribe(getCoreAlgorithm().getNode(), t.getOperation().getID());
+            // getCoreAlgorithm().getNode().getCallback().onTopicSubscribe(getCoreAlgorithm().getNode(), t.getOperation().getID());
         } else {
             /*
              * The subscriber was added before the topic was accepted - it has to be
@@ -321,33 +342,33 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
                         logger.trace("Topic: " + topic.getID() + " found locally!");
                         getCoreAlgorithm().addTopic(topic, false);
                         networkSubscribe(topic, new InterestConditions(topic),
-                            PubSubConstants.HISTORY_NONE);
+                                PubSubConstants.HISTORY_NONE);
                         return;
                     }
-                    logger.trace("Invoking onPubSubError callback for the "
-                            + PubSubConstants.STR_OPERATION[t.getOperation().getType()]
-                            + " operation (" + respcode + ")");
+                    logger.trace("Invoking onPubSubError callback for: " + res.getTopicID() + "@"
+                            + PubSubConstants.STR_OPERATION.get(t.getOperation().getType())
+                            + " operation, respCode (" + respcode + ")");
                     for (NodeCallback listener : getCoreAlgorithm().getNode().getCallbacks()) {
-					listener.onPubSubError(getCoreAlgorithm().getNode(),
-	                        res.getTopicID(),
-	                        t.getOperation().getType(),
-	                        NodeError.NOSUCHTOPICERR);
-				}
+                        listener.onPubSubError(getCoreAlgorithm().getNode(),
+                                res.getTopicID(),
+                                t.getOperation().getType(),
+                                NodeError.NOSUCHTOPICERR, t.getID());
+                    }
 //                    getCoreAlgorithm().getNode().getCallback().onPubSubError(getCoreAlgorithm().getNode(),
 //                            res.getTopicID(),
 //                            t.getOperation().getType(),
 //                            NodeError.NOSUCHTOPICERR, res.getTransactionID());
                     break;
                 case PubSubConstants.RESP_FORBIDDEN:
-                    logger.trace("Invoking onPubSubError callback for the "
-                            + PubSubConstants.STR_OPERATION[t.getOperation().getType()]
-                            + " operation (" + respcode + ")");
+                    logger.trace("Invoking onPubSubError callback for: " + res.getTopicID() + "@"
+                            + PubSubConstants.STR_OPERATION.get(t.getOperation().getType())
+                            + " operation, respCode (" + respcode + ")");
                     for (NodeCallback listener : getCoreAlgorithm().getNode().getCallbacks()) {
-					listener.onPubSubError(getCoreAlgorithm().getNode(),
-	                        res.getTopicID(),
-	                        t.getOperation().getType(),
-	                        NodeError.AUTHERR);
-				}
+                        listener.onPubSubError(getCoreAlgorithm().getNode(),
+                                res.getTopicID(),
+                                t.getOperation().getType(),
+                                NodeError.AUTHERR, t.getID());
+                    }
 //
 //                    getCoreAlgorithm().getNode().getCallback().onPubSubError(getCoreAlgorithm().getNode(),
 //                            res.getTopicID(),
@@ -363,9 +384,9 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
         logger.trace("Invoking " + PubSubConstants.STR_OPERATION + " callback for '"
                 + t.getTopic().getID() + "'.....");
         for (NodeCallback listener : getCoreAlgorithm().getNode().getCallbacks()) {
-			listener.onTopicUnsubscribe(getCoreAlgorithm().getNode(),
-                    t.getTopic().getID());
-		}
+            listener.onTopicUnsubscribe(getCoreAlgorithm().getNode(),
+                    t.getTopic().getID(), res.getResponseCode());
+        }
 
 //        getCoreAlgorithm().getNode().getCallback().onTopicUnsubscribe(getCoreAlgorithm().getNode(),
 //                t.getTopic().getID());
@@ -381,16 +402,18 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
     public void createTopic(Object topicID, boolean subscribe, Object acRules) {
         String tid = (String) topicID;
         Topic newTopic = getCoreAlgorithm().getTopic(tid);
-        if(newTopic==null) newTopic = getCoreAlgorithm().getTopicStateLogger().getTopic(tid);
+        if (newTopic == null) {
+            newTopic = getCoreAlgorithm().getTopicStateLogger().getTopic(tid);
+        }
         if (newTopic != null) {
             //Topic exists locally
             logger.trace("Topic " + tid + " exists locally...");
             logger.trace("Invoking ONERROR callback for '" + tid + "'");
             for (NodeCallback listener : getCoreAlgorithm().getNode().getCallbacks()) {
-				listener.onPubSubError(getCoreAlgorithm().getNode(), tid,
+                listener.onPubSubError(getCoreAlgorithm().getNode(), tid,
                         PubSubConstants.OPERATION_CREATETOPIC,
                         NodeError.TOPICEXISTSERR);
-			}
+            }
 
 //            getCoreAlgorithm().getNode().getCallback().onPubSubError(getCoreAlgorithm().getNode(), tid,
 //                    PubSubConstants.OPERATION_CREATETOPIC,
@@ -418,8 +441,7 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
                 msg.addSubscriber(new User(thisNode));
                 newTopic.addSubscriber(thisNode);
             }
-            logger.trace("Sending " + PubSubConstants.STR_OPERATION[PubSubConstants.OPERATION_CREATETOPIC]
-                    + " request for '" + newTopic.getID() + "'...");
+            logger.trace("Sending request for:" + newTopic.getID() + "@" + PubSubConstants.STR_OPERATION.get(PubSubConstants.OPERATION_CREATETOPIC));
             //Adding transaction and starting timer for it
             logger.trace("Creating transaction " + trans);
             getCoreAlgorithm().addTransaction(trans);
@@ -455,35 +477,63 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
     }
 
     @Override
+    public void networkPublish(Object topic, byte[] message, short eventType) {
+        String tid = (String) topic;
+        NodeInfo thisNode = getCoreAlgorithm().getNodeInfo();
+        Topic t = getCoreAlgorithm().getTopic(tid);
+        if (t != null && t.getChild(thisNode.getID()) != null) {
+            User parent = t.getParent();
+            if (parent == null) {
+                //this node is topic root
+                parent = new User(thisNode);
+            }
+            PublishOperation o = new PublishOperation(tid,
+                    new Subscriber(t, thisNode),
+                    new Event(eventType));
+            Transaction trans = new Transaction(o, t);
+            PublishRequest msg = new PublishRequest(trans.getID(), thisNode,
+                    parent.getNodeInfo(), tid,
+                    eventType, message,
+                    new User(thisNode.getName()));
+            //Adding transaction and starting timer for it
+            getCoreAlgorithm().addTransaction(trans);
+            getCoreAlgorithm().sendMessage(msg, PubSubTransport.ROUTING_DIRECT, null);
+        } else {
+            logger.info("The node is not '" + tid + "' subscriber, so it can't publish events");
+        }
+    }
+
+    @Override
     public void networkSubscribe(Object topic) {
-        Topic t = getCoreAlgorithm().getTopicStateLogger().getTopic((String)topic);
-        if(t!=null)
-        networkSubscribe(topic, new InterestConditions(new Topic((String) topic)),
-                t.getCurrentOperationID());
-        else
+        Topic t = getCoreAlgorithm().getTopicStateLogger().getTopic((String) topic);
+        if (t != null) {
             networkSubscribe(topic, new InterestConditions(new Topic((String) topic)),
-                PubSubConstants.HISTORY_ALL);
+                    t.getCurrentOperationID());
+        } else {
+            networkSubscribe(topic, new InterestConditions(new Topic((String) topic)),
+                    PubSubConstants.HISTORY_ALL);
+        }
     }
 
     @Override
     public void networkSubscribe(Object topic, Object ic, int eventIndex) {
         Topic t = null;
         String tid = null;
-        if(topic instanceof String){
+        if (topic instanceof String) {
             tid = (String) topic;
             t = getCoreAlgorithm().getTopic(tid);
-        }else{
+        } else {
             t = (Topic) topic;
             tid = t.getID();
         }
         if (t != null) {
             //Topic exists locally
-            logger.trace("Topic " + tid + " exists - subscribing locally...");
+            logger.trace(getCoreAlgorithm().getNodeInfo().getName() + " - Topic " + tid + " exists - subscribing locally...");
             t.addSubscriber(getCoreAlgorithm().getNodeInfo());
             t.getChild(getCoreAlgorithm().getNodeInfo().getID()).getSubscription(t.getID()).setInterestConditions((InterestConditions) ic);
             for (NodeCallback listener : getCoreAlgorithm().getNode().getCallbacks()) {
-				listener.onTopicSubscribe(getCoreAlgorithm().getNode(), t.getID());
-			}
+                listener.onTopicSubscribe(getCoreAlgorithm().getNode(), t.getID());
+            }
 
 //            getCoreAlgorithm().getNode().getCallback().onTopicSubscribe(getCoreAlgorithm().getNode(), t.getID());
         } else {
@@ -523,10 +573,10 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
         if (associatedTopic == null) {
             logger.trace("Can't unsubscribe for the topic '" + topicID + "' doesn't exist....");
             for (NodeCallback listener : getCoreAlgorithm().getNode().getCallbacks()) {
-				listener.onPubSubError(getCoreAlgorithm().getNode(), topicID,
+                listener.onPubSubError(getCoreAlgorithm().getNode(), topicID,
                         PubSubConstants.OPERATION_UNSUBSCRIBE,
                         NodeError.NOSUCHTOPICERR);
-			}
+            }
 //            getCoreAlgorithm().getNode().getCallback().onPubSubError(getCoreAlgorithm().getNode(), topicID,
 //                    PubSubConstants.OPERATION_UNSUBSCRIBE,
 //                    NodeError.NOSUCHTOPICERR);
@@ -536,10 +586,10 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
                 logger.trace("Can't unsubscribe for the user " + thisNode + " is not a '" + topicID
                         + "' subscriber....");
                 for (NodeCallback listener : getCoreAlgorithm().getNode().getCallbacks()) {
-					listener.onPubSubError(getCoreAlgorithm().getNode(), topicID,
+                    listener.onPubSubError(getCoreAlgorithm().getNode(), topicID,
                             PubSubConstants.OPERATION_UNSUBSCRIBE,
                             NodeError.NOSUCHSUBSCRIBERERR);
-				}
+                }
 //
 //                getCoreAlgorithm().getNode().getCallback().onPubSubError(getCoreAlgorithm().getNode(), topicID,
 //                        PubSubConstants.OPERATION_UNSUBSCRIBE,
@@ -547,18 +597,17 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
             } else {
                 boolean hasNoMoreChildren = associatedTopic.removeSubscriber(thisNode.getID());
                 if (hasNoMoreChildren) {
-                    if (associatedTopic.isTopicRoot()) {
+                    if (associatedTopic.isTopicRoot(getCoreAlgorithm().getNodeInfo().getID())) {
                         /*
                          * The topic itself can't be removed, and there is no need to send
                          * the unsubscribe request.
                          */
                         logger.trace("No more children, but can't remove '" + topicID
                                 + "' for this is topic root...");
-                        logger.trace("Invoking " + PubSubConstants.STR_OPERATION[PubSubConstants.OPERATION_UNSUBSCRIBE]
-                                + " callback for '" + topicID + "'....");
+                        logger.trace("Invoking callback for: " + topicID + "@" + PubSubConstants.STR_OPERATION.get(PubSubConstants.OPERATION_UNSUBSCRIBE));
                         for (NodeCallback listener : getCoreAlgorithm().getNode().getCallbacks()) {
-							listener.onTopicUnsubscribe(getCoreAlgorithm().getNode(), topicID);
-						}
+                            listener.onTopicUnsubscribe(getCoreAlgorithm().getNode(), topicID, PubSubConstants.RESP_SUCCESS);
+                        }
 
 //                        getCoreAlgorithm().getNode().getCallback().onTopicUnsubscribe(getCoreAlgorithm().getNode(), topicID);
                     } else {
@@ -588,14 +637,13 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
                             + "' but can't send unsubscribe request to the parent, because "
                             + "there are more subscribers....");
                     for (NodeCallback listener : getCoreAlgorithm().getNode().getCallbacks()) {
-						listener.onTopicUnsubscribe(getCoreAlgorithm().getNode(),
-                                topicID);
-					}
+                        listener.onTopicUnsubscribe(getCoreAlgorithm().getNode(),
+                                topicID, PubSubConstants.RESP_SUCCESS);
+                    }
 //
 //                    getCoreAlgorithm().getNode().getCallback().onTopicUnsubscribe(getCoreAlgorithm().getNode(),
 //                            topicID);
-                    logger.trace("Invoking " + PubSubConstants.STR_OPERATION[PubSubConstants.OPERATION_UNSUBSCRIBE]
-                            + " callback for '" + topicID + "'...");
+                    logger.trace("Callback invoked for :" + topicID + "@" + PubSubConstants.STR_OPERATION.get(PubSubConstants.OPERATION_UNSUBSCRIBE));
                 }
             }
         }
@@ -603,6 +651,7 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
 
     @Override
     public void removeTopic(Object topicID) {
+
         String tid = (String) topicID;
         Topic t = new Topic(tid);
         NodeInfo thisNode = getCoreAlgorithm().getNodeInfo();
@@ -660,8 +709,8 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
 
     /**
      * invoked to send cache update request
-     * @param topic the topic in which chache will must be updated
-     * @param nodeInfo involvedNode (to add/deleto from cache)
+     * @param topic the topic in which cache will must be updated
+     * @param nodeInfo involvedNode (to add/delete from cache)
      * @param eventType type of cacheUpdate operation
      */
     public void maintenanceCacheUpdate(Object topic, Object nodeInfo, byte eventType) {
@@ -681,7 +730,7 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
          */
         if (eventType == PubSubConstants.MAINTENANCE_NEW_NODE_CONNECTED) {
             //neighbourns cache update
-            if (t.isTopicRoot()) {
+            if (t.isTopicRoot(getCoreAlgorithm().getNodeInfo().getID())) {
                 //sending new node as new neighbour to all child
                 Vector<String> children = t.getChildren();
 
@@ -715,15 +764,24 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
                         continue;
                     }
                     Subscriber child = t.getChild(childName);
-                    req = new TopologyCacheUpdateRequest(me, child.getNodeInfo(), t.getID(), TopologyCacheUpdateRequest.STORE_NEW_NEIGHBOUR_NODE_TO_CACHE, -1);
+                    KeepAliveOperation o = new KeepAliveOperation(t.getID(),
+                            child,
+                            new Event((short) PubSubConstants.OPERATION_KEEPALIVE));
+                    Transaction trans = new Transaction(o, t);
+                    req = new TopologyCacheUpdateRequest(me, child.getNodeInfo(), t.getID(), TopologyCacheUpdateRequest.STORE_NEW_NEIGHBOUR_NODE_TO_CACHE, trans.getID());
                     req.addInvolvedNode(node);
                     req.setParentID(me);
                     //proposed new root
                     req.setGrandParentID(proposedRoot);
+                    getCoreAlgorithm().addTransaction(trans);
                     getCoreAlgorithm().sendMessage(req, PubSubTransport.ROUTING_DIRECT, null);
                 }
                 //sending all neighbourns for new node
-                req = new TopologyCacheUpdateRequest(me, node, t.getID(), TopologyCacheUpdateRequest.STORE_NEW_NEIGHBOUR_NODE_TO_CACHE, -1);
+                KeepAliveOperation o = new KeepAliveOperation(t.getID(),
+                        new Subscriber(node.getName(), t),
+                        new Event((short) PubSubConstants.OPERATION_KEEPALIVE));
+                Transaction trans = new Transaction(o, t);
+                req = new TopologyCacheUpdateRequest(me, node, t.getID(), TopologyCacheUpdateRequest.STORE_NEW_NEIGHBOUR_NODE_TO_CACHE, trans.getID());
                 req.setParentID(me);
                 req.setGrandParentID(proposedRoot);
                 for (String childName : children) {
@@ -733,16 +791,22 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
                     Subscriber child = t.getChild(childName);
                     req.addInvolvedNode(child.getNodeInfo());
                 }
+                getCoreAlgorithm().addTransaction(trans);
                 getCoreAlgorithm().sendMessage(req, PubSubTransport.ROUTING_DIRECT, null);
             } else {
+                KeepAliveOperation o = new KeepAliveOperation(t.getID(),
+                        new Subscriber(node.getName(), t),
+                        new Event((short) PubSubConstants.OPERATION_KEEPALIVE));
+                Transaction trans = new Transaction(o, t);
                 //update gparent cache for new node
-                req = new TopologyCacheUpdateRequest(getCoreAlgorithm().getNodeInfo(), node, t.getID(), TopologyCacheUpdateRequest.UPDATE_GRANDPARENT_IN_CACHE, -1);
+                req = new TopologyCacheUpdateRequest(getCoreAlgorithm().getNodeInfo(), node, t.getID(), TopologyCacheUpdateRequest.UPDATE_GRANDPARENT_IN_CACHE, trans.getID());
                 req.setParentID(getCoreAlgorithm().getNodeInfo());
                 req.setGrandParentID(t.getParent().getNodeInfo());
+                getCoreAlgorithm().addTransaction(trans);
                 getCoreAlgorithm().sendMessage(req, PubSubTransport.ROUTING_DIRECT, null);
             }
         } else if (eventType == PubSubConstants.MAINTENANCE_DELETE_NODE) {
-            if (t.isTopicRoot()) {
+            if (t.isTopicRoot(getCoreAlgorithm().getNodeInfo().getID())) {
                 //sending failed node to all child
                 Vector<String> children = t.getChildren();
                 for (String childName : children) {
@@ -750,10 +814,15 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
                         continue;
                     }
                     Subscriber child = t.getChild(childName);
-                    req = new TopologyCacheUpdateRequest(getCoreAlgorithm().getNodeInfo(), child.getNodeInfo(), t.getID(), TopologyCacheUpdateRequest.REMOVE_NEIGHBOUR_FROM_CACHE, -1);
+                    KeepAliveOperation o = new KeepAliveOperation(t.getID(),
+                            child,
+                            new Event((short) PubSubConstants.OPERATION_KEEPALIVE));
+                    Transaction trans = new Transaction(o, t);
+                    req = new TopologyCacheUpdateRequest(getCoreAlgorithm().getNodeInfo(), child.getNodeInfo(), t.getID(), TopologyCacheUpdateRequest.REMOVE_NEIGHBOUR_FROM_CACHE, trans.getID());
                     req.addInvolvedNode(node);
                     req.setParentID(getCoreAlgorithm().getNodeInfo());
                     req.setGrandParentID(null);
+                    getCoreAlgorithm().addTransaction(trans);
                     getCoreAlgorithm().sendMessage(req, PubSubTransport.ROUTING_DIRECT, null);
                 }
             }
@@ -770,26 +839,29 @@ public class DefaultCustomizableAlgorithm extends CustomizableAlgorithm {
             return;
         }
         if (eventType == TopologyCacheUpdateRequest.STORE_NEW_NEIGHBOUR_NODE_TO_CACHE) {
-            try{
-            if (req.getParentNodeInfo() == null || !req.getParentNodeInfo().getID().equals(t.getParent().getNodeInfo().getID())) {
-                log_M.error("[MAINT] " + getCoreAlgorithm().getNodeInfo().getName() + " - unknown topic parent, skipping cache update request for topic: " + t.getID());
-                return;
-            }
-            //proposed new root
-            t.setProposedNewRoot(req.getGrandParentNodeInfo());
-            t.setGrandParent(null);
-            if (req.getInvolvedNodeInfos() != null) {
-                t.addNeighbourns(req.getInvolvedNodeInfos());
-            }
-            }catch(Exception e){
-                log_M.fatal("Error while caching new neighbour node: "+e.getMessage(), e);
+            try {
+                if (req.getParentNodeInfo() == null || t.getParent()!=null && !req.getParentNodeInfo().getID().equals(t.getParent().getNodeInfo().getID())) {
+                    log_M.error("[MAINT] " + getCoreAlgorithm().getNodeInfo().getName() + " - unknown topic parent, skipping cache update request for topic: " + t.getID());
+                    return;
+                }
+                //proposed new root
+                t.setProposedNewRoot(req.getGrandParentNodeInfo());
+                t.setGrandParent(null);
+                if (req.getInvolvedNodeInfos() != null) {
+                    t.addNeighbourns(req.getInvolvedNodeInfos());
+                }
+            } catch (Exception e) {
+                log_M.fatal("Error while caching new neighbour node: " + e.getMessage(), e);
             }
         } else if (eventType == TopologyCacheUpdateRequest.UPDATE_GRANDPARENT_IN_CACHE) {
+            if(t.getParent()!=null){
             if (req.getParentNodeInfo() == null || !req.getParentNodeInfo().getID().equals(t.getParent().getNodeInfo().getID())) {
                 log_M.error("[MAINT] " + getCoreAlgorithm().getNodeInfo().getName() + " - unknown topic parent, skipping cache update request for topic: " + t.getID());
                 return;
             }
+            }
             t.setGrandParent(req.getGrandParentNodeInfo());
+            
         } else if (eventType == TopologyCacheUpdateRequest.REMOVE_NEIGHBOUR_FROM_CACHE) {
             t.removeNeighbour(req.getInvolvedNodeInfos());
         } /*

@@ -16,11 +16,14 @@ import pl.edu.pjwstk.mteam.pubsub.core.User;
  */
 public class NotifyIndication extends PubSubIndication {
 	int length;
-	byte eventType;
+	short eventType;
 	User publisher;
 	boolean isHistorical;
 	byte[] message;
         int operationID;
+    
+        // if true - then indication will not be resend to node children
+        boolean direct = false;
 	
 	public NotifyIndication(){
 		super(new NodeInfo("127.0.0.1", 0), new NodeInfo("127.0.0.1", 0), "", PubSubConstants.MSG_NOTIFY);
@@ -41,7 +44,7 @@ public class NotifyIndication extends PubSubIndication {
 	 * @param publ Event publisher
 	 */
 	public NotifyIndication(NodeInfo src, NodeInfo dest, String topicId,
-			                byte event, byte[] msg, boolean historical, User publ, int operationID){
+			                short event, byte[] msg, boolean historical, User publ, int operationID){
 		super(src, dest, topicId, PubSubConstants.MSG_NOTIFY);
 		eventType = event;
 		publisher = publ;
@@ -57,7 +60,7 @@ public class NotifyIndication extends PubSubIndication {
 		return super.getByteLength()+length;
 	}
 	
-	public byte getEventType(){
+	public short getEventType(){
 		return eventType;
 	}
 	
@@ -75,6 +78,12 @@ public class NotifyIndication extends PubSubIndication {
         public int getOperationID(){
             return this.operationID;
         }
+        public void setDirect(boolean direct){
+            this.direct = direct;
+        }
+        public boolean isDirect(){
+            return this.direct;
+        }
 	
 	/**
 	 * Prepares create topic request for sending.
@@ -89,9 +98,10 @@ public class NotifyIndication extends PubSubIndication {
 			byte[] header = super.encode();
 			dtstr.write(header);
 			dtstr.writeBoolean(isHistorical);
-			dtstr.writeByte(eventType);
+			dtstr.writeShort(eventType);
 			dtstr.writeInt(publisher.getNodeInfo().getName().length());
 			dtstr.write(publisher.getNodeInfo().getName().getBytes());
+                        dtstr.writeBoolean(direct);
 			if(message != null){
 				dtstr.writeInt(message.length);
 				dtstr.write(message);
@@ -122,14 +132,16 @@ public class NotifyIndication extends PubSubIndication {
 			istream.skip(super.getByteLength());
 			isHistorical = dtstr.readBoolean();
 			length += 1;
-			eventType = dtstr.readByte();
-			length += 1;
+			eventType = dtstr.readShort();
+			length += 2;
 			int pubNameLength = dtstr.readInt();
 			length += 4;
 			byte[] pubName = new byte[pubNameLength];
 			dtstr.read(pubName);
 			length += pubNameLength;
 			publisher = new User(new String(pubName));
+                        direct = dtstr.readBoolean();
+                        length+=1;
 			message = new byte[dtstr.readInt()];
 			length += 4;
 			dtstr.read(message);
@@ -140,6 +152,9 @@ public class NotifyIndication extends PubSubIndication {
 			e.printStackTrace();
 		}
 	}
+        public void setOperationID(int operationID) {
+        this.operationID = operationID;
+    }
 
     @Override
     public String toString() {
@@ -147,8 +162,8 @@ public class NotifyIndication extends PubSubIndication {
         sb.append("EventType: ").append(this.eventType);
         sb.append(", Publisher: ").append(this.publisher.getNodeInfo().getName());
         sb.append(", opID: ").append(this.operationID);
-        sb.append(", message: ");
-        sb.append(new String(this.message));
+        //sb.append(", message: ");
+        //sb.append(new String(this.message));
         return sb.toString();
     }
 

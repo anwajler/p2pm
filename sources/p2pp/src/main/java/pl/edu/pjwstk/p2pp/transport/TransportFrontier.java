@@ -38,11 +38,14 @@ public class TransportFrontier {
             if (!this.addresses.contains(receiverAddress)) {
                 this.addresses.add(receiverAddress);
             }
+            //sometimes calledMethod removes below address from frontier, below 
+            // code moves to synchronized block
+            this.size.incrementAndGet();
+            this.frontier.get(receiverAddress).add(message);
 
         }
 
-        this.size.incrementAndGet();
-        this.frontier.get(receiverAddress).add(message);
+        
 
     }
 

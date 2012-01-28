@@ -18,7 +18,7 @@ import pl.edu.pjwstk.mteam.pubsub.logging.Logger;
 public class PublishRequest extends PubSubRequest{
 	private static Logger logger = Logger.getLogger("pl.edu.pjwstk.mteam.pubsub.message.request.PublishRequest");
 	
-	private byte eventType;
+	private short eventType;
 	private User publisher;
 	private byte[] message;
 
@@ -41,14 +41,14 @@ public class PublishRequest extends PubSubRequest{
 	 *            For {@link PubSubConstants#EVENT_MODIFYAC} must be encoded new AC rules.
 	 */
 	public PublishRequest(int transaction, NodeInfo src, NodeInfo dest, 
-			              String topicId, byte event, byte[] msg, User publ){
+			              String topicId, short event, byte[] msg, User publ){
 		super(src, dest, topicId, PubSubConstants.MSG_PUBLISH, transaction);
 		eventType = event;
 		publisher = publ;
 		message = msg;
 	}
 
-	public byte getEventType(){
+	public short getEventType(){
 		return eventType;
 	}
 	
@@ -72,7 +72,7 @@ public class PublishRequest extends PubSubRequest{
 			//writing header inherited from PubSubRequest object
 			byte[] header = super.encode();
 			dtstr.write(header);
-			dtstr.writeByte(eventType);
+			dtstr.writeShort(eventType);
 			dtstr.writeInt(publisher.getNodeInfo().getName().length());
 			dtstr.write(publisher.getNodeInfo().getName().getBytes());
 			if(message != null){
@@ -102,7 +102,7 @@ public class PublishRequest extends PubSubRequest{
 			istream.skip(offset);
 			super.parse(stream, offset);
 			istream.skip(super.getByteLength());
-			eventType = dtstr.readByte();
+			eventType = dtstr.readShort();
 			int pubNameLength = dtstr.readInt();
 			byte[] pubName = new byte[pubNameLength];
 			dtstr.read(pubName);
@@ -113,4 +113,17 @@ public class PublishRequest extends PubSubRequest{
 			e.printStackTrace();
 		}
 	}
+        @Override
+    public String toString(){
+        StringBuilder sb = new StringBuilder();
+        sb.append("PublishRequest type: ");
+        sb.append(getEventType());
+        sb.append(", topicID: ");
+        sb.append(getTopicID());
+        sb.append(", transID: ");
+        sb.append(getTransactionID());
+        sb.append(", sourceName: ");
+        sb.append(getSourceInfo().getName());
+        return sb.toString();
+    }
 }

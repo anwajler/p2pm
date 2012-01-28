@@ -44,16 +44,11 @@ public class Topology_Star_Test {
 			@Override
 			public void onOverlayError(Node node, Object sourceID, int errorCode) {;}
 
-			@Override
-			public void onPubSubError(Node node, Object topicID,
-					byte operationType, int errorCode) {;}
-
+			
 			@Override
 			public void onTopicCreate(Node node, Object topicID) {;}
 
-			@Override
-			public void onTopicNotify(Node node, Object topicID, byte[] message) {;}
-
+			
 			@Override
 			public void onTopicRemove(Node node, Object topicID) {;}
 
@@ -63,17 +58,47 @@ public class Topology_Star_Test {
 			@Override
 			public void onUserLookup(Node node, Object userInfo) {;}
 
-			@Override
-			public void onTopicUnsubscribe(Node node, Object topicID) {
-				// TODO Auto-generated method stub
-				
-			}
-
+			
             public boolean onDeliverRequest(List<NetworkObject> objectList) {
                 throw new UnsupportedOperationException("Not supported yet.");
             }
 
             public boolean onForwardingRequest(List<NetworkObject> objectList) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void onTopicNotify(Node node, Object topicID, byte[] message, boolean historical, short eventType) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void onTopicCreate(Node node, Object topicID, int transID) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void onTopicSubscribe(Node node, Object topicID, int transID) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void onTopicUnsubscribe(Node node, Object topicID, int respCode) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void onOverlayError(Node node, Object sourceID, int errorCode, int transID) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void onPubSubError(Node node, Object topicID, short operationType, int errorCode) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void onPubSubError(Node node, Object topicID, short operationType, int errorCode, int transID) {
                 throw new UnsupportedOperationException("Not supported yet.");
             }
 			

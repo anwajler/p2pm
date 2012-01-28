@@ -27,7 +27,7 @@ public abstract class Rule{
 	 * List of users which are f.e. allowed (or not allowed) to perform 
 	 * specified operation.
 	 */
-	private Hashtable<Byte, Hashtable<String, User>> users;
+	private Hashtable<Short, Hashtable<String, User>> users;
 	
 	/**
 	 * Creates new rule.
@@ -35,7 +35,7 @@ public abstract class Rule{
 	 */
 	public Rule(Operation o){
 		operation = o;
-		users = new Hashtable<Byte, Hashtable<String, User>>();
+		users = new Hashtable<Short, Hashtable<String, User>>();
 		//Creating user list for every event associated with operation
 		Collection<Event> events = operation.getEvents();
 		Iterator<Event> it = events.iterator();
@@ -49,7 +49,7 @@ public abstract class Rule{
 		ByteArrayInputStream istr = new ByteArrayInputStream(bytes);
 		DataInputStream dtstr = new DataInputStream(istr);
 		
-		users = new Hashtable<Byte, Hashtable<String, User>>();
+		users = new Hashtable<Short, Hashtable<String, User>>();
 		
 		try {
 			int operationByteLen = dtstr.readInt();
@@ -58,7 +58,7 @@ public abstract class Rule{
 			operation = new Operation(encOperation);
 			Collection<Event> events = operation.getEvents();
 			for(int i=0; i<events.size(); i++){
-				byte eventType = dtstr.readByte();
+				short eventType = dtstr.readShort();
 				users.put(eventType, new Hashtable<String, User>());
 				int ulistlen = dtstr.readInt();
 				for(int j=0; j<ulistlen; j++){
@@ -86,7 +86,7 @@ public abstract class Rule{
 	 * <li>{@link #MODIFICATION_REMOVEUSER},
 	 * @return Value indicating, whether modification is allowed.
 	 */
-	protected abstract boolean isModificationAllowed(byte eventType, byte modificationType, User user);
+	protected abstract boolean isModificationAllowed(short eventType, byte modificationType, User user);
 	
 	/**
 	 * Checks, if specified operation isn't against this rule.
@@ -104,14 +104,30 @@ public abstract class Rule{
 	 * 		   due to some user-defined restrictions or because specified event is undefined
 	 * 		   for specific operation.
 	 */
-	public boolean addUser(byte eventType, User user){
+	public boolean addUser(short eventType, User user){
 		boolean result = false;
 		Event e = operation.getEvent(eventType);
 		if (e != null){
+                    /*bug fixing - when we call getOperation().addEvent(new event(type))
+                    * then here is no users hashtable for this eventType
+                    * ,if the user == null just create new hashtable
+                    */
+                    if(user == null){
+                         if(users.get(e.getType())==null){
+                                    users.put(e.getType(), new Hashtable<String, User>());
+                                }
+                    }else{
 			if(isModificationAllowed(eventType, MODIFICATION_ADDUSER, user)){
+                                /*bug fixing - when we call getOperation().addEvent(new event(type))
+                                * then here is no users hashtable for this eventType
+                                */                            
+                                if(users.get(e.getType())==null){
+                                    users.put(e.getType(), new Hashtable<String, User>());
+                                }
 				users.get(e.getType()).put(user.getNodeInfo().getName(), user);
 				result = true;
 			}
+                    }
 		}
 		return result;
 	}
@@ -124,7 +140,7 @@ public abstract class Rule{
 	 * 		   due to some user-defined restrictions or because specified event is undefined
 	 * 		   for specific operation.
 	 */
-	public boolean removeUser(byte eventType, User user){
+	public boolean removeUser(short eventType, User user){
 		boolean result = false;
 		Event e = operation.getEvent(eventType);
 		if (e != null){
@@ -140,7 +156,7 @@ public abstract class Rule{
 	/**
 	 * @return Type of operation, this rule is associated with.
 	 */
-	public byte getType(){
+	public short getType(){
 		return operation.getType();
 	}
 	
@@ -157,7 +173,7 @@ public abstract class Rule{
 	 * @return Collection of users assigned to event or <code>null</code> if it doesn'
 	 * 		   exist.
 	 */
-	public Collection<User> getUsers(byte eventType){
+	public Collection<User> getUsers(short eventType){
 		Collection<User> result = null;
 		try{
 			result = users.get(eventType).values();
@@ -165,7 +181,7 @@ public abstract class Rule{
 		return result;
 	}
 	
-	public Hashtable<Byte, Hashtable<String, User>> getUsers(){
+	public Hashtable<Short, Hashtable<String, User>> getUsers(){
 		return users;
 	}
 	
@@ -184,7 +200,7 @@ public abstract class Rule{
 			while(it.hasNext()){
 				Event e = it.next();
 				//writing event type
-				dtstr.write(e.getType());
+				dtstr.writeShort(e.getType());                                
 				Collection<User> ulist = users.get(e.getType()).values();
 				//writing user list length
 				dtstr.writeInt(ulist.size());

@@ -29,7 +29,7 @@ public interface NodeCallback {
 	 * @param message Message encapsulated in this event
          * @param historical true if this notify is from past
 	 */
-	public void onTopicNotify(Node node, Object topicID, byte[] message, boolean historical);
+	public void onTopicNotify(Node node, Object topicID, byte[] message, boolean historical,short eventType);
 	/**
 	 * Called when topic is successfully created.
 	 * @param node This node reference. 
@@ -56,7 +56,7 @@ public interface NodeCallback {
 	 * @param node This node reference.
 	 * @param topicID String value.
 	 */
-	public void onTopicUnsubscribe(Node node, Object topicID);
+	public void onTopicUnsubscribe(Node node, Object topicID, int respCode);
 	/**
 	 * Called, when object is successfully inserted into DHT
 	 * @param node Insert request sender
@@ -101,8 +101,8 @@ public interface NodeCallback {
 	 *  				<li>{@link NodeError#NOSUCHTOPICERR}
 	 * 
 	 */
-	public void onPubSubError(Node node, Object topicID, byte operationType, int errorCode);
-        public void onPubSubError(Node node, Object topicID, byte operationType, int errorCode, int transID);
+	public void onPubSubError(Node node, Object topicID, short operationType, int errorCode);
+        public void onPubSubError(Node node, Object topicID, short operationType, int errorCode, int transID);
 
 	/**
 	 * Invoked after receiving P2PP insert request containing a MESSAGE

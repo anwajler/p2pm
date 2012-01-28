@@ -12,7 +12,7 @@ import pl.edu.pjwstk.mteam.pubsub.message.indication.NotifyIndication;
  */
 public interface TopicStateLogger {
     public static Logger log = Logger.getLogger("pl.edu.pjwstk.mteam.pubsub.util.TopicStateLogger");
-    public void onDeliverPublishIndication(int operationID, NotifyIndication ni);
+    public boolean onDeliverPublishIndication(String nodeName,int operationID, NotifyIndication ni);
     //public NotifyIndication getPublishOperation(String topicID,int opID);
     public ArrayList<NotifyIndication> getPublishOperations(String topicID,int fromID);
     public void addNewTopic(Topic t);

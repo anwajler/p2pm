@@ -40,7 +40,7 @@ public class AccessControlRule extends Rule{
 	 * @param user Must be a Subscriber object instance. Otherwise operation 
 	 *             will fail.
 	 */
-	protected boolean isModificationAllowed(byte eventType, byte modificationType, User user){
+	protected boolean isModificationAllowed(short eventType, byte modificationType, User user){
 		boolean result = false;
 		if(user instanceof Subscriber){
 			result = true;
@@ -60,12 +60,12 @@ public class AccessControlRule extends Rule{
 			 * about particular events
 			 */
 			Collection<User> ulist = getUsers(PubSubConstants.EVENT_ALL);
-			if(ulist.size() == 0 || ulist.contains(o.getUser())){
+			if(ulist.isEmpty() || ulist.contains(o.getUser())){
 				//check event-specific rule
 				ArrayList<Event> elist = new ArrayList<Event>(o.getEvents());
 				Collection<User> uelist = getUsers(elist.get(0).getType());
 				if(uelist != null){
-					if(uelist.size() == 0 || uelist.contains(o.getUser())){
+					if(uelist.isEmpty() || uelist.contains(o.getUser())){
 						result = true;
 					}
 				}
@@ -75,12 +75,12 @@ public class AccessControlRule extends Rule{
 	}
 	
 	public String toString(){
-		String result = "Operation type: "+PubSubConstants.STR_OPERATION[getType()]+"\n";
+		String result = "Operation type: "+PubSubConstants.STR_OPERATION.get(getType())+"\n";
 		Collection<Event> events = getOperation().getEvents();
 		Iterator<Event> it = events.iterator();
 		while(it.hasNext()){
 			Event e = it.next();
-			result += "\tUser list ("+PubSubConstants.STR_EVENT[e.getType()]+"): ";
+			result += "\tUser list ("+PubSubConstants.STR_EVENT.get(e.getType())+"): ";
 			Collection<User> ulist = getUsers().get(e.getType()).values();
 			Iterator<User> uit = ulist.iterator();
 			while(uit.hasNext()){

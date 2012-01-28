@@ -19,13 +19,13 @@ public abstract class RuleSet{
 	 * Rules stored in this set (indexed by operation type, they are
 	 * associated with).
 	 */
-	protected Hashtable<Byte, Rule> rules;
+	protected Hashtable<Short, Rule> rules;
 	
 	/**
 	 * Creates new set of rules.
 	 */
 	public RuleSet(){
-		rules = new Hashtable<Byte, Rule>();
+		rules = new Hashtable<Short, Rule>();
 	}
 	
 	/**
@@ -60,8 +60,8 @@ public abstract class RuleSet{
 	 * @return Removed rule or <code>null</code> if there was no rule for 
 	 *         specified operation. 
 	 */
-	public Rule removeRule(byte operationType){
-		return rules.remove(new Byte(operationType));
+	public Rule removeRule(short operationType){
+		return rules.remove(operationType);
 	}
 	
 	/**
@@ -69,7 +69,7 @@ public abstract class RuleSet{
 	 * @return Rule for operation of specified type or <code>null</code> if it
 	 * 	 	   is not defined in this set. 
 	 */
-	public Rule getRule(byte operationType){
+	public Rule getRule(short operationType){
 		return rules.get(operationType);
 	}
 	

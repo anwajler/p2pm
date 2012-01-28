@@ -25,14 +25,14 @@ import pl.edu.pjwstk.mteam.pubsub.message.request.SubscribeRequest;
 import pl.edu.pjwstk.mteam.pubsub.operation.CreateTopicOperation;
 
 public class PubSubManager_Test {
-	static Logger logger = Logger.getLogger("pl.edu.pjwstk.mteam.pubsub.tests");
+	static Logger LOG = Logger.getLogger("pl.edu.pjwstk.mteam.pubsub.tests");
 	
 	static Topic topic;
 	static CoreAlgorithm pubsubmngr;
 	static Subscriber user1;
 	
 	static{
-		logger = Logger.getLogger("pl.edu.pjwstk.mteam.pubsub.tests");		
+		LOG = Logger.getLogger("pl.edu.pjwstk.mteam.pubsub.tests");		
 		topic = new Topic("Plants");
 		Subscriber subscriber = new Subscriber("paulina", topic);
 		topic.setOwner(subscriber);
@@ -54,15 +54,10 @@ public class PubSubManager_Test {
 			@Override
 			public void onOverlayError(Node node, Object sourceID, int errorCode) {;}
 
-			@Override
-			public void onPubSubError(Node node, Object topicID,
-					byte operationType, int errorCode) {;}
 
 			@Override
 			public void onTopicCreate(Node node, Object topicID) {;}
 
-			@Override
-			public void onTopicNotify(Node node, Object topicID, byte[] message) {;}
 
 			@Override
 			public void onTopicRemove(Node node, Object topicID) {;}
@@ -72,18 +67,70 @@ public class PubSubManager_Test {
 
 			@Override
 			public void onUserLookup(Node node, Object userInfo) {;}
+			
 
-			@Override
-			public void onTopicUnsubscribe(Node node, Object topicID) {
-				// TODO Auto-generated method stub
-				
-			}
+                    @Override
+                    public boolean onDeliverRequest(List<NetworkObject> objectList) {
+                        LOG.debug("onDeliverRequest invoked with: " + objectList);
+                        //EventManager.getInstance().addEventToQueue(PSNode.EVENT_ONDELIVER, objectList);
+                        boolean result = true;
+                        NetworkObject obj = objectList.get(0);
+                        if (obj.getType() == NetworkObject.TYPE_PROTOTRUST) {
+                            byte[] msgbytes = obj.getValue();
+                            LOG.debug("onDeliverRequest invoked !!!");
+                            //Protocol-specific parsing goes here...
 
-            public boolean onDeliverRequest(List<NetworkObject> objectList) {
+                            // Return 'false' to prevent the MESSAGE object from being inserted into DHT
+                            result = false;
+                        }
+                        return result;
+                    }
+
+            @Override
+                    public boolean onForwardingRequest(List<NetworkObject> objectList) {
+                        boolean result = true;
+                        NetworkObject obj = objectList.get(0);
+                        if (obj.getType() == NetworkObject.TYPE_PROTOTRUST) {
+                            byte[] msgbytes = obj.getValue();
+                            //Protocol-specific parsing goes here...
+
+                            // Return 'false' to discard P2PP insert request encapsulating ProtoTrust message
+                        }
+                        return result;
+                    }
+
+            @Override
+            public void onTopicNotify(Node node, Object topicID, byte[] message, boolean historical, short eventType) {
                 throw new UnsupportedOperationException("Not supported yet.");
             }
 
-            public boolean onForwardingRequest(List<NetworkObject> objectList) {
+            @Override
+            public void onTopicCreate(Node node, Object topicID, int transID) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void onTopicSubscribe(Node node, Object topicID, int transID) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void onTopicUnsubscribe(Node node, Object topicID, int respCode) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void onOverlayError(Node node, Object sourceID, int errorCode, int transID) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void onPubSubError(Node node, Object topicID, short operationType, int errorCode) {
+                throw new UnsupportedOperationException("Not supported yet.");
+            }
+
+            @Override
+            public void onPubSubError(Node node, Object topicID, short operationType, int errorCode, int transID) {
                 throw new UnsupportedOperationException("Not supported yet.");
             }
 			
@@ -98,7 +145,7 @@ public class PubSubManager_Test {
 	
 	@Test
 	public void PubSubManager_OnDeliverSubscribe_Test(){
-		logger.trace("Entering test 1...");
+		LOG.trace("Entering test 1...");
 		SubscribeRequest req = new SubscribeRequest(
 				 7000,
 				 new NodeInfo("13256", "10.69.40.111", 
@@ -113,8 +160,8 @@ public class PubSubManager_Test {
 	
 	@Test
 	public void PubSubManager_OnDeliverSubscribe_AccessDenied_Test(){
-		logger.trace("Entering test 2...");
-		logger.trace("Modifying AC rules for "+PubSubConstants.STR_OPERATION[PubSubConstants.OPERATION_SUBSCRIBE]+" operation..");
+		LOG.trace("Entering test 2...");
+		LOG.trace("Modifying AC rules for "+PubSubConstants.STR_OPERATION.get(PubSubConstants.OPERATION_SUBSCRIBE)+" operation..");
 		topic.getAccessControlRules().getRule(PubSubConstants.OPERATION_SUBSCRIBE).addUser(PubSubConstants.EVENT_ALL, user1);
 		SubscribeRequest req = new SubscribeRequest(
 				 7000,
@@ -137,7 +184,7 @@ public class PubSubManager_Test {
 	
 	@Test
 	public void PubSubManager_OnDeliverSubscribe_NoSuchTopic_Test(){
-		logger.trace("Entering test 3...");
+		LOG.trace("Entering test 3...");
 		SubscribeRequest req = new SubscribeRequest(
 				 7000,
 				 new NodeInfo("12645", "10.69.40.111", 
@@ -152,8 +199,8 @@ public class PubSubManager_Test {
 	
 	@Test
 	public void PubSubManager_OnForwardingSubscribe_Test(){
-		logger.trace("Entering test 4...");
-		logger.trace("Modifying AC rules for "+PubSubConstants.STR_OPERATION[PubSubConstants.OPERATION_SUBSCRIBE]+" operation..");
+		LOG.trace("Entering test 4...");
+		LOG.trace("Modifying AC rules for "+PubSubConstants.STR_OPERATION.get(PubSubConstants.OPERATION_SUBSCRIBE)+" operation..");
 		topic.getAccessControlRules().getRule(PubSubConstants.OPERATION_SUBSCRIBE).removeUser(PubSubConstants.EVENT_ALL, user1);
 		SubscribeRequest req = new SubscribeRequest(
 				 7000,
@@ -167,7 +214,7 @@ public class PubSubManager_Test {
 	
 	@Test
 	public void PubSubManager_OnDeliverIndiaction_CustomNotify_Test(){
-		logger.trace("Entering test 5...");
+		LOG.trace("Entering test 5...");
 		topic.DEBUG_showChildren();
 		String msg = new String("Hello ;)");
 		NotifyIndication ind = new NotifyIndication(
@@ -176,14 +223,14 @@ public class PubSubManager_Test {
 				 new NodeInfo("23147", "10.69.40.222", 
 				 "tiia2", 9072), "Plants",
 				 PubSubConstants.EVENT_CUSTOM, msg.getBytes(), true,
-				 new User("tiia"));
+				 new User("tiia"),0);
 		pubsubmngr.onDeliverIndication(ind);
 	}
 	
 	@Test
 	public void PubSubManager_OnDeliverIndiaction_ACMODIFIEDNotify_Test(){
-		logger.trace("Entering test 6...");
-		logger.trace(topic.getAccessControlRules());
+		LOG.trace("Entering test 6...");
+		LOG.trace(topic.getAccessControlRules());
 		
 		AccessControlRules newRules = new AccessControlRules(new Topic("Plants"));
 		newRules.getRule(PubSubConstants.OPERATION_PUBLISH).addUser(PubSubConstants.EVENT_CUSTOM, user1);
@@ -194,14 +241,14 @@ public class PubSubManager_Test {
 				 new NodeInfo("23147", "10.69.40.222", 
 				 "tiia2", 9072), "Plants",
 				 PubSubConstants.EVENT_MODIFYAC, newRules.encode(), true,
-				 new User("tiia"));
+				 new User("tiia"),1);
 		pubsubmngr.onDeliverIndication(ind);
-		logger.trace(pubsubmngr.getTopic("Plants").getAccessControlRules());
+		LOG.trace(pubsubmngr.getTopic("Plants").getAccessControlRules());
 	}
 	
 	@Test
 	public void PubSubManager_OnDeliverIndiaction_REMOVETOPICNotify_Test(){
-		logger.trace("Entering test 7...");
+		LOG.trace("Entering test 7...");
 		
 		NotifyIndication ind = new NotifyIndication(
 				 new NodeInfo("12345", "10.69.40.111", 
@@ -209,7 +256,7 @@ public class PubSubManager_Test {
 				 new NodeInfo("23147", "10.69.40.222", 
 				 "tiia2", 9072), "Plants",
 				 PubSubConstants.EVENT_REMOVETOPIC, null, true,
-				 new User("tiia"));
+				 new User("tiia"),2);
 		pubsubmngr.onDeliverIndication(ind);
 		pubsubmngr.DEBUG_showTopics();
 	}
@@ -224,7 +271,7 @@ public class PubSubManager_Test {
 		/*
 		 * Publish request reaches topic root
 		 */
-		logger.trace("Entering test 8 - onDeliverPublish...");
+		LOG.trace("Entering test 8 - onDeliverPublish...");
 		new AccessControlRules(topic);
 		pubsubmngr.addTopic(topic);
 		pubsubmngr.DEBUG_showTopics();
@@ -250,7 +297,7 @@ public class PubSubManager_Test {
 		 * Publish request reaches plain topic subscriber - it should be forwarded
 		 * to parent
 		 */
-		logger.trace("Entering test 9 - onDeliverPublish (forwarding to parent)...");
+		LOG.trace("Entering test 9 - onDeliverPublish (forwarding to parent)...");
 	    topic.setParent(new NodeInfo("12011", "192.168.9.46", "zenek", 9050));
 		String msg = "Custom message :)";
 		
@@ -269,7 +316,7 @@ public class PubSubManager_Test {
 	
 	@Test
 	public void PubSubManager_AddRemoveTransaction_Test(){
-		logger.trace("Entering test 10...");
+		LOG.trace("Entering test 10...");
 		Event e = new Event(PubSubConstants.EVENT_ALL);
 		Subscriber owner = new Subscriber("paulina", topic);
 		CreateTopicOperation o = new CreateTopicOperation(topic.getID(), owner, e);
@@ -280,19 +327,19 @@ public class PubSubManager_Test {
 		 * Trying to remove transaction that does not exist.
 		 */
 		Transaction newTransaction = new Transaction(o);
-		logger.trace("Trying to remove transaction "+newTransaction.getID()+"...");
+		LOG.trace("Trying to remove transaction "+newTransaction.getID()+"...");
 		Transaction removed = pubsubmngr.removeTransaction(newTransaction.getID());
 		if(removed == null){
-			logger.trace("Remove operation failed - no transaction with id "+
+			LOG.trace("Remove operation failed - no transaction with id "+
 					     newTransaction.getID()+" found...");
 		}
 		/* 
 		 * Trying to remove existing transaction.
 		 */
-		logger.trace("Trying to remove existing transaction 1...");
+		LOG.trace("Trying to remove existing transaction 1...");
 		removed = pubsubmngr.removeTransaction(1);
 		if(removed != null){
-			logger.trace("Successfully removed transaction with id "+
+			LOG.trace("Successfully removed transaction with id "+
 					     removed.getID()+"...");
 		}
 		pubsubmngr.DEBUG_showTransactions();	
@@ -300,7 +347,7 @@ public class PubSubManager_Test {
 	
 /*	@Test
 	public void PubSubManager_OnDeliverIndiaction_NotInteresting_Test(){
-		logger.trace("Entering test 11...");
+		LOG.trace("Entering test 11...");
 		topic.DEBUG_showChildren();
 		
 		topic.getInterestConditions().getRule(PubSubConstants.OPERATION_NOTIFY).addUser(PubSubConstants.EVENT_CUSTOM, 
@@ -322,7 +369,7 @@ public class PubSubManager_Test {
 	
 	@Test
 	public void PubSubManager_OnIncomingCreateNewTopic_AlreadyExists(){
-		logger.trace("Entering test 12...");
+		LOG.trace("Entering test 12...");
 		CreateTopicOperation o = new CreateTopicOperation("Plants",
 				                                          new Subscriber("tiia", topic),
 				                                          new Event(PubSubConstants.EVENT_NEWTOPIC));
@@ -334,15 +381,15 @@ public class PubSubManager_Test {
 								 "tiia2", 9072), "Plants",
 					     PubSubConstants.CREATETOPICFLAG_NEWTOPIC,
 					     t.getID());
-		logger.trace("Invoking onDeliverRequest....");
+		LOG.trace("Invoking onDeliverRequest....");
 		pubsubmngr.onDeliverRequest(req);
-		logger.trace("Invoking onForwardingRequest....");
+		LOG.trace("Invoking onForwardingRequest....");
 		pubsubmngr.onForwardingRequest(req);
 	}
 	
 	@Test
 	public void PubSubManager_OnIncomingCreateTopic_DoesntExists(){
-		logger.trace("Entering test 13...");
+		LOG.trace("Entering test 13...");
 		Topic top = new Topic("Software developement");
 		CreateTopicOperation o = new CreateTopicOperation(top.getID(),
 				                                          new Subscriber("tiia", top),
@@ -355,15 +402,15 @@ public class PubSubManager_Test {
 								 "tiia2", 9072), top.getID(),
 					     PubSubConstants.CREATETOPICFLAG_NEWTOPIC,
 					     t.getID());
-		logger.trace("Invoking onDeliverRequest....");
+		LOG.trace("Invoking onDeliverRequest....");
 		pubsubmngr.onDeliverRequest(req);
-		logger.trace("Invoking onForwardingRequest....");
+		LOG.trace("Invoking onForwardingRequest....");
 		pubsubmngr.onForwardingRequest(req);
 	}
 	
 	@Test
 	public void PubSubManager_OnIncomingTransferTopic_AlreadyExists(){
-		logger.trace("Entering test 14...");
+		LOG.trace("Entering test 14...");
 		CreateTopicOperation o = new CreateTopicOperation("Plants",
 				                                          new Subscriber("tiia", topic),
 				                                          new Event(PubSubConstants.EVENT_NEWTOPIC));
@@ -375,15 +422,15 @@ public class PubSubManager_Test {
 								 "tiia2", 9072), "Plants",
 					     PubSubConstants.CREATETOPICFLAG_TRANSFERTOPIC,
 					     t.getID());
-		logger.trace("Invoking onDeliverRequest....");
+		LOG.trace("Invoking onDeliverRequest....");
 		pubsubmngr.onDeliverRequest(req);
-		logger.trace("Invoking onForwardingRequest....");
+		LOG.trace("Invoking onForwardingRequest....");
 		pubsubmngr.onForwardingRequest(req);
 	}
 	
 	@Test
 	public void PubSubManager_OnIncomingTransferTopic_DoesntExists(){
-		logger.trace("Entering test 15...");
+		LOG.trace("Entering test 15...");
 		Topic top = new Topic("Software developement");
 		CreateTopicOperation o = new CreateTopicOperation(top.getID(),
 				                                          new Subscriber("tiia", top),
@@ -396,9 +443,9 @@ public class PubSubManager_Test {
 								 "tiia2", 9072), top.getID(),
 					     PubSubConstants.CREATETOPICFLAG_TRANSFERTOPIC,
 					     t.getID());
-		logger.trace("Invoking onDeliverRequest....");
+		LOG.trace("Invoking onDeliverRequest....");
 		pubsubmngr.onDeliverRequest(req);
-		logger.trace("Invoking onForwardingRequest....");
+		LOG.trace("Invoking onForwardingRequest....");
 		pubsubmngr.onForwardingRequest(req);
 		pubsubmngr.DEBUG_showTopics();
 	}

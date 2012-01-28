@@ -59,6 +59,8 @@ public interface PubSubInterface {
 	
 //ogłaszanie zdarzenia
 	void networkPublish(Object topic, byte[] message);
+        
+        void networkPublish(Object topic, byte[] message, short eventType);
 	
 //rejestrowanie się do zdarzenia w sieci (np monitoruję dostępność moich znajomych)
 	/**

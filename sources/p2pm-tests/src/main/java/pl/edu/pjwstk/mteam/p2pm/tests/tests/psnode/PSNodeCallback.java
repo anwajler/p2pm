@@ -120,4 +120,27 @@ public class PSNodeCallback implements NodeCallback {
         EventManager.getInstance().addEventToQueue(PSNode.EVENT_ONTOPICSUBSCRIBE, topicID);
     }
 
+    @Override
+    public void onTopicNotify(Node node, Object topicID, byte[] message, boolean historical, short eventType) {
+        LOG.info("onTopicNotify for topic '" + topicID + "' callback invoked");
+        EventManager.getInstance().addEventToQueue(PSNode.EVENT_ONTOPICNOTIFY, new Object[]{topicID,message});
+    }
+
+    @Override
+    public void onTopicUnsubscribe(Node node, Object topicID, int respCode) {
+        LOG.info("onTopicUnsubscribe for topic '" + topicID + "' callback invoked");
+    }
+
+    @Override
+    public void onPubSubError(Node node, Object topicID, short operationType, int errorCode) {
+        LOG.info(node.getUserName() + ": OnPubSubError for topic '" + topicID + "' callback invoked (" + topicID + ", " + operationType + ", " + errorCode + ")");
+        EventManager.getInstance().addEventToQueue(PSNode.EVENT_ONPUBSUBERROR, new Object[]{topicID, operationType, errorCode});
+    }
+
+    @Override
+    public void onPubSubError(Node node, Object topicID, short operationType, int errorCode, int transID) {
+        LOG.info(node.getUserName() + ": OnPubSubError for topic '" + topicID + "' callback invoked (" + topicID + ", " + operationType + ", " + errorCode + ")");
+        EventManager.getInstance().addEventToQueue(PSNode.EVENT_ONPUBSUBERROR, new Object[]{topicID, operationType, errorCode});
+    }
+
 }

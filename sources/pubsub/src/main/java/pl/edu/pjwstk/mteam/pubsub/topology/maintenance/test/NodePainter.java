@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package pl.edu.pjwstk.mteam.pubsub.topology.maintenance.test;
 
 import java.awt.AWTEvent;
@@ -394,17 +390,17 @@ public class NodePainter extends JComponent {
         }
 
         @Override
-        public void onPubSubError(Node node, Object topicID, byte operationType, int errorCode) {
+        public void onPubSubError(Node node, Object topicID, short operationType, int errorCode) {
             logger.info(this_ + " - OnPubSubError for topic '" + topicID + "' callback invoked");
         }
 
         @Override
-        public void onTopicNotify(Node node, Object topicID, byte[] message, boolean b) {
+        public void onTopicNotify(Node node, Object topicID, byte[] message, boolean b, short eventType) {
             logger.info(this_ + " - onTopicNotify for topic '" + topicID + "' callback invoked");
         }
 
         @Override
-        public void onTopicUnsubscribe(Node node, Object topicID) {
+        public void onTopicUnsubscribe(Node node, Object topicID, int respCode) {
             logger.info(this_ + " - onTopicUnsubscribe for topic '" + topicID + "' callback invoked");
         }
 
@@ -456,7 +452,7 @@ public class NodePainter extends JComponent {
             throw new UnsupportedOperationException("Not supported yet.");
         }
 
-        public void onPubSubError(Node node, Object topicID, byte operationType, int errorCode, int transID) {
+        public void onPubSubError(Node node, Object topicID, short operationType, int errorCode, int transID) {
             throw new UnsupportedOperationException("Not supported yet.");
         }
     };
@@ -588,7 +584,7 @@ public class NodePainter extends JComponent {
             } else if (this.node.getPubSubCoreAlgorithm().getTopic(selectedTopic).getChild(this.node.getID()) != null) {
                 this.subscription = true;
                 this.notSubsribed = false;
-                if(this.node.getPubSubCoreAlgorithm().getTopic(selectedTopic).isTopicRoot()){
+                if(this.node.getPubSubCoreAlgorithm().getTopic(selectedTopic).isTopicRoot(this.node.getPubSubCoreAlgorithm().getNodeInfo().getID())){
                     this.additionalInfo = "root";
                 }
                 else{
@@ -598,7 +594,7 @@ public class NodePainter extends JComponent {
                 this.subscription = false;
                 this.notSubsribed = true;
                 this.additionalInfo = "unsubscribed";
-                if(this.node.getPubSubCoreAlgorithm().getTopic(selectedTopic).isTopicRoot()){
+                if(this.node.getPubSubCoreAlgorithm().getTopic(selectedTopic).isTopicRoot(this.node.getPubSubCoreAlgorithm().getNodeInfo().getID())){
                     this.additionalInfo2 = "root";
                 }
             }

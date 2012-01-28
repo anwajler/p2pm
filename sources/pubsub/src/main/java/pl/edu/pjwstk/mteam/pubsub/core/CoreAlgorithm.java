@@ -2,11 +2,10 @@ package pl.edu.pjwstk.mteam.pubsub.core;
 
 import java.util.ArrayList;
 import java.util.Enumeration;
+
 import java.util.Hashtable;
-import java.util.Iterator;
 import java.util.Vector;
 import java.util.logging.Level;
-
 import pl.edu.pjwstk.mteam.pubsub.interestconditions.InterestConditions;
 import pl.edu.pjwstk.mteam.pubsub.logging.Logger;
 
@@ -78,10 +77,13 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
         transport = new PubSubTransport(this, port, n);
         n.setMessageListener(transport);
         topics = new Hashtable<String, Topic>();
-        this.transaction_logger = StateLoggerManager.getTransactionStateLogger();
+
+        StateLoggerManager stm = new StateLoggerManager();
+
+        this.transaction_logger = stm.getTransactionStateLogger();
         //transactions = new Hashtable<Integer, Transaction>();
         //this.keepAliveSender_ = new Maintenance_Keep_Alive_Sender(this, topics.elements());
-        this.topic_logger = StateLoggerManager.getTopicStateLogger();
+        this.topic_logger = stm.getTopicStateLogger();
         //this.maintenanceTransaction = new Hashtable<Integer, Transaction>();
     }
 
@@ -160,15 +162,15 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
     public void addTopic(Topic t) {
         if (topics.containsKey(t.getID())) {
             try {
-                throw new Exception("Topic already exists");
+                throw new Exception("Topic already exists: " + t.getID());
             } catch (Exception ex) {
                 logger.fatal("", ex);
             }
         } else {
             topics.put(t.getID(), t);
-            if(this.topic_logger.getTopic(t.getID())==null){
+            if (this.topic_logger.getTopic(t.getID()) == null) {
                 this.topic_logger.addNewTopic(t);
-            }else{
+            } else {
                 this.topic_logger.clearTopicState(t.getID());
             }
         }
@@ -178,7 +180,7 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
     public void addTopic(Topic t, boolean store) {
         if (topics.containsKey(t.getID())) {
             try {
-                throw new Exception("Topic already exists");
+                throw new Exception("Topic already exists: "+t.getID());
             } catch (Exception ex) {
                 logger.fatal("", ex);
             }
@@ -192,6 +194,9 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
 
     public void removeTopic(String topicId) {
         Topic forRemoval = topics.get(topicId);
+        if (forRemoval == null) {
+            return;
+        }
         Vector<String> chldrn = forRemoval.getChildren();
         for (int i = 0; i < chldrn.size(); i++) {
             logger.trace("Trying to remove subscriber: " + chldrn.get(i));
@@ -292,21 +297,19 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
         if (t != null) { //node stores information about this topic
             AccessControlRules ac = t.getAccessControlRules();
             if (ind instanceof NotifyIndication) {
-                logger.trace("Received notify indication...");
+                logger.trace(getNodeInfo().getName() + " - Received notify indication, operationID:"+((NotifyIndication)ind).getOperationID());
                 NotifyOperation o = new NotifyOperation(t.getID(),
                         new Subscriber(t, ind.getSourceInfo()),
                         new Event(((NotifyIndication) ind).getEventType()));
                 if (ac.isAllowed(o)) {
-                    logger.trace("Notify "
-                            + PubSubConstants.STR_EVENT[((NotifyIndication) ind).getEventType()]
-                            + "('" + t.getID() + "') allowed for user '"
-                            + o.getUser() + "'");
+                    logger.trace("Notify: " + ((NotifyIndication) ind).getTopicID() + "@"
+                            + PubSubConstants.STR_EVENT.get(((NotifyIndication) ind).getEventType())
+                            + " allow for user '" + o.getUser() + "'");
                     getCustomizableAlgorithm().onDeliverNotify((NotifyIndication) ind, t);
                 } else {
-                    logger.trace("Notify "
-                            + PubSubConstants.STR_EVENT[((NotifyIndication) ind).getEventType()]
-                            + "('" + t.getID() + "' forbidden for user '"
-                            + o.getUser() + "'");
+                    logger.trace("Notify: " + ((NotifyIndication) ind).getTopicID() + "@"
+                            + PubSubConstants.STR_EVENT.get(((NotifyIndication) ind).getEventType())
+                            + " forbidden for user '" + o.getUser() + "'");
                 }
             } else if (ind instanceof KeepAliveIndication) {
                 KeepAliveIndication kal = (KeepAliveIndication) ind;
@@ -374,11 +377,11 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
     }
 
     public void terminateTransaction(int tID, byte code) {
-        this.transaction_logger.markTransactionEnd(tID, code);
+        //this.transaction_logger.markTransactionEnd(tID, code);
     }
 
     public boolean onDeliverRequest(PubSubRequest req) {
-        logger.trace(this.getNodeInfo().getName() + " - Searching for topic '" + req.getTopicID() + "'....");
+        logger.debug(this.getNode().getUserName() + " - received request:" + req);
         Topic t = getTopic(req.getTopicID());
         if (t != null) { //node stores information about this topic
             AccessControlRules ac = t.getAccessControlRules();
@@ -398,6 +401,15 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
                          *       onDeliver/ForwardingSubscribe should return operation results
                          */
                         if (retValue) {
+                            t.addSubscriber(req.getSourceInfo());
+                            sendResponse(PubSubConstants.RESP_SUCCESS, req, t);
+                            logger.info("Subscriber '" + req.getSourceInfo()
+                                    + "' accepted by " + getNodeInfo()
+                                    + " ('" + t.getID() + "').....\n");
+//                            try {
+//                                Thread.sleep(300);
+//                            } catch (InterruptedException ex) {
+//                            }
                             getCustomizableAlgorithm().maintenanceCacheUpdate(t, req.getSourceInfo(), PubSubConstants.MAINTENANCE_NEW_NODE_CONNECTED);
                             synchroniseTopic((SubscribeRequest) req, t);
                         }
@@ -415,7 +427,8 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
                 if (ac.isAllowed(o)) {
                     getCustomizableAlgorithm().onDeliverPublish(pubreq, t);
                 } else {
-                    logger.trace(this.getNodeInfo().getName() + " - Publish " + PubSubConstants.STR_EVENT[pubreq.getEventType()]
+                    logger.trace(this.getNodeInfo().getName() + " - Publish: " + pubreq.getTopicID()
+                            + "@" + PubSubConstants.STR_EVENT.get(pubreq.getEventType())
                             + " operation not allowed for '" + req.getSourceInfo().getName()
                             + "'...");
                     sendResponse(PubSubConstants.RESP_FORBIDDEN, req, t);
@@ -443,23 +456,31 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
                 }
             }
         } else {
-            logger.trace("Topic '" + req.getTopicID() + "' not found...");
+            logger.trace(this.getNode().getUserName() + " - Topic '" + req.getTopicID() + "' not found...");
             if (req instanceof CreateTopicRequest) {
                 CreateTopicRequest crtpcreq = (CreateTopicRequest) req;
                 switch (crtpcreq.getFlag()) {
                     case PubSubConstants.CREATETOPICFLAG_NEWTOPIC:
-                        logger.trace("Accepting create topic request (" + req.getTopicID() + ")...");
+                        logger.trace(this.getNode().getUserName() + " -Accepting create topic request (" + req.getTopicID() + ")...");
                         getCustomizableAlgorithm().onDeliverCreateTopic(crtpcreq);
                         break;
                     case PubSubConstants.CREATETOPICFLAG_TRANSFERTOPIC:
                         Topic transferedTopic = new Topic(req.getTopicID());
                         transferedTopic.setAccessControlRules(crtpcreq.getAccessRules());
-                        logger.trace("Accepting topic transfer request (" + req.getTopicID() + ")...");
+                        logger.trace(this.getNode().getUserName() + " -Accepting topic transfer request (" + req.getTopicID() + ")...");
                         addTopic(transferedTopic);
                         topologyManager.onDeliverTransferTopic(crtpcreq, transferedTopic);
                         break;
                 }
-            } else {
+            } 
+//            else if (req instanceof TopologyCacheUpdateRequest) {
+//                Topic topic = new Topic(req.getTopicID());
+//                topic.setParent(req.getSourceInfo());
+//                addTopic(topic);
+//                getCustomizableAlgorithm().onDeliverCacheUpdateRequest((TopologyCacheUpdateRequest) req);
+//                sendResponse(PubSubConstants.RESP_SUCCESS, req, t);
+//            } 
+            else {
                 sendResponse(PubSubConstants.RESP_DOESNOTEXIST, req, null);
             }
         }
@@ -467,21 +488,21 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
     }
 
     public boolean onDeliverResponse(PubSubResponse res) {
-        logger.debug("OnDeliverResponse, topicID: "+res.getTopicID()+", type: "+res.getResponseCode()+", source name: "+res.getSourceInfo().getName()+", destination name: "+res.getDestinationInfo().getName());
+        logger.debug(getNodeInfo().getName() + " - OnDeliverResponse, topicID: " + res.getTopicID() + ", type: " + res.getType() + ", respCode: " + res.getResponseCode() + ", source name: " + res.getSourceInfo().getName() + ", destination name: " + res.getDestinationInfo().getName());
         //Transaction t = transactions.remove(res.getTransactionID());
         Transaction t = null;
-        try{
-         t = this.transaction_logger.getTransaction(res.getTransactionID());
-        }catch(IllegalArgumentException e){
-           t = null;
-           logger.error("Transaction: "+res.getTransactionID()+" - doesn't exists!");
+        try {
+            t = this.transaction_logger.getTransaction(res.getTransactionID());
+        } catch (IllegalArgumentException e) {
+            t = null;
+            logger.error("Transaction: " + res.getTransactionID() + " - doesn't exists!");
         }
         if (t != null) {
             //Stopping the timer associated with this transaction
             //t.terminate();
             terminateTransaction(t.getID(), Transaction.COMPLETED);
             Operation o = t.getOperation();
-            logger.trace("Received response associated with the " + t);
+            logger.trace(getNodeInfo().getName() + " -Received response associated with the " + t);
             switch (o.getType()) {
                 case PubSubConstants.OPERATION_CREATETOPIC:
                     if (o.getEvent().getType() == PubSubConstants.EVENT_NEWTOPIC) {
@@ -537,9 +558,8 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
                      */
                     return getCustomizableAlgorithm().onForwardingPublish(pubreq, t);
                 } else {
-                    logger.trace("Publish " + PubSubConstants.STR_EVENT[pubreq.getEventType()]
-                            + " operation not allowed for '" + req.getSourceInfo().getName()
-                            + "'...");
+                    logger.trace("Publish: " + pubreq.getTopicID() + ")" + PubSubConstants.STR_EVENT.get(pubreq.getEventType())
+                            + " operation not allowed for '" + req.getSourceInfo().getName());
                     sendResponse(PubSubConstants.RESP_FORBIDDEN, req, t);
                 }
             } else if (req instanceof CreateTopicRequest) {
@@ -570,7 +590,7 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
                  * The message will be forwarded anyway, this method may only be used by
                  * the Algorithm component for gathering information.
                  */
-                logger.trace("Invoking onForwardingCreateTopic...");
+                logger.trace("Invoking onForwardingCreateTopic for: " + req.getTopicID() + "@" + PubSubConstants.STR_OPERATION.get((short) req.getType()) + "...");
                 getCustomizableAlgorithm().onForwardingCreateTopic((CreateTopicRequest) req);
             }
             /* TODO: Add the subscribe forwarding handler to implement Scribe 'forwarders'
@@ -595,8 +615,8 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
                 return true;
             case PubSubTransport.ROUTING_DIRECT:
                 return transport.sendDirectly(msg);
-                //transport.sendThroughOverlay(msg, msg.getTopicID());
-                //return true;
+            //transport.sendThroughOverlay(msg, msg.getTopicID());
+            //return true;
             default:
                 return false;
         }
@@ -609,8 +629,8 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
         msg.getDestinationInfo().setName(newDest.getName());
         msg.getDestinationInfo().setPort(newDest.getPort());
         sendMessage(msg, PubSubTransport.ROUTING_DIRECT, null);
-        logger.trace("Forwarding " + PubSubConstants.STR_OPERATION[msg.getType()]
-                + " to parent for topic '" + t.getID() + "': " + msg.getDestinationInfo());
+        logger.trace("Forwarding: " + msg.getTopicID() + "@" + PubSubConstants.STR_OPERATION.get((byte) msg.getType())
+                + " to parent: " + msg.getDestinationInfo());
     }
 
     public void forwardToOtherNode(PubSubMessage msg, NodeInfo newDest) {
@@ -619,8 +639,8 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
         msg.getDestinationInfo().setName(newDest.getName());
         msg.getDestinationInfo().setPort(newDest.getPort());
         sendMessage(msg, PubSubTransport.ROUTING_DIRECT, null);
-        logger.trace("Forwarding " + PubSubConstants.STR_OPERATION[msg.getType()]
-                + " to parent for topic '" + msg.getTopicID() + "': " + msg.getDestinationInfo());
+        logger.trace("Forwarding: " + msg.getTopicID() + "@" + PubSubConstants.STR_OPERATION.get((short) msg.getType())
+                + " to parent: " + msg.getDestinationInfo());
     }
 
     /**
@@ -636,34 +656,32 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
         NotifyOperation o = new NotifyOperation(ind.getTopicID(),
                 new Subscriber(ind.getPublisher(), t),
                 new Event(PubSubConstants.EVENT_CUSTOM));
-        if (child.getNodeInfo().getID().equals(thisNodeId) && msg instanceof NotifyIndication) {
+        if ((child.getNodeInfo().getID().compareTo(thisNodeId) == 0) && msg instanceof NotifyIndication) {
             if (ind.getEventType() == PubSubConstants.EVENT_CUSTOM) {
                 if (child.getSubscription(t.getID()).getInterestConditions().isInteresting(o)) {
-                    logger.trace("Invoking notify callback: "
-                            + PubSubConstants.STR_EVENT[ind.getEventType()]
-                            + " - " + new String(ind.getMessage()) + " ("
-                            + ind.getTopicID() + ")");
+                    logger.trace(getNodeInfo().getName() + " - Invoking notify callback: " + ind.getTopicID() + "@"
+                            + PubSubConstants.STR_EVENT.get(ind.getEventType())
+                            + " - " + new String(ind.getMessage()));
                     for (NodeCallback listener : getNode().getCallbacks()) {
                         listener.onTopicNotify(getNode(), ind.getTopicID(),
-                                ind.getMessage(), ind.isHistorical());
+                                ind.getMessage(), ind.isHistorical(), (short) msg.getType());
                     }
 //
 //					getNode().getCallback().onTopicNotify(getNode(), ind.getTopicID(),
 //			    		                         		  ind.getMessage());
                 } else {
-                    logger.trace("Notify "
-                            + PubSubConstants.STR_EVENT[ind.getEventType()]
-                            + " - " + new String(ind.getMessage()) + " ("
-                            + ind.getTopicID() + ") is not interesting for "
+                    logger.trace("Notify: " + ind.getTopicID() + "@"
+                            + PubSubConstants.STR_EVENT.get(ind.getEventType())
+                            + " - " + new String(ind.getMessage()) + " is not interesting for "
                             + child.getNodeInfo());
                 }
                 if (ind.getEventType() == PubSubConstants.EVENT_CUSTOM) {
-                    if (ind.getOperationID() == (t.getCurrentOperationID() + 1)) {
+ //                   if (ind.getOperationID() == (t.getCurrentOperationID() + 1)) {
                         storeNotifyIndication(ind);
-                    } else {
-                        logger.error("TODO Received operationID from indication mismatch with current ID from topic, these topic need to be synchronised, proceeding ...");
-                        //todo bucior send synchroRequest to parent
-                    }
+//                    } else {
+//                        logger.warn("TODO Received operationID from indication mismatch with current ID from topic, these topic need to be synchronised, proceeding ...");
+//                        //todo bucior send synchroRequest to parent
+//                    }
                 }
             }
 
@@ -680,12 +698,12 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
                 msg.getDestinationInfo().setName(child.getNodeInfo().getName());
                 msg.getDestinationInfo().setPort(child.getNodeInfo().getPort());
                 sendMessage(msg, PubSubTransport.ROUTING_DIRECT, null);
-                logger.trace("Forwarding notify to child: " + msg.getDestinationInfo());
+                logger.trace(getNodeInfo() + " - Forwarding notify :(" + ind.getTopicID() + "@"
+                        + PubSubConstants.STR_EVENT.get(ind.getEventType()) + "to child: " + msg.getDestinationInfo());
             } else {
-                logger.trace("Notify "
-                        + PubSubConstants.STR_EVENT[ind.getEventType()]
-                        + " - " + new String(ind.getMessage()) + " ("
-                        + ind.getTopicID() + ") is not interesting for "
+                logger.trace("Notify: " + ind.getTopicID() + "@"
+                        + PubSubConstants.STR_EVENT.get(ind.getEventType())
+                        + " - " + new String(ind.getMessage()) + " is not interesting for "
                         + child.getNodeInfo());
             }
         }
@@ -706,8 +724,16 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
                     req.getTopicID());
             sendMessage(resp, PubSubTransport.ROUTING_DIRECT, null);
         }
-        logger.trace("Response " + respCode + " for " + PubSubConstants.STR_OPERATION[req.getType()]
-                + " sent to '" + resp.getDestinationInfo() + "'");
+        if (req instanceof PublishRequest) {
+            logger.trace("Response (" + respCode + ") for: " + req.getTopicID() + "@" + PubSubConstants.STR_OPERATION.get((short) req.getType())
+                    + " - event: " + PubSubConstants.STR_EVENT.get((short) ((PublishRequest) req).getEventType())
+                    +", tID: "+resp.getTransactionID()
+                    + " sent to '" + resp.getDestinationInfo() + "'");
+        } else {
+            logger.trace("Response (" + respCode + ") for: " + req.getTopicID() + "@" + PubSubConstants.STR_OPERATION.get((short) req.getType())
+                    +", tID: "+resp.getTransactionID()
+                    + " sent to '" + resp.getDestinationInfo() + "'");
+        }
     }
 
     //TODO s3544 build and send response for kepalive ind:
@@ -715,22 +741,26 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
     public void sendResponse(int respCode, PubSubIndication req, Topic t) {
         StandardResponse resp = null;
 
-        logger.trace("Response " + respCode + " for " + PubSubConstants.STR_OPERATION[req.getType()]
+        logger.trace("Response for: " + req.getTopicID() + "@" + PubSubConstants.STR_OPERATION.get((short) req.getType())
                 + " sent to '" + resp.getDestinationInfo() + "'");
     }
 
     public void forwardToChildren(PubSubMessage msg, Topic t) {
         Vector<String> children = t.getChildren();
         //Iterator<String> iter = children.iterator();
+        logger.trace(getNodeInfo().getName() + " - forwarding indication to children, size: " + children.size());
         Subscriber child;
         boolean isThisNodeSubscribed = false;
-         for (String childName : children) {
-             child = t.getChild(childName);
+        for (String childName : children) {
+            child = t.getChild(childName);
+            logger.trace(getNodeInfo().getName()+": forwarding notifyIndication with tID: "+((NotifyIndication)msg).getOperationID()+"to child: "+child.getNodeInfo().getName());
+            //if(child.nodeInfo.getID().compareTo(t.getParent().nodeInfo.getID())!=0){
             forwardToChild(msg, child);
+            //}
             if (child.getNodeInfo().equals(getNodeInfo())) {
                 isThisNodeSubscribed = true;
             }
-         }
+        }
 //        while (iter.hasNext()) {
 //            child = t.getChild((String) iter.next());
 //            forwardToChild(msg, child);
@@ -738,7 +768,7 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
 //                isThisNodeSubscribed = true;
 //            }
 //        }
-        if (isThisNodeSubscribed || t.isTopicRoot()) {
+        if (isThisNodeSubscribed || t.isTopicRoot(getNodeInfo().getID())) {
             /*
              * If the received notification refers to one of the 'special' events
              * (f.e. remove topic) the procedure for this node can only be performed
@@ -748,24 +778,23 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
             switch (ind.getEventType()) {
                 case PubSubConstants.EVENT_MODIFYAC:
                     getTopic(ind.getTopicID()).setAccessControlRules(new AccessControlRules(ind.getMessage()));
-                    logger.debug(PubSubConstants.STR_EVENT[ind.getEventType()] + " received "
-                            + "(" + ind.getTopicID() + ")");
+                    logger.debug("Notify received: " + ind.getTopicID() + "@" + PubSubConstants.STR_EVENT.get(ind.getEventType()));
                     break;
                 case PubSubConstants.EVENT_REMOVETOPIC:
-                    logger.debug(PubSubConstants.STR_EVENT[ind.getEventType()] + " received "
-                            + " (" + ind.getTopicID() + ")");
+                    logger.debug("Notify received: " + ind.getTopicID() + "@" + PubSubConstants.STR_EVENT.get(ind.getEventType()));
                     removeTopic(ind.getTopicID());
-                    if (isThisNodeSubscribed) /*
-                     * Invoked callback only, if the node is the topic subscriber
-                     * as well, not when it is only the root for this channel
-                     */ {
-                        for (NodeCallback listener : getNode().getCallbacks()) {
-                            listener.onTopicRemove(getNode(), t.getID());
-                        }
+                    logger.debug("Topic: " + ind.getTopicID() + " - REMOVED!"); //if (isThisNodeSubscribed) 
+                /*
+                 * Invoked callback only, if the node is the topic subscriber
+                 * as well, not when it is only the root for this channel
+                 */ {
+                    for (NodeCallback listener : getNode().getCallbacks()) {
+                        listener.onTopicRemove(getNode(), t.getID());
                     }
+                }
 
 //					getNode().getCallback().onTopicRemove(getNode(), t.getID());
-                    break;
+                break;
 //                case PubSubConstants.EVENT_CUSTOM:
 //                    storeNotifyIndication(ind);
 //                    break;
@@ -813,19 +842,21 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
         this.topics = new Hashtable<String, Topic>();
     }
 
-    public void storeNotifyIndication(NotifyIndication ni) {
+    public boolean storeNotifyIndication(NotifyIndication ni) {
         Topic c = getTopic(ni.getTopicID());
-        c.increaseCurrentOperation();
-        if ((c.getCurrentOperationID()) == ni.getOperationID()) {
-            this.topic_logger.onDeliverPublishIndication(ni.getOperationID(), ni);
-        } else {
-            this.topic_logger.onDeliverPublishIndication(c.getCurrentOperationID(), ni);
-        }
+        c.increaseCurrentOperation(getNodeInfo().getName(),ni.getOperationID());
+        
+        //if ((c.getCurrentOperationID()) == ni.getOperationID()) {
+            return this.topic_logger.onDeliverPublishIndication(getNodeInfo().getName(),ni.getOperationID(), ni);
+        //} else {
+        //    this.topic_logger.onDeliverPublishIndication(getNodeInfo().getName(),c.getCurrentOperationID(), ni);
+        //}
     }
 
     private void initCacheDBConnections() {
-        if(this.topic_logger instanceof DBConnection)
-        t_db_conn = DBConnection.getConnection();
+        if (this.topic_logger instanceof DBConnection) {
+            t_db_conn = DBConnection.getConnection();
+        }
     }
 
     public TopicStateLogger getTopicStateLogger() {
@@ -843,11 +874,11 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
         int received_operationID = req.getEventIndex();
         try {
             if (received_operationID != current_operationID) {
-                logger.trace("Received synchroniseTopic request for operation ID:"+received_operationID+" , current topic operation: "+current_operationID+" [topic="+t.getID()+"]");
+                logger.trace("Received synchroniseTopic request for operation ID:" + received_operationID + " , current topic operation: " + current_operationID + " [topic=" + t.getID() + "]");
                 if (received_operationID == PubSubConstants.HISTORY_NONE) {
                     //ignore - Node doesn't want do receive history publish events for these topic
                 } else {
-                    indications_to_send = this.topic_logger.getPublishOperations(req.getTopicID(),((received_operationID == PubSubConstants.HISTORY_ALL) ? 0 : received_operationID));
+                    indications_to_send = this.topic_logger.getPublishOperations(req.getTopicID(), ((received_operationID == PubSubConstants.HISTORY_ALL) ? 0 : received_operationID));
                     logger.trace("Preparing to sent historical notifyIndications: topicID:" + req.getTopicID() + ", source: " + source.getName() + ",receiver operationID: " + received_operationID + ", history indications to sent: " + indications_to_send.size());
                     if (indications_to_send.size() > 0) {
                         publisher = new User(indications_to_send.get(0).getPublisher());
@@ -866,7 +897,6 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
                         } catch (InterruptedException ex) {
                         }
                     }
-
                 }
             }
         } finally {
