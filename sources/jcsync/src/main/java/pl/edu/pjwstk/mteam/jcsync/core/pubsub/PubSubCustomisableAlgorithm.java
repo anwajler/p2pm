@@ -593,12 +593,13 @@ public class PubSubCustomisableAlgorithm extends DefaultCustomizableAlgorithm {
 
             @Override
             public void onOverlayError(Node node, Object sourceID, int errorCode) {
-                throw new UnsupportedOperationException("Not supported yet.");
+                log.error("onOverlayError, node:"+node.getUserName()+", object:"+sourceID+", errorCode: "+errorCode);
+                
             }
 
             @Override
             public void onOverlayError(Node node, Object sourceID, int errorCode, int transID) {
-                throw new UnsupportedOperationException("Not supported yet.");
+                log.error("onOverlayError, node:"+node.getUserName()+", object:"+sourceID+", errorCode: "+errorCode);
             }
 
             @Override

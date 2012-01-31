@@ -64,20 +64,25 @@ public class TestsFactory {
 
         }
         else if(JCsyncBasicTest.isTestFromName(testName)){
+            LOG.info("JCsyncBasicTest found...");
             Logger logger = Logger.getRootLogger();
             RollingFileAppender rfa = (RollingFileAppender) logger.getAppender("R");
-            rfa.setFile(args[14]);   
-            rfa.activateOptions();
+            if(rfa!=null){
+                rfa.setFile(args[14]);   
+                rfa.activateOptions();
+            }
             System.setProperty("mail.smtp.port", "465");
             System.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
             System.setProperty("mail.smtp.socketFactory.port", "465");
             System.setProperty("mail.smtp.socketFactory.fallback", "false");            
             SMTPAppender sa = (SMTPAppender) logger.getAppender("SMTP");
-            //sa.setBufferSize(100);
-            sa.setSubject(testName+":node"+args[1]);
-            //sa.setThreshold(Priority.INFO);
-            sa.activateOptions();
-            LOG.error("Here i am (test message)");
+            if(sa!=null){
+                //sa.setBufferSize(100);
+                sa.setSubject(testName+":node"+args[1]+" : "+args[13]);
+                //sa.setThreshold(Priority.INFO);
+                sa.activateOptions();
+                LOG.error("Here i am (test message)");
+            }
             int testArgsCount = JCsyncBasicTest.getArgsCount();
             
             

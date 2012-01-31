@@ -20,7 +20,7 @@ public class Main {
         PropertyConfigurator.configureAndWatch("./log4j.properties", 1000);
 
         String testName = args[0];
-
+        LOG.info("Looking for test:"+testName+"-in stored test classes");
         ITest test = TestsFactory.getTestForName(testName, args);
 
         if (test != null) {

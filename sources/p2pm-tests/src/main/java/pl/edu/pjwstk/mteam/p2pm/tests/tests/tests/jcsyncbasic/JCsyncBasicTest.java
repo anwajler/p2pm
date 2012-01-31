@@ -195,7 +195,7 @@ public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
     }
 
     public void initTestEnviroinment(Map<String, Object> args, P2PNode node) throws Exception {
-        this.jcsyncCore = new JCSyncCore(node, ((Integer) args.get(FIELD_PORT) + 1000));
+        this.jcsyncCore = new JCSyncCore(node, ((Integer) args.get(FIELD_PORT) + 2));
         this.jcsyncCore.init();
 
         this.observable = new JCSyncObservable();
@@ -333,7 +333,8 @@ public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
     }
 
     public static boolean isTestFromName(String name) {
-        return "JCsyncBasicTest".equalsIgnoreCase(name);
+        if("JCsyncBasicTest".compareToIgnoreCase(name)==0)return true;
+        else return false;
     }
 
     public static int getArgsCount() {

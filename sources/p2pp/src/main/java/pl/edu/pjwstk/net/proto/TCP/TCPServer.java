@@ -29,7 +29,7 @@ public class TCPServer extends Thread {
     private ServerSocketFactory socketFactory;
     private ServerSocket serverSocket;
     private final BlockingQueue<TransportPacket> receivedPackets = new LinkedBlockingQueue<TransportPacket>(100);
-    private final ThreadPoolExecutor readExecutor = new ThreadPoolExecutor(10, 10, 5, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(20));
+    private final ThreadPoolExecutor readExecutor = new ThreadPoolExecutor(10, 10, 5, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1000));
 
     private final InetAddress address;
     private final int port;
