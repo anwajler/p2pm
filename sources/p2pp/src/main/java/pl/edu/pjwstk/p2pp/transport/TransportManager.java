@@ -148,7 +148,8 @@ public class TransportManager extends Thread {
                 while ((message = this.frontier.poll()) != null) {
 
                     for (TransportWorker<? extends ProtocolWorker> currentTransportWorker : transportObjects) {
-                        if (currentTransportWorker.isWorkerReady() && (currentTransportWorker.isReliable() == message.isOverReliable())) {
+                        if (currentTransportWorker.isWorkerReady() && (currentTransportWorker.isReliable() == message.isOverReliable()) &&
+                                (currentTransportWorker.isEncrypted() == message.isEncrypted())) {
                             currentTransportWorker.OnSend(message);
                         }
                     }

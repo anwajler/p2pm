@@ -21,4 +21,4 @@ else
     ssh-add ~/.ssh/id_?*[^pub$]? > /dev/null 2>&1
 fi
 
-ssh -q -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $username@$hostname "$command"
+ssh -t -q -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $username@$hostname "$command"

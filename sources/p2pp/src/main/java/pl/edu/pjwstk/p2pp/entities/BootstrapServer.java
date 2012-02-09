@@ -33,9 +33,7 @@ public abstract class BootstrapServer extends P2PPEntity {
     /**
      * Creates bootstrap server.
      */
-    public BootstrapServer() {
-
-    }
+    public BootstrapServer() {}
 
     @Override
     protected boolean isBestKnownPeer(Request request) {

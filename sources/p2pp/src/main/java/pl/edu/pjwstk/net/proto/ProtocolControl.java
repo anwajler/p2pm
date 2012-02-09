@@ -11,6 +11,8 @@ public interface ProtocolControl {
 	 * @return true - reliable/false - unreliable
 	 */
 	public boolean isReliable();
+
+    public boolean isEncrypted();
 	
 	/**
 	 * Determines is protocol worker has state machine. This future is only for unreliable protocols.

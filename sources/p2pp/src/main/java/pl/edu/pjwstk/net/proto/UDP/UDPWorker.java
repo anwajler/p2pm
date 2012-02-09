@@ -189,6 +189,10 @@ public class UDPWorker extends ProtocolWorker implements ProtocolControl, Protoc
         return isReliable;
     }
 
+    public boolean isEncrypted() {
+        return false;
+    }
+
     /* (non-Javadoc)
       * @see pl.edu.pjwstk.net.proto.ProtocolReader#Receive()
       */

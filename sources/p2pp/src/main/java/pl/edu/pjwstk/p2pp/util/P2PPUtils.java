@@ -1,5 +1,12 @@
 package pl.edu.pjwstk.p2pp.util;
 
+import pl.edu.pjwstk.p2pp.entities.BootstrapServer;
+import pl.edu.pjwstk.p2pp.entities.Peer;
+import pl.edu.pjwstk.p2pp.kademlia.KademliaBoostrapServer;
+import pl.edu.pjwstk.p2pp.kademlia.KademliaPeer;
+import pl.edu.pjwstk.p2pp.superpeer.SuperPeerBootstrapServer;
+import pl.edu.pjwstk.p2pp.superpeer.SuperPeerPeer;
+
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -192,5 +199,27 @@ public final class P2PPUtils {
 			}
 		}
 	}
+
+    public BootstrapServer getBootstrapForProtocol(byte protocolByte) throws NoSuchAlgorithmException {
+        switch (protocolByte) {
+            case KADEMLIA_P2P_ALGORITHM:
+                return new KademliaBoostrapServer();
+            case SUPERPEER_P2P_ALGORITHM:
+                return new SuperPeerBootstrapServer();
+            default:
+                throw new NoSuchAlgorithmException("P2P algorithm id=" + protocolByte + " is not supported.");
+        }
+    }
+
+    public Peer getPeerForProtocol(byte protocolByte) throws NoSuchAlgorithmException {
+        switch (protocolByte) {
+            case KADEMLIA_P2P_ALGORITHM:
+                return new KademliaPeer();
+            case SUPERPEER_P2P_ALGORITHM:
+                return new SuperPeerPeer();
+            default:
+                throw new NoSuchAlgorithmException("P2P algorithm id=" + protocolByte + " is not supported.");
+        }
+    }
 
 }
