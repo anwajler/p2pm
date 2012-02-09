@@ -31,7 +31,7 @@ public class Logger {
 	public void fatal(Object msg){
 		logger.fatal(msg);
 	}
-        public void fatal(Object msg, Exception e){
+        public void fatal(Object msg, Throwable e){
             logger.fatal(msg, e);
         }
 

@@ -804,6 +804,7 @@ public class SuperPeerPeer extends Peer {
 
         try {
             hashedID = P2PPUtils.hash(unhashedID, sharedManager.getOptions().getHashAlgorithm());
+            LOG.warn("--- unhashed ID: "+java.util.Arrays.toString(unhashedID)+", hashed to: "+java.util.Arrays.toString(hashedID)+", with hashAlgorithm: "+sharedManager.getOptions().getHashAlgorithm());
         } catch (NoSuchAlgorithmException e) {
             LOG.error("Error while generating hashed id from " + new String(unhashedID), e);
         }
@@ -921,6 +922,7 @@ public class SuperPeerPeer extends Peer {
                             };
                             error.setValue(((LookupObjectRequest) request).getResourceLookup());
                             callback.errorCallback(error, P2PPNodeCallback.USER_LOOKUP_ERROR_CODE);
+                            
                         }
 
                     }
@@ -957,6 +959,7 @@ public class SuperPeerPeer extends Peer {
                     };
                     error.setValue(peerID);
                     callback.errorCallback(error, P2PPNodeCallback.USER_LOOKUP_ERROR_CODE);
+                    LOG.warn("PeerID: "+peerID+", PeerIndex values: "+this.peerIndex.toString());
             }
 
         }
@@ -1244,24 +1247,24 @@ public class SuperPeerPeer extends Peer {
 
                                         } else {
 
-                                            if (LOG.isDebugEnabled()) {
-                                                LOG.debug("Removing unresponsive peer and it's resources from indexes: " + pPI);
-                                            }
-
-                                            peerIndex.remove(pID);
-
-                                            Collection<ResourceID> resourceIDs = reverseResourceIndex.remove(pPI);
-                                            if (resourceIDs != null) {
-                                                for (ResourceID resourceID : resourceIDs) {
-                                                    resourceIndex.remove(resourceID);
-                                                }
-
-                                                if (LOG.isTraceEnabled()) {
-                                                    LOG.trace(resourceIDs.size() + " resources removed from indexes");
-                                                }
-                                            }
-
-                                            transactionTable.removeForPeerID(pID.getPeerIDBytes());
+//                                            if (LOG.isDebugEnabled()) {
+//                                                LOG.debug("Removing unresponsive peer and it's resources from indexes: " + pPI);
+//                                            }
+//
+//                                            peerIndex.remove(pID);
+//
+//                                            Collection<ResourceID> resourceIDs = reverseResourceIndex.remove(pPI);
+//                                            if (resourceIDs != null) {
+//                                                for (ResourceID resourceID : resourceIDs) {
+//                                                    resourceIndex.remove(resourceID);
+//                                                }
+//
+//                                                if (LOG.isTraceEnabled()) {
+//                                                    LOG.trace(resourceIDs.size() + " resources removed from indexes");
+//                                                }
+//                                            }
+//
+//                                            transactionTable.removeForPeerID(pID.getPeerIDBytes());
 
                                         }
 

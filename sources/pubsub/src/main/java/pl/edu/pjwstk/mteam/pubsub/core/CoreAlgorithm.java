@@ -33,6 +33,7 @@ import pl.edu.pjwstk.mteam.pubsub.operation.NotifyOperation;
 import pl.edu.pjwstk.mteam.pubsub.operation.PublishOperation;
 import pl.edu.pjwstk.mteam.pubsub.operation.SubscribeOperation;
 import pl.edu.pjwstk.mteam.pubsub.topology.TopologyManager;
+import pl.edu.pjwstk.mteam.pubsub.topology.implementation.StarTopology;
 import pl.edu.pjwstk.mteam.pubsub.topology.implementation.TreeTopology;
 import pl.edu.pjwstk.mteam.pubsub.topology.maintenance.message.TopologyCacheUpdateRequest;
 import pl.edu.pjwstk.mteam.pubsub.transport.PubSubTransport;
@@ -73,7 +74,7 @@ public class CoreAlgorithm extends AbstractCoreAlgorithm implements PubSubMessag
     public CoreAlgorithm(int port, Node n) {
         super(n);
         algChooser = new DefaultAlgorithmConfigurator();
-        topologyManager = new TreeTopology(this);
+        topologyManager = new StarTopology(this);
         transport = new PubSubTransport(this, port, n);
         n.setMessageListener(transport);
         topics = new Hashtable<String, Topic>();

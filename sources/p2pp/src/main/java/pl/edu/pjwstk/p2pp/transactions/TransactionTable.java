@@ -192,9 +192,10 @@ public class TransactionTable {
                 Hashtable<Long, Transaction> transactionsForSourceID = responseTransactionsMap.get(wrappedSourceID);
 
                 if (transactionsForSourceID != null) {
-
+                    
                     long transactionIDAsLong = request.getTransactionIDAsLong();
-
+                    //if returned value is not a transaction mask
+                    if(transactionIDAsLong != Long.MIN_VALUE)
                     foundTransaction = transactionsForSourceID.get(transactionIDAsLong);
                 }
             }

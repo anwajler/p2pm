@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
 import java.net.BindException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Vector;
 
@@ -293,7 +294,8 @@ public class P2PNode extends Node{
 					//nodeCallback.onOverlayError(self, null, errorCode);
 					break;
 				case P2PPNodeCallback.USER_LOOKUP_ERROR_CODE:
-					logger.trace("User not found...");
+					logger.fatal("User not found...",new Throwable());
+                                        
 					for (NodeCallback listener : nodeCallbacks) {
 						listener.onOverlayError(self, null, errorCode);
 					}
@@ -547,6 +549,7 @@ public class P2PNode extends Node{
             for (P2PPEntity current : entities) {
 
                 if (current instanceof pl.edu.pjwstk.p2pp.entities.Node) {
+                    logger.warn("--- sending message to "+peerId+", peerIDBytes: "+Arrays.toString(peerId.getBytes()));
                     ((pl.edu.pjwstk.p2pp.entities.Node) current).sendMessage(peerId.getBytes(), " ", msg);
                     break;
                 }

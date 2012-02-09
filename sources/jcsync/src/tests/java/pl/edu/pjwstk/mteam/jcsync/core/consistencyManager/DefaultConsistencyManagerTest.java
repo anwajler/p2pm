@@ -232,8 +232,8 @@ public class DefaultConsistencyManagerTest {
         map1 = new JCSyncHashMap<String, String>(sh);   
         so_1 = new SharedCollectionObject(name, map1, core);
         
-        int nodesCount = 7;
-        int operationCount = 1000;
+        int nodesCount = 10;
+        int operationCount = 100;
         CountDownLatch latch = new CountDownLatch(nodesCount);   
         CountDownLatch endLatch = new CountDownLatch(nodesCount);
         for (int i = 0; i < nodesCount; i++) {

@@ -1,5 +1,6 @@
 package pl.edu.pjwstk.p2pp.objects;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import pl.edu.pjwstk.p2pp.util.Arrays;
 import pl.edu.pjwstk.p2pp.util.ByteUtils;
 
@@ -15,13 +16,17 @@ public class PeerID extends GeneralObject {
 
 	@Override
 	public String toString() {
-		return super.toString() + "[PeerID=[peerIDBytes=" + ByteUtils.byteArrayToHexString(peerIDBytes) + "]]";
+		return super.toString() + "[PeerID=[peerIDBytes=" + ByteUtils.byteArrayToHexString(peerIDBytes) + ", peerIDHashCode="+this.peerIDHashCode.get()+"]]";
 	}
 
 	/**
 	 * Bytes containing peerID value.
 	 */
-	private byte[] peerIDBytes;
+	private volatile byte[] peerIDBytes;
+        /**
+         * Created one time hashCode for peerID - not all time when hashCode() is called.
+         */
+        private final AtomicInteger peerIDHashCode;
 
 	/**
 	 * Constructor for peerID object as defined in P2PP protocol (draft 01).
@@ -33,6 +38,9 @@ public class PeerID extends GeneralObject {
 		super(GeneralObject.PEER_ID_OBJECT_TYPE);
 
 		this.peerIDBytes = peerIDBytes;
+                StringBuilder buffer = new StringBuilder("");
+                for (byte b : this.peerIDBytes) buffer.append(b);
+                this.peerIDHashCode = new AtomicInteger(buffer.toString().hashCode());
 	}
 
 	@Override
@@ -75,7 +83,10 @@ public class PeerID extends GeneralObject {
 	 * Sets value of peerID.
 	 */
 	public void setPeerIDBytes(byte[] peerIDValue) {
-		peerIDBytes = peerIDValue;
+		this.peerIDBytes = peerIDValue;
+                StringBuilder buffer = new StringBuilder("");
+                for (byte b : this.peerIDBytes) buffer.append(b);
+                this.peerIDHashCode.set(buffer.toString().hashCode());
 	}
 
 	/**
@@ -95,8 +106,9 @@ public class PeerID extends GeneralObject {
 
     @Override
 	public int hashCode() {
-		StringBuffer buffer = new StringBuffer("");
-        for (byte b : peerIDBytes) buffer.append(b);
-		return buffer.toString().hashCode();
+        return this.peerIDHashCode.get();
+//		StringBuffer buffer = new StringBuffer("");
+//        for (byte b : peerIDBytes) buffer.append(b);
+//		return buffer.toString().hashCode();
 	}
 }

@@ -360,7 +360,10 @@ public abstract class P2PPMessage extends Message {
 	 * @return
 	 */
 	public long getTransactionIDAsLong() {
+            // if the transaction is not null
+            if(this.transactionID!=null){
 		return ByteUtils.bytesToLong(transactionID[0], transactionID[1], transactionID[2], transactionID[3]);
+            }else return Long.MIN_VALUE;
 	}
 
 	public void setTransactionID(byte[] transactionID) {
