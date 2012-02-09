@@ -120,6 +120,10 @@ public class TCPNBWorker extends ProtocolWorker implements ProtocolControl, Prot
         return this.isReliable;
     }
 
+    public boolean isEncrypted() {
+        return false;
+    }
+
     public byte[] Receive() throws IOException {
         return this.ReceivePacket().packetBody;
     }
