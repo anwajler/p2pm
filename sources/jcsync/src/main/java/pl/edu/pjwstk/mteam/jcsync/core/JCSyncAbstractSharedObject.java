@@ -289,7 +289,7 @@ public abstract class JCSyncAbstractSharedObject {
             OperationForbiddenException,
             Exception {
         byte[] details = null;
-        details = (byte[]) core.sendMessage(JCsyncAbstractOperation.get_OP_REQ_TRANSFER_OBJECT(name), true);
+        details = (byte[]) core.sendMessage(JCsyncAbstractOperation.get_OP_REQ_TRANSFER_OBJECT(name,core.getNodeInfo().getName()), true);
         return details;
     }
 
@@ -485,7 +485,7 @@ public abstract class JCSyncAbstractSharedObject {
      * it will take place when the previous one is released.
      */
     protected void beforePublishReadOperation() throws Exception {
-        JCsyncAbstractOperation op = JCsyncAbstractOperation.get_OP_REQ_LOCK_APPLY(this.ID);
+        JCsyncAbstractOperation op = JCsyncAbstractOperation.get_OP_REQ_LOCK_APPLY(this.ID,this.coreAlg.getNodeInfo().getName());
         this.coreAlg.getConsistencyManager(this.ID).beforeRequestSend(op, true);
         this.coreAlg.sendMessage(op, false);
         this.coreAlg.getConsistencyManager(this.ID).afterRequestSend(op, true);        
@@ -500,7 +500,7 @@ public abstract class JCSyncAbstractSharedObject {
      * it will take place when the previous one is released.
      */
     protected void beforePublishWriteOperation() throws Exception{
-        JCsyncAbstractOperation op = JCsyncAbstractOperation.get_OP_REQ_LOCK_APPLY(this.ID);
+        JCsyncAbstractOperation op = JCsyncAbstractOperation.get_OP_REQ_LOCK_APPLY(this.ID,this.coreAlg.getNodeInfo().getName());
         this.coreAlg.getConsistencyManager(this.ID).beforeRequestSend(op, true);
         this.coreAlg.sendMessage(op, false);
         this.coreAlg.getConsistencyManager(this.ID).afterRequestSend(op, true);
@@ -511,7 +511,7 @@ public abstract class JCSyncAbstractSharedObject {
      */
     
     protected void afterPublishWriteOperation() throws Exception {
-        JCsyncAbstractOperation op = JCsyncAbstractOperation.get_OP_REQ_LOCK_RELEASE(this.ID);
+        JCsyncAbstractOperation op = JCsyncAbstractOperation.get_OP_REQ_LOCK_RELEASE(this.ID,this.coreAlg.getNodeInfo().getName());
         this.coreAlg.getConsistencyManager(this.ID).beforeRequestSend(op, true);
         this.coreAlg.sendMessage(op, false);
         this.coreAlg.getConsistencyManager(this.ID).afterRequestSend(op, true);
@@ -521,7 +521,7 @@ public abstract class JCSyncAbstractSharedObject {
      * Invoked to release the locker.
      */
     protected void afterPublishReadOperation() throws Exception {
-        JCsyncAbstractOperation op = JCsyncAbstractOperation.get_OP_REQ_LOCK_RELEASE(this.ID);
+        JCsyncAbstractOperation op = JCsyncAbstractOperation.get_OP_REQ_LOCK_RELEASE(this.ID,this.coreAlg.getNodeInfo().getName());
         this.coreAlg.getConsistencyManager(this.ID).beforeRequestSend(op, true);
         this.coreAlg.sendMessage(op, false);
         this.coreAlg.getConsistencyManager(this.ID).afterRequestSend(op, true);
@@ -539,7 +539,7 @@ public abstract class JCSyncAbstractSharedObject {
         MethodCarrier mc = new MethodCarrier(methodName);
         mc.setArgTypes(argTypes);
         mc.setArgValues(argValues);
-        JCsyncAbstractOperation op = JCsyncAbstractOperation.getByType(RegisteredOperations.OP_REQ_WRITE_METHOD, this.ID, mc);
+        JCsyncAbstractOperation op = JCsyncAbstractOperation.getByType(RegisteredOperations.OP_REQ_WRITE_METHOD, this.ID, mc,this.coreAlg.getNodeInfo().getName());
         this.coreAlg.getConsistencyManager(this.ID).beforeRequestSend(op, true);
         this.coreAlg.sendMessage(op, false);
         Object e = this.coreAlg.getConsistencyManager(this.ID).afterRequestSend(op, true);
@@ -559,7 +559,7 @@ public abstract class JCSyncAbstractSharedObject {
         MethodCarrier mc = new MethodCarrier(methodName);
         mc.setArgTypes(argTypes);
         mc.setArgValues(argValues);
-        JCsyncAbstractOperation op = JCsyncAbstractOperation.getByType(RegisteredOperations.OP_REQ_READ_METHOD, this.ID, mc);
+        JCsyncAbstractOperation op = JCsyncAbstractOperation.getByType(RegisteredOperations.OP_REQ_READ_METHOD, this.ID, mc,this.coreAlg.getNodeInfo().getName());
         this.coreAlg.getConsistencyManager(this.ID).beforeRequestSend(op, true);
         this.coreAlg.sendMessage(op, false);
         Object e = this.coreAlg.getConsistencyManager(this.ID).afterRequestSend(op, true);

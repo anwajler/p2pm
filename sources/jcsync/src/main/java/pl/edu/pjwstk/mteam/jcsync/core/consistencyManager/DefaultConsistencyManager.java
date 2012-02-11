@@ -206,51 +206,51 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
         log.trace("(response received (" + respCode + ")): " + op.toString());
         if (this.blockingRequests.containsKey(op)) {
             synchronized (this.blockingRequests.get(op).methodAlreadyInvoked) {
-            //if the operation is a request
-            if ((op.getOperationType() & OP_REQ_GENERIC) == OP_REQ_GENERIC) {
-                //if the operation is a single phase operation
-                if ((op.getOperationType() & OP_REQ_ONE_PHASE_GENERIC) == OP_REQ_ONE_PHASE_GENERIC) {
-                    //set response code
-                    this.blockingRequests.get(op).respCode = respCode;
-                    //release semaphore
-                    this.blockingRequests.get(op).semaphore.release();
-                } else if ((op.getOperationType() & OP_REQ_BIPHASE_GENERIC) == OP_REQ_BIPHASE_GENERIC) {
-                    /* operation depends on respCode, allowe response codes:
-                     * JCSyncConstans.J_RESP_GENERAL_SUCCESS;
-                     * JCSyncConstans.J_ERR_COLLECTION_EXISTS;
-                     * JCSyncConstans.J_ERR_OBJECT_NOT_EXISTS;
-                     * JCSyncConstans.J_ERR_COLLECTION_AUTH_ERROR;
-                     * If the response code is SUCCESS then go to the second phase (wait for the indication)
-                     * else throw exception depending on the respCOde
-                     * 
-                     * differentation just for clarity
-                     */
-                    switch (respCode) {
-                        case (J_RESP_GENERAL_SUCCESS): {
-                            log.trace("received success response for biphase operation: " + op.toString());
-                            //synchronized (this.blockingRequests.get(op).methodAlreadyInvoked) {
+                //if the operation is a request
+                if ((op.getOperationType() & OP_REQ_GENERIC) == OP_REQ_GENERIC) {
+                    //if the operation is a single phase operation
+                    if ((op.getOperationType() & OP_REQ_ONE_PHASE_GENERIC) == OP_REQ_ONE_PHASE_GENERIC) {
+                        //set response code
+                        this.blockingRequests.get(op).respCode = respCode;
+                        //release semaphore
+                        this.blockingRequests.get(op).semaphore.release();
+                    } else if ((op.getOperationType() & OP_REQ_BIPHASE_GENERIC) == OP_REQ_BIPHASE_GENERIC) {
+                        /* operation depends on respCode, allowe response codes:
+                         * JCSyncConstans.J_RESP_GENERAL_SUCCESS;
+                         * JCSyncConstans.J_ERR_COLLECTION_EXISTS;
+                         * JCSyncConstans.J_ERR_OBJECT_NOT_EXISTS;
+                         * JCSyncConstans.J_ERR_COLLECTION_AUTH_ERROR;
+                         * If the response code is SUCCESS then go to the second phase (wait for the indication)
+                         * else throw exception depending on the respCOde
+                         * 
+                         * differentation just for clarity
+                         */
+                        switch (respCode) {
+                            case (J_RESP_GENERAL_SUCCESS): {
+                                log.trace("received success response for biphase operation: " + op.toString());
+                                //synchronized (this.blockingRequests.get(op).methodAlreadyInvoked) {
                                 this.blockingRequests.get(op).respCode = respCode;
                                 //sometimes response is sent after the indication is received, if that - just release the semaphore
                                 if (this.blockingRequests.get(op).methodAlreadyInvoked == true) {
                                     this.blockingRequests.get(op).semaphore.release();
                                 }
-                            //}
-                            break;
+                                //}
+                                break;
+                            }
+                            default: {
+                                log.trace("received fail code for biphase operation: " + op.toString());
+                                this.blockingRequests.get(op).respCode = respCode;
+                                this.blockingRequests.get(op).semaphore.release();
+                                break;
+                            }
                         }
-                        default: {
-                            log.trace("received fail code for biphase operation: " + op.toString());
-                            this.blockingRequests.get(op).respCode = respCode;
-                            this.blockingRequests.get(op).semaphore.release();
-                            break;
-                        }
-                    }
 
+                    }
+                } else {
+                    log.fatal("(responseReceived)- Unhandled operation type (with respCode:" + respCode + "):" + op.toString());
                 }
-            } else {
-                log.fatal("(responseReceived)- Unhandled operation type (with respCode:" + respCode + "):" + op.toString());
             }
-        } 
-    }else if (this.callableRequests.containsKey(op)) {
+        } else if (this.callableRequests.containsKey(op)) {
             //todo implement callable 
         } else {
             log.fatal("(responseReceived)- Received response, but operation isn't in the monitor map: "
@@ -326,6 +326,7 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
         log.trace(this.core.getNodeInfo().getName() + ": (indicationReceived) - called with: " + op.toString());
         //log.trace("Operation:" + op + ", taken from the notify stack");
         if (this.blockingRequests.containsKey(op)) {
+            log.trace(this.core.getNodeInfo().getName() + ": (indicationReceived) - contained by blockingRequests: " + op.toString());
             //if the operation is a Indication
             if ((op.getOperationType() + 128 & OP_INDICATION_GENERIC) == OP_INDICATION_GENERIC) {
                 //if the operation is a single phase operation
@@ -350,20 +351,25 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
             }
         } else if (callableRequests.containsKey(op)) {
             //todo implement callable 
+            log.trace(this.core.getNodeInfo().getName() + ": (indicationReceived) - TODO, operation passed to callableRequests: " + op.toString());
+            this.requestManagers.get(op.getObjectID()).nc.deliveredIndications.add(op);
+
         } else {
             boolean b = false;
             synchronized (operationBuffer) {
                 if (operationBuffer.containsKey(op.getObjectID())) {
-                    log.trace(this.core.getNodeInfo().getName() + ": no registered notifyConsumer yet, passing operation to the buffer: " + op.toString());                    operationBuffer.get(op.getObjectID()).add(op);
+                    log.trace(this.core.getNodeInfo().getName() + ": no registered notifyConsumer yet, passing operation to the buffer: " + op.toString());
+                    operationBuffer.get(op.getObjectID()).add(op);
                     b = true;
-                } 
+                }
             }
-            if(!b){
-                    this.requestManagers.get(op.getObjectID()).nc.deliveredIndications.add(op);
+            if (!b) {
+                log.trace(this.core.getNodeInfo().getName() + ": (indicationReceived) - passed to notifyConsumer : " + op.toString());
+                this.requestManagers.get(op.getObjectID()).nc.deliveredIndications.add(op);
 //                    synchronized (this.requestManagers.get(op.getObjectID()).nc.locker) {
 //                        this.requestManagers.get(op.getObjectID()).nc.locker.notifyAll();
 //                    }
-                }
+            }
         }
     }
 
@@ -444,23 +450,23 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
             Thread nc = new Thread(notifyConsumersThreadsGroup, rr.nc, "consumer: " + id);
             tc.start();
             tr.start();
-            nc.start();   
+            nc.start();
             JCsyncAbstractOperation op;
             ArrayList<JCsyncAbstractOperation> operations = null;
             synchronized (operationBuffer) {
                 if (operationBuffer.containsKey(id)) {
-                    operations = operationBuffer.remove(id);                    
+                    operations = operationBuffer.remove(id);
                 }
             }
-            if(operations!=null){
-            for (int i = 0; i < operations.size(); i++) {
-                        op = operations.get(i);
-                        log.trace(this.core.getNodeInfo().getName() + ": operation taken from the buffer: " + op);
-                        this.requestManagers.get(id).nc.deliveredIndications.add(op);                        
+            if (operations != null) {
+                for (int i = 0; i < operations.size(); i++) {
+                    op = operations.get(i);
+                    log.trace(this.core.getNodeInfo().getName() + ": operation taken from the buffer: " + op);
+                    this.requestManagers.get(id).nc.deliveredIndications.add(op);
 //                        synchronized (this.requestManagers.get(id).nc.locker) {
 //                            this.requestManagers.get(id).nc.locker.notifyAll();
 //                        }
-                    }
+                }
             }
         }
     }
@@ -713,9 +719,9 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
                     mc.setArgTypes(op.getMethodCarrier().getArgTypes());
                     mc.setArgValues(op.getMethodCarrier().getArgValues());
                     mc.setOperationIndex(this.core.getObject(op.getObjectID()).getCurrentOperationID());
-                    JCsyncAbstractOperation op_ = JCsyncAbstractOperation.getByType(OP_IND_WRITE_METHOD, op.getObjectID(), mc);
+                    JCsyncAbstractOperation op_ = JCsyncAbstractOperation.getByType(OP_IND_WRITE_METHOD, op.getObjectID(), mc, op.getPublisher());
                     op_.setReqestID(op.getReqestID());
-                    log.trace("Passing operation to sent it to children: "+op_);
+                    log.trace("Passing operation to sent it to children: " + op_);
                     this.core.sendMessage(dr.request, op_, true);
                 } else {
                     log.fatal(this.core.getNodeInfo().getName() + ":Unhandled operation: " + dr.operation);
@@ -770,16 +776,16 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
         @Override
         public void run() {
             JCsyncAbstractOperation op = null;
-            
+
             while (true) {
 
-                
-                
+
+
                 while (true) {
                     try {
 
-                        
-                        
+
+
                         op = this.deliveredIndications.peek();
                         if (op != null
                                 && op.getMethodCarrier() != null
@@ -787,19 +793,18 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
                                 <= this.core.getObject(op.getObjectID()).getCurrentOperationID()) {
                             try {
                                 op = this.deliveredIndications.take();
-                                if(op.getMethodCarrier().getOperationIndex()-1 < this.core.getObject(op.getObjectID()).getCurrentOperationID() ){
+                                if (op.getMethodCarrier().getOperationIndex() - 1 < this.core.getObject(op.getObjectID()).getCurrentOperationID()) {
                                     if (op.getOperationType() + 128 == OP_IND_LOCK_APPLY || op.getOperationType() + 128 == OP_IND_LOCK_RELEASE) {
                                         break;
                                     }
-                                    log.warn(this.core.getNodeInfo().getName() + ": ignoring history operation :"+op);
+                                    log.warn(this.core.getNodeInfo().getName() + ": ignoring history operation :" + op);
                                     continue;
                                 }
                                 break;
                             } catch (InterruptedException ex) {
                                 log.fatal(this.core.getNodeInfo().getName() + ":An error occurred", ex);
                             }
-                        }
-                        else {
+                        } else {
                             if (op != null) {
                                 if (op.getOperationType() + 128 == OP_IND_LOCK_APPLY || op.getOperationType() + 128 == OP_IND_LOCK_RELEASE) {
                                     try {
@@ -807,10 +812,10 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
                                         break;
                                     } catch (InterruptedException ex) {
                                         log.fatal(this.core.getNodeInfo().getName() + ":An error occurred", ex);
-                                        
+
                                     }
                                 }
-                                log.debug(this.core.getNodeInfo().getName() + ":Waiting for the next ordered operation, current operation ID: "
+                                log.debug(this.core.getNodeInfo().getName() + "@" + op.getObjectID() + ": Waiting for the next ordered operation, current operation ID: "
                                         + this.core.getObject(op.getObjectID()).getCurrentOperationID()
                                         + ", next operation in the buffer: " + op.getMethodCarrier().getOperationIndex()
                                         + ", queue size: " + this.deliveredIndications.size());
@@ -827,7 +832,7 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
                             Thread.sleep(500);
                         }
                     } catch (Exception e) {
-                        log.fatal("An error occurred: ",e);
+                        log.fatal("An error occurred: ", e);
                     }
                 }
 
@@ -837,36 +842,36 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
                     if ((op.getOperationType() + 128 & OP_INDICATION_GENERIC) == OP_INDICATION_GENERIC) {
                         //if the operation is a single phase operation
                         synchronized (blockingRequests.get(op).methodAlreadyInvoked) {
-                        if ((op.getOperationType() + 128) == OP_IND_WRITE_METHOD) {
-                            Object result = null;
-                            try {
-                                result = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier());
-                                log.trace(this.core.getNodeInfo().getName() + ":Method invoked (" + op.getMethodCarrier().genericMethodName + ") on: " + op.toString());
-                                if (result != null) {
-                                    if (result.equals(op.getMethodCarrier().getRetVal())) {
-                                        log.trace(this.core.getNodeInfo().getName() + ":Result value may not be the same as given in indication!");
+                            if ((op.getOperationType() + 128) == OP_IND_WRITE_METHOD) {
+                                Object result = null;
+                                try {
+                                    result = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier());
+                                    log.trace(this.core.getNodeInfo().getName() + ":Method invoked (" + op.getMethodCarrier().genericMethodName + ") on: " + op.toString());
+                                    if (result != null) {
+                                        if (result.equals(op.getMethodCarrier().getRetVal())) {
+                                            log.trace(this.core.getNodeInfo().getName() + ":Result value may not be the same as given in indication!");
+                                        }
                                     }
+                                } catch (Exception e) {
+                                    result = e;
                                 }
-                            } catch (Exception e) {
-                                result = e;
-                            }
 
-                            blockingRequests.get(op).retVal = result;
-                            //synchronized (blockingRequests.get(op).methodAlreadyInvoked) {
-                                blockingRequests.get(op).methodAlreadyInvoked = true;
-                           // }
-                        } else {
-                            blockingRequests.get(op).retVal = op.getDetails();
-                            //release semaphore only when the respCode already is set up;                    
-                            if (op.getOperationType() + 128 == OP_IND_LOCK_APPLY || op.getOperationType() + 128 == OP_IND_LOCK_RELEASE) {
-                                blockingRequests.get(op).retVal = "";
+                                blockingRequests.get(op).retVal = result;
                                 //synchronized (blockingRequests.get(op).methodAlreadyInvoked) {
+                                blockingRequests.get(op).methodAlreadyInvoked = true;
+                                // }
+                            } else {
+                                blockingRequests.get(op).retVal = op.getDetails();
+                                //release semaphore only when the respCode already is set up;                    
+                                if (op.getOperationType() + 128 == OP_IND_LOCK_APPLY || op.getOperationType() + 128 == OP_IND_LOCK_RELEASE) {
+                                    blockingRequests.get(op).retVal = "";
+                                    //synchronized (blockingRequests.get(op).methodAlreadyInvoked) {
                                     blockingRequests.get(op).methodAlreadyInvoked = true;
-                                //}
+                                    //}
+                                }
                             }
-                        }
-                        //release semaphore only when the respCode already is set up;
-                        
+                            //release semaphore only when the respCode already is set up;
+
                             if (blockingRequests.get(op).respCode != -1) {
                                 blockingRequests.get(op).semaphore.release();
                             }
@@ -875,7 +880,21 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
                         log.fatal(this.core.getNodeInfo().getName() + ":(indicationReceived)- Unhandled operation type :" + op.toString());
                     }
                 } else if (callableRequests.containsKey(op)) {
-                    //todo implement callable 
+                    if ((op.getOperationType() + 128) == OP_IND_WRITE_METHOD) {
+                        Object result = null;
+                        try {
+                            result = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier());
+                            log.trace(this.core.getNodeInfo().getName() + ":Method invoked (" + op.getMethodCarrier().genericMethodName + ") on: " + op.toString());
+                            if (result != null) {
+                                if (result.equals(op.getMethodCarrier().getRetVal())) {
+                                    log.trace(this.core.getNodeInfo().getName() + ":Result value may not be the same as given in indication!");
+                                }
+                            }
+                        } catch (Exception e) {
+                            result = e;
+                        }
+                        callableRequests.remove(op);
+                    }
                 } else {
                     if ((op.getOperationType() + 128) == OP_IND_WRITE_METHOD) {
                         Object result = null;
@@ -898,7 +917,7 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
     /**
      * Stores information about received operation.
      */
-    protected class DeliveredRequest implements Comparable<DeliveredRequest>  {
+    protected class DeliveredRequest implements Comparable<DeliveredRequest> {
 
         private long deliveryTime = 0;
         private PublishRequest request;
@@ -912,6 +931,7 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
             this.operation = op;
             this.deliveryTime = System.currentTimeMillis();
         }
+
         @Override
         public int compareTo(DeliveredRequest o) {
             if (this.deliveryTime < o.deliveryTime) {

@@ -38,15 +38,16 @@ public class JCsyncAbstractOperation implements Comparable {
      * Request identifier of current operation.
      */
     protected long reqestID = -1;
-
+    protected final String publisher;
     /**
      * Creates new instance of class with given arguments.
      * @param objectID shared object identifier.
      * @param operationType operation type.
      */
-    protected JCsyncAbstractOperation(String objectID, short operationType) {
+    protected JCsyncAbstractOperation(String objectID, short operationType, String publisher) {
         this.objectID = objectID;
         this.operationType = operationType;
+        this.publisher = publisher;
     }
 
     /**
@@ -55,10 +56,11 @@ public class JCsyncAbstractOperation implements Comparable {
      * @param operationType operation type.
      * @param details additional data related with this operation.
      */
-    public JCsyncAbstractOperation(String objectID, short operationType, byte details[]) {
+    public JCsyncAbstractOperation(String objectID, short operationType, byte details[], String publisher) {
         this.objectID = objectID;
         this.operationType = operationType;
         this.details = details;
+        this.publisher = publisher;
     }
     /**
      * Creates new instance wit given arguments.
@@ -66,10 +68,11 @@ public class JCsyncAbstractOperation implements Comparable {
      * @param operationType operation type.
      * @param details additional data related with this operation.
      */
-    public JCsyncAbstractOperation(String objectID, short operationType, Serializable details) {
+    public JCsyncAbstractOperation(String objectID, short operationType, Serializable details, String publisher) {
         this.objectID = objectID;
         this.operationType = operationType;
         this.details_ = details;
+        this.publisher = publisher;
     }
 
     /**
@@ -79,8 +82,8 @@ public class JCsyncAbstractOperation implements Comparable {
      * @return <tt>OP_REQ_CREATE_SHARED_OBJECT</tt> operation
      * @see RegisteredOperations
      */
-    public static JCsyncAbstractOperation get_OP_REQ_CREATE_SHARED_OBJECT(String objectName) {
-        return new JCsyncAbstractOperation(objectName, OP_REQ_CREATE_SHARED_OBJECT);
+    public static JCsyncAbstractOperation get_OP_REQ_CREATE_SHARED_OBJECT(String objectName, String publisher) {
+        return new JCsyncAbstractOperation(objectName, OP_REQ_CREATE_SHARED_OBJECT, publisher);
     }
 
     /**
@@ -90,8 +93,8 @@ public class JCsyncAbstractOperation implements Comparable {
      * @return <tt>OP_REQ_SUBSCRIBE</tt> operation
      * @see RegisteredOperations
      */
-    public static JCsyncAbstractOperation get_OP_REQ_SUBSCRIBE(String objectName) {
-        return new JCsyncAbstractOperation(objectName, OP_REQ_SUBSCRIBE);
+    public static JCsyncAbstractOperation get_OP_REQ_SUBSCRIBE(String objectName, String publisher) {
+        return new JCsyncAbstractOperation(objectName, OP_REQ_SUBSCRIBE, publisher);
     }
 
     /**
@@ -101,8 +104,8 @@ public class JCsyncAbstractOperation implements Comparable {
      * @return <tt>OP_REQ_UNSUBSCRIBE</tt> operation
      * @see RegisteredOperations
      */
-    public static JCsyncAbstractOperation get_OP_REQ_UNSUBSCRIBE(String objectName) {
-        return new JCsyncAbstractOperation(objectName, OP_REQ_UNSUBSCRIBE);
+    public static JCsyncAbstractOperation get_OP_REQ_UNSUBSCRIBE(String objectName, String publisher) {
+        return new JCsyncAbstractOperation(objectName, OP_REQ_UNSUBSCRIBE,  publisher);
     }
 
     /**
@@ -112,8 +115,8 @@ public class JCsyncAbstractOperation implements Comparable {
      * @return <tt>OP_REQ_REMOVE</tt> operation
      * @see RegisteredOperations
      */
-    public static JCsyncAbstractOperation get_OP_REQ_REMOVE(String objectName) {
-        return new JCsyncAbstractOperation(objectName, OP_REQ_REMOVE);
+    public static JCsyncAbstractOperation get_OP_REQ_REMOVE(String objectName, String publisher) {
+        return new JCsyncAbstractOperation(objectName, OP_REQ_REMOVE,publisher);
     }
 
     /**
@@ -123,8 +126,8 @@ public class JCsyncAbstractOperation implements Comparable {
      * @return <tt>OP_REQ_TRANSFER_OBJECT</tt> operation
      * @see RegisteredOperations
      */
-    public static JCsyncAbstractOperation get_OP_REQ_TRANSFER_OBJECT(String objectName) {
-        return new JCsyncAbstractOperation(objectName, OP_REQ_TRANSFER_OBJECT);
+    public static JCsyncAbstractOperation get_OP_REQ_TRANSFER_OBJECT(String objectName, String publisher) {
+        return new JCsyncAbstractOperation(objectName, OP_REQ_TRANSFER_OBJECT,publisher);
     }
 
     /**
@@ -134,8 +137,8 @@ public class JCsyncAbstractOperation implements Comparable {
      * @return <tt>OP_IND_TRANSFER_OBJECT</tt> operation
      * @see RegisteredOperations
      */
-    public static JCsyncAbstractOperation get_OP_IND_TRANSFER_OBJECT(String objectName, byte[] details) {
-        return new JCsyncAbstractOperation(objectName, OP_IND_TRANSFER_OBJECT, details);
+    public static JCsyncAbstractOperation get_OP_IND_TRANSFER_OBJECT(String objectName, byte[] details, String publisher) {
+        return new JCsyncAbstractOperation(objectName, OP_IND_TRANSFER_OBJECT, details,publisher);
     }
 
     /**
@@ -145,8 +148,8 @@ public class JCsyncAbstractOperation implements Comparable {
      * @return <tt>OP_REQ_LOCK_APPLY</tt> operation
      * @see RegisteredOperations
      */
-    public static JCsyncAbstractOperation get_OP_REQ_LOCK_APPLY(String objectName) {
-        return new JCsyncAbstractOperation(objectName, OP_REQ_LOCK_APPLY);
+    public static JCsyncAbstractOperation get_OP_REQ_LOCK_APPLY(String objectName, String publisher) {
+        return new JCsyncAbstractOperation(objectName, OP_REQ_LOCK_APPLY,publisher);
     }
 
     /**
@@ -156,8 +159,8 @@ public class JCsyncAbstractOperation implements Comparable {
      * @return <tt>OP_IND_LOCK_APPLY,</tt> operation
      * @see RegisteredOperations
      */
-    public static JCsyncAbstractOperation get_OP_IND_LOCK_APPLY(String objectName, byte[] details) {
-        return new JCsyncAbstractOperation(objectName, OP_IND_LOCK_APPLY, details);
+    public static JCsyncAbstractOperation get_OP_IND_LOCK_APPLY(String objectName, byte[] details, String publisher) {
+        return new JCsyncAbstractOperation(objectName, OP_IND_LOCK_APPLY, details,publisher);
     }
 
     /**
@@ -167,8 +170,8 @@ public class JCsyncAbstractOperation implements Comparable {
      * @return <tt>OP_REQ_LOCK_RELEASE,</tt> operation
      * @see RegisteredOperations
      */
-    public static JCsyncAbstractOperation get_OP_REQ_LOCK_RELEASE(String objectName) {
-        return new JCsyncAbstractOperation(objectName, OP_REQ_LOCK_RELEASE);
+    public static JCsyncAbstractOperation get_OP_REQ_LOCK_RELEASE(String objectName, String publisher) {
+        return new JCsyncAbstractOperation(objectName, OP_REQ_LOCK_RELEASE,publisher);
     }
 
     /**
@@ -178,8 +181,8 @@ public class JCsyncAbstractOperation implements Comparable {
      * @return <tt>OP_IND_LOCK_RELEASE,</tt> operation
      * @see RegisteredOperations
      */
-    public static JCsyncAbstractOperation get_OP_IND_LOCK_RELEASE(String objectName, byte[] details) {
-        return new JCsyncAbstractOperation(objectName, OP_IND_LOCK_RELEASE, details);
+    public static JCsyncAbstractOperation get_OP_IND_LOCK_RELEASE(String objectName, byte[] details, String publisher) {
+        return new JCsyncAbstractOperation(objectName, OP_IND_LOCK_RELEASE, details,publisher);
     }
 
     /**
@@ -189,8 +192,8 @@ public class JCsyncAbstractOperation implements Comparable {
      * @return <tt>OP_REQ_READ_METHOD,</tt> operation
      * @see RegisteredOperations
      */
-    public static JCsyncAbstractOperation get_OP_REQ_READ_METHOD(String objectName, byte[] details) {
-        return new JCsyncAbstractOperation(objectName, OP_REQ_READ_METHOD, details);
+    public static JCsyncAbstractOperation get_OP_REQ_READ_METHOD(String objectName, byte[] details, String publisher) {
+        return new JCsyncAbstractOperation(objectName, OP_REQ_READ_METHOD, details,publisher);
     }
 
     /**
@@ -200,8 +203,8 @@ public class JCsyncAbstractOperation implements Comparable {
      * @return <tt>OP_REQ_WRITE_METHOD,</tt> operation
      * @see RegisteredOperations
      */
-    public static JCsyncAbstractOperation get_OP_REQ_WRITE_METHOD(String objectName, byte[] details) {
-        return new JCsyncAbstractOperation(objectName, OP_REQ_WRITE_METHOD, details);
+    public static JCsyncAbstractOperation get_OP_REQ_WRITE_METHOD(String objectName, byte[] details, String publisher) {
+        return new JCsyncAbstractOperation(objectName, OP_REQ_WRITE_METHOD, details,publisher);
     }
 
     /**
@@ -211,8 +214,8 @@ public class JCsyncAbstractOperation implements Comparable {
      * @return <tt>OP_IND_READ_METHOD,</tt> operation
      * @see RegisteredOperations
      */
-    public static JCsyncAbstractOperation get_OP_IND_READ_METHOD(String objectName, byte[] details) {
-        return new JCsyncAbstractOperation(objectName, OP_IND_READ_METHOD, details);
+    public static JCsyncAbstractOperation get_OP_IND_READ_METHOD(String objectName, byte[] details, String publisher) {
+        return new JCsyncAbstractOperation(objectName, OP_IND_READ_METHOD, details,publisher);
     }
 
     /**
@@ -222,8 +225,8 @@ public class JCsyncAbstractOperation implements Comparable {
      * @return <tt>OP_IND_WRITE_METHOD,</tt> operation
      * @see RegisteredOperations
      */
-    public static JCsyncAbstractOperation get_OP_IND_WRITE_METHOD(String objectName, byte[] details) {
-        return new JCsyncAbstractOperation(objectName, OP_IND_WRITE_METHOD, details);
+    public static JCsyncAbstractOperation get_OP_IND_WRITE_METHOD(String objectName, byte[] details, String publisher) {
+        return new JCsyncAbstractOperation(objectName, OP_IND_WRITE_METHOD, details,publisher);
     }
 
     /**
@@ -232,11 +235,11 @@ public class JCsyncAbstractOperation implements Comparable {
      * @param name object identifier
      * @return new operation associated with given arguments.
      */
-    public static JCsyncAbstractOperation getByType(short type, String name) { 
+    public static JCsyncAbstractOperation getByType(short type, String name,String publisher) { 
         //checks whether the operation is registered - it prevents duplication of types
         if(!RegisteredOperations.OP_NAMES.containsKey(type)) 
             throw new IllegalArgumentException("Operation with given type: "+type+" is not registered.");
-        return new JCsyncAbstractOperation(name, type);
+        return new JCsyncAbstractOperation(name, type,publisher);
     }
 
     /**
@@ -246,11 +249,11 @@ public class JCsyncAbstractOperation implements Comparable {
      * @param details additional details that will be passed with this operations
      * @return new operation associated with given arguments
      */
-    public static JCsyncAbstractOperation getByType(short type, String name, byte[] details) {
+    public static JCsyncAbstractOperation getByType(short type, String name, byte[] details,String publisher) {
         //checks whether the operation is registered - it prevents duplication of types
         if(!RegisteredOperations.OP_NAMES.containsKey(type)) 
             throw new IllegalArgumentException("Operation with given type: "+type+" is not registered.");
-        return new JCsyncAbstractOperation(name, type, details);
+        return new JCsyncAbstractOperation(name, type, details,publisher);
     }
     /**
      * Returns new operation depending on the <tt>type</tt>
@@ -259,8 +262,8 @@ public class JCsyncAbstractOperation implements Comparable {
      * @param details additional details that will be passed with this operations
      * @return new operation associated with given arguments
      */
-    public static JCsyncAbstractOperation getByType(short type, String name, Serializable details) {
-        JCsyncAbstractOperation o = new JCsyncAbstractOperation(name, type);
+    public static JCsyncAbstractOperation getByType(short type, String name, Serializable details,String publisher) {
+        JCsyncAbstractOperation o = new JCsyncAbstractOperation(name, type, publisher);
         o.details_ = details;
         return o;
         
@@ -298,7 +301,9 @@ public class JCsyncAbstractOperation implements Comparable {
     public long getReqestID() {
         return reqestID;
     }
-
+    public String getPublisher(){
+        return this.publisher;
+    }
     /**
      * Sets request identifier for current operation.
      * @param reqestID request identifier that current operation will be 
@@ -323,7 +328,7 @@ public class JCsyncAbstractOperation implements Comparable {
      */
     public void setMethodCarrier(MethodCarrier mc){
         this.details_ = mc;
-    }
+    }    
 
     @Override
     public int compareTo(Object o_) {
@@ -336,7 +341,7 @@ public class JCsyncAbstractOperation implements Comparable {
         }
         return -1;
     }
-
+    
     @Override
     public int hashCode() {
         int hash = 3;
@@ -352,6 +357,7 @@ public class JCsyncAbstractOperation implements Comparable {
         if (this.objectID.compareTo(o.getObjectID()) == 0) {
             if (this.operationType == o.getOperationType() 
                     && this.reqestID == o.getReqestID()) {
+                if(this.publisher.compareTo(o.publisher)==0)
                 return true;
             }
         }
@@ -391,6 +397,7 @@ public class JCsyncAbstractOperation implements Comparable {
             dostr.writeShort(this.operationType);
             dostr.writeUTF(this.objectID);
             dostr.writeLong(this.reqestID);
+            dostr.writeUTF(this.publisher);
             if(this.details_==null){
             if (this.details != null && details.length > 0) {
                 dostr.writeInt(this.details.length);
@@ -429,6 +436,7 @@ public class JCsyncAbstractOperation implements Comparable {
         distr = new DataInputStream(istream);
         short operationType = -1;
         String objectID = null;
+        String publisher = "";
         long reqID = -1;
         byte[] details = null;
         Serializable details_ = null;
@@ -436,6 +444,7 @@ public class JCsyncAbstractOperation implements Comparable {
             operationType = distr.readShort();
             objectID = distr.readUTF();
             reqID = distr.readLong();
+            publisher = distr.readUTF();
             if (distr.available() > 0) {
                 int detailsLenght = distr.readInt();
                 if(detailsLenght == -1){
@@ -447,9 +456,9 @@ public class JCsyncAbstractOperation implements Comparable {
                 }
             }
             if(details_ == null)
-            retval = new JCsyncAbstractOperation(objectID, operationType, details);
+            retval = new JCsyncAbstractOperation(objectID, operationType, details,publisher);
             else
-            retval = new JCsyncAbstractOperation(objectID, operationType, details_);            
+            retval = new JCsyncAbstractOperation(objectID, operationType, details_,publisher);            
             retval.setReqestID(reqID);
 
         } catch (Exception e) {
@@ -473,7 +482,7 @@ public class JCsyncAbstractOperation implements Comparable {
      * @return a copy of current operation with changed type to request. 
      */
     public JCsyncAbstractOperation changeTypeToRequest() {
-        JCsyncAbstractOperation o = new JCsyncAbstractOperation(this.objectID, (short) (this.operationType -128),this.details);
+        JCsyncAbstractOperation o = new JCsyncAbstractOperation(this.objectID, (short) (this.operationType -128),this.details,this.publisher);
         o.details_ = this.details_;
         o.reqestID = this.reqestID;
         return o;
@@ -484,9 +493,10 @@ public class JCsyncAbstractOperation implements Comparable {
      * @return a copy of current operation with changed type to indication.
      */
     public JCsyncAbstractOperation changeTypeToIndication() {
-        JCsyncAbstractOperation o = new JCsyncAbstractOperation(this.objectID, (short) (this.operationType +128),this.details);
+        JCsyncAbstractOperation o = new JCsyncAbstractOperation(this.objectID, (short) (this.operationType +128),this.details,this.publisher);
         o.details_ = this.details_;
         o.reqestID = this.reqestID;
         return o;       
     }
+    
 }

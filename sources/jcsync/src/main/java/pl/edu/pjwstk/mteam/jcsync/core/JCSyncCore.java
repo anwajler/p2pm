@@ -374,7 +374,7 @@ public class JCSyncCore implements MessageDeliveryObserver, JCsyncAlgorithInterf
                         log.trace(getNodeInfo().getName()
                                 + ": transferring shared object with current operation id: "
                                 + so.getCurrentOperationID() + ", to node: " + req.getPublisher());
-                        JCsyncAbstractOperation op_ = JCsyncAbstractOperation.get_OP_IND_TRANSFER_OBJECT(op.getObjectID(), so.encode());
+                        JCsyncAbstractOperation op_ = JCsyncAbstractOperation.get_OP_IND_TRANSFER_OBJECT(op.getObjectID(), so.encode(),this.getNodeInfo().getName());
                         op_.setReqestID(op.getReqestID());
                         sendMessage(req, op_, false);
                     }
@@ -469,8 +469,8 @@ public class JCSyncCore implements MessageDeliveryObserver, JCsyncAlgorithInterf
              */
             this.request_response_locker.readLock().lock();
             if ((operationType & OP_GENERIC_JCSYNC_OPERATION) == OP_GENERIC_JCSYNC_OPERATION) {
-                JCsyncAbstractOperation o = JCsyncAbstractOperation.getByType(operationType, name);
-                o = JCsyncAbstractOperation.getByType(operationType, name);
+                JCsyncAbstractOperation o = null;//JCsyncAbstractOperation.getByType(operationType, name);
+                o = JCsyncAbstractOperation.getByType(operationType, name,this.getNodeInfo().getName());
                 o.setReqestID(reqID);
                 if (getConsistencyManager(name) != null) {
                     getConsistencyManager(name).responseReceived(o, respCode);
@@ -482,25 +482,25 @@ public class JCSyncCore implements MessageDeliveryObserver, JCsyncAlgorithInterf
             switch (operationType) {
                 case PubSubConstants.MSG_CREATETOPIC: {
                     JCsyncAbstractOperation o = null;
-                    o = JCsyncAbstractOperation.get_OP_REQ_CREATE_SHARED_OBJECT(name);
+                    o = JCsyncAbstractOperation.get_OP_REQ_CREATE_SHARED_OBJECT(name,this.getNodeInfo().getName());
                     this.dcManager.responseReceived(o, respCode);
                     return;
                 }
                 case PubSubConstants.MSG_SUBSCRIBE: {
                     JCsyncAbstractOperation o = null;
-                    o = JCsyncAbstractOperation.get_OP_REQ_SUBSCRIBE(name);
+                    o = JCsyncAbstractOperation.get_OP_REQ_SUBSCRIBE(name,this.getNodeInfo().getName());
                     this.dcManager.responseReceived(o, respCode);
                     return;
                 }
                 case PubSubConstants.MSG_UNSUBSCRIBE: {
                     JCsyncAbstractOperation o = null;
-                    o = JCsyncAbstractOperation.get_OP_REQ_UNSUBSCRIBE(name);
+                    o = JCsyncAbstractOperation.get_OP_REQ_UNSUBSCRIBE(name,this.getNodeInfo().getName());
                     this.dcManager.responseReceived(o, respCode);
                     return;
                 }
                 case PubSubConstants.EVENT_REMOVETOPIC: {
                     JCsyncAbstractOperation o = null;
-                    o = JCsyncAbstractOperation.get_OP_REQ_REMOVE(name);
+                    o = JCsyncAbstractOperation.get_OP_REQ_REMOVE(name,this.getNodeInfo().getName());
                     this.dcManager.responseReceived(o, respCode);
                     return;
                 }
@@ -526,7 +526,7 @@ public class JCSyncCore implements MessageDeliveryObserver, JCsyncAlgorithInterf
         } else {
             // preparing locker to wait for response
             try {
-                JCsyncAbstractOperation operation = JCsyncAbstractOperation.get_OP_REQ_CREATE_SHARED_OBJECT(name);
+                JCsyncAbstractOperation operation = JCsyncAbstractOperation.get_OP_REQ_CREATE_SHARED_OBJECT(name,this.getNodeInfo().getName());
                 // inform Consistency Manager before sending request
                 this.dcManager.beforeRequestSend(operation, blocking);
                 this.pubsubLayer.getCustomAlgorith().registerSharedObjectName(name);
@@ -563,7 +563,7 @@ public class JCSyncCore implements MessageDeliveryObserver, JCsyncAlgorithInterf
         } else {
             // preparing locker to wait for response
             try {
-                JCsyncAbstractOperation operation = JCsyncAbstractOperation.get_OP_REQ_CREATE_SHARED_OBJECT(name);
+                JCsyncAbstractOperation operation = JCsyncAbstractOperation.get_OP_REQ_CREATE_SHARED_OBJECT(name,this.getNodeInfo().getName());
                 // inform Consistency Manager before sending request
                 this.dcManager.inititBuffer(name);
                 this.dcManager.beforeRequestSend(operation, blocking);
@@ -599,7 +599,7 @@ public class JCSyncCore implements MessageDeliveryObserver, JCsyncAlgorithInterf
             Exception {
         // preparing locker to wait for response
         try {
-            JCsyncAbstractOperation operation = JCsyncAbstractOperation.get_OP_REQ_SUBSCRIBE(name);
+            JCsyncAbstractOperation operation = JCsyncAbstractOperation.get_OP_REQ_SUBSCRIBE(name,this.getNodeInfo().getName());
             // inform Consistency Manager before sending request
             this.dcManager.inititBuffer(name);
             this.dcManager.beforeRequestSend(operation, blocking);
@@ -638,7 +638,7 @@ public class JCSyncCore implements MessageDeliveryObserver, JCsyncAlgorithInterf
             Exception {
         // preparing locker to wait for response
         try {
-            JCsyncAbstractOperation operation = JCsyncAbstractOperation.get_OP_REQ_UNSUBSCRIBE(name);
+            JCsyncAbstractOperation operation = JCsyncAbstractOperation.get_OP_REQ_UNSUBSCRIBE(name,this.getNodeInfo().getName());
             // inform Consistency Manager before sending request
             this.dcManager.beforeRequestSend(operation, blocking);
             this.pubsubLayer.getCustomAlgorith().registerSharedObjectName(name);
@@ -673,7 +673,7 @@ public class JCSyncCore implements MessageDeliveryObserver, JCsyncAlgorithInterf
             Exception {
         // preparing locker to wait for response
         try {
-            JCsyncAbstractOperation operation = JCsyncAbstractOperation.get_OP_REQ_REMOVE(name);
+            JCsyncAbstractOperation operation = JCsyncAbstractOperation.get_OP_REQ_REMOVE(name,this.getNodeInfo().getName());
             // inform Consistency Manager before sending request
             this.dcManager.beforeRequestSend(operation, blocking);
             this.pubsubLayer.getCustomAlgorith().registerSharedObjectName(name);
