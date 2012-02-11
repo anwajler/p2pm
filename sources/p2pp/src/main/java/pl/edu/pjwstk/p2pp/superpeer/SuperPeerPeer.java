@@ -804,7 +804,7 @@ public class SuperPeerPeer extends Peer {
 
         try {
             hashedID = P2PPUtils.hash(unhashedID, sharedManager.getOptions().getHashAlgorithm());
-            LOG.warn("--- unhashed ID: "+java.util.Arrays.toString(unhashedID)+", hashed to: "+java.util.Arrays.toString(hashedID)+", with hashAlgorithm: "+sharedManager.getOptions().getHashAlgorithm());
+            //LOG.warn("--- unhashed ID: "+java.util.Arrays.toString(unhashedID)+", hashed to: "+java.util.Arrays.toString(hashedID)+", with hashAlgorithm: "+sharedManager.getOptions().getHashAlgorithm());
         } catch (NoSuchAlgorithmException e) {
             LOG.error("Error while generating hashed id from " + new String(unhashedID), e);
         }

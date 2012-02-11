@@ -549,7 +549,7 @@ public class P2PNode extends Node{
             for (P2PPEntity current : entities) {
 
                 if (current instanceof pl.edu.pjwstk.p2pp.entities.Node) {
-                    logger.warn("--- sending message to "+peerId+", peerIDBytes: "+Arrays.toString(peerId.getBytes()));
+                    //logger.warn("--- sending message to "+peerId+", peerIDBytes: "+Arrays.toString(peerId.getBytes()));
                     ((pl.edu.pjwstk.p2pp.entities.Node) current).sendMessage(peerId.getBytes(), " ", msg);
                     break;
                 }
