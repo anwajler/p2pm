@@ -285,7 +285,7 @@ public class TransactionTable {
                 // creates transaction with generated ID
                 transaction = new Transaction(message, transactionListener, addressInfos, ownPeerID, ByteUtils
                         .intToByteArray((int) transactionID));
-                // adds transaction to transactions' map
+                // adds transaction to transactions' map                
                 requestTransactionsMap.put(new Long(transactionID), transaction);
 
                 if (LOG.isTraceEnabled()) {
@@ -408,7 +408,9 @@ public class TransactionTable {
                 // gives time slot to current transaction
                 Message message = currentTransaction.onTimeSlot(this, localEntity);
                 // if transaction wants to send message, it is passed to outgoing listener
-                if (message != null) {
+                if (message != null) {       
+                    //sometimes returned message does not have set transactionID yet, below line fixed this issue.
+                    if(((P2PPMessage)message).getTransactionID()==null)((P2PPMessage)message).setTransactionID(currentTransaction.getTransactionID());
                     outgoingListener.onSend(message);
                 }
             }
