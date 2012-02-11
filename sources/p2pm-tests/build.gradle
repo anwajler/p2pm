@@ -11,6 +11,12 @@ p2pmtests = [
     ":mysql-connector-java:5.1.10-bin",
 ]
 
+jar {
+    manifest {
+        attributes('Main-Class':'pl.edu.pjwstk.mteam.p2pm.tests.tests.Main')
+    }
+}
+
 dependencies {
 
     compile project(':sources/p2pp'), project(':sources/pubsub'), project(':sources/jcsync'), p2pmtests

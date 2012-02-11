@@ -22,5 +22,6 @@ SuperPeer:
 P2PPMessageFactory:
   * Refactor.
 
- * Overlay support!
- * Properties file.
+ * Better multiple entities support.
+ * Remove EntitiesSharedDataManager.
+ * Overlay support.

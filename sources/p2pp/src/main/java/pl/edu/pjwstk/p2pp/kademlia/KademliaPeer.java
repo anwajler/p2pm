@@ -38,6 +38,7 @@ import pl.edu.pjwstk.p2pp.util.P2PPUtils;
  * Class describing peer that uses Kademlia protocol.
  *
  * @author Maciej Skorupka s3874@pjwstk.edu.pl
+ * @author Konrad Adamczyk conrad.adamczyk@gmail.com
  *
  */
 public class KademliaPeer extends Peer {

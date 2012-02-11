@@ -145,6 +145,10 @@ public class TCPWorker extends ProtocolWorker implements ProtocolControl, Protoc
         return this.isReliable;
     }
 
+    public boolean isEncrypted() {
+        return this.encryption != null;
+    }
+
     public byte[] Receive() throws IOException {
         return this.ReceivePacket().packetBody;
     }

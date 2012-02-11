@@ -194,7 +194,7 @@ public class ResourceManager {
                 }
             } // if search concerns to resource owned by particular owner
             else {
-                ResourceObject searchedResourceObject = (ResourceObject) ownersMap.get(owner);
+                ResourceObject searchedResourceObject = ownersMap.get(owner);
                 searchedResources = new ArrayList<ResourceObject>(1);
                 searchedResources.add(searchedResourceObject);
             }

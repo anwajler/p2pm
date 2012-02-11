@@ -12,6 +12,12 @@ List p2pp = [
     ":junit:4.9",
 ]
 
+jar {
+    manifest {
+        attributes('Main-Class':'pl.edu.pjwstk.p2pp.launchers.CommandLineLauncher')
+    }
+}
+
 dependencies {
 
     compile p2pp

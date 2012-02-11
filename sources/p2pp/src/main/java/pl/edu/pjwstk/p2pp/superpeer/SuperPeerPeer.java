@@ -51,7 +51,7 @@ public class SuperPeerPeer extends Peer {
 
     private Date lastPeerLookup = new Date();
     private final Map<PeerID, PeerInfo> peerIndex = new ConcurrentHashMap<PeerID,PeerInfo>();
-    private final Map<ResourceID,PeerInfo> resourceIndex = new ConcurrentHashMap<ResourceID,PeerInfo>();
+    private final Map<ResourceID,List<PeerInfo>> resourceIndex = new ConcurrentHashMap<ResourceID,List<PeerInfo>>();
     private final Map<PeerInfo,Collection<ResourceID>> reverseResourceIndex = new ConcurrentHashMap<PeerInfo,Collection<ResourceID>>();
     private Date lastSuperPeerLookup = new Date();
 
@@ -331,10 +331,22 @@ public class SuperPeerPeer extends Peer {
             LOG.debug("Adding resource " + resourceID + " to resourceIndex with " + peerInfo);
         }
 
-        this.resourceIndex.put(resourceID, peerInfo);
+        synchronized (this.resourceIndex) {
+            List<PeerInfo> resourcePublishers;
+            if (this.resourceIndex.containsKey(resourceID)) {
+                resourcePublishers = this.resourceIndex.get(resourceID);
+                if (!resourcePublishers.contains(peerInfo)) {
+                    resourcePublishers.add(peerInfo);
+                }
+            } else {
+                resourcePublishers = new Vector<PeerInfo>();
+                resourcePublishers.add(peerInfo);
+                this.resourceIndex.put(resourceID, resourcePublishers);
+            }
+        }
 
         Collection<ResourceID> resourceIDs = this.reverseResourceIndex.get(peerInfo);
-        if (resourceIDs != null) {
+        if (resourceIDs != null && !resourceIDs.contains(resourceID)) {
             resourceIDs.add(resourceID);
         } else {
             if (LOG.isDebugEnabled()) LOG.debug("Adding peerInfo to reverseResourceIndex " + peerInfo);
@@ -730,8 +742,8 @@ public class SuperPeerPeer extends Peer {
 				byte[] hashedResourceID = P2PPUtils.hash(resourceIDBytes, sharedManager.getOptions().getHashAlgorithm());
                 ResourceID resourceID = new ResourceID(hashedResourceID);
 				RLookup resourceLookup = new RLookup(contentType, contentSubtype, resourceID, owner);
-                //PeerInfo ownPeerInfo = sharedManager.getPeerInfo(true, true);
-                byte[] ownPeerID = sharedManager.getPeerIDAsBytes();
+                PeerInfo ownPeerInfo = sharedManager.getPeerInfo(true, true);
+                byte[] ownPeerID = ownPeerInfo.getPeerID().getPeerIDBytes();
                 if (owner == null) {
                     owner = new Owner(ownPeerID);
                 }
@@ -777,8 +789,16 @@ public class SuperPeerPeer extends Peer {
                     } else {
 
                         ResourceID removedRID = removedResource.getResourceID();
-                        PeerInfo resourceKeeperPI = this.resourceIndex.remove(removedRID);
-                        this.reverseResourceIndex.get(resourceKeeperPI).remove(removedRID);
+
+                        if (this.resourceIndex.containsKey(removedRID)) {
+                            List<PeerInfo> resourceKeepers = this.resourceIndex.get(removedRID);
+                            if (resourceKeepers != null && resourceKeepers.size() > 0) {
+                                resourceKeepers.remove(ownPeerInfo);
+                            }
+                        }
+
+                        this.reverseResourceIndex.get(ownPeerInfo).remove(removedRID);
+
                         callback.removeCallback(removedResource);
 
                     }
@@ -1247,24 +1267,24 @@ public class SuperPeerPeer extends Peer {
 
                                         } else {
 
-//                                            if (LOG.isDebugEnabled()) {
-//                                                LOG.debug("Removing unresponsive peer and it's resources from indexes: " + pPI);
-//                                            }
-//
-//                                            peerIndex.remove(pID);
-//
-//                                            Collection<ResourceID> resourceIDs = reverseResourceIndex.remove(pPI);
-//                                            if (resourceIDs != null) {
-//                                                for (ResourceID resourceID : resourceIDs) {
-//                                                    resourceIndex.remove(resourceID);
-//                                                }
-//
-//                                                if (LOG.isTraceEnabled()) {
-//                                                    LOG.trace(resourceIDs.size() + " resources removed from indexes");
-//                                                }
-//                                            }
-//
-//                                            transactionTable.removeForPeerID(pID.getPeerIDBytes());
+                                            if (LOG.isDebugEnabled()) {
+                                                LOG.debug("Removing unresponsive peer and it's resources from indexes: " + pPI);
+                                            }
+
+                                            peerIndex.remove(pID);
+
+                                            Collection<ResourceID> resourceIDs = reverseResourceIndex.remove(pPI);
+                                            if (resourceIDs != null) {
+                                                for (ResourceID resourceID : resourceIDs) {
+                                                    resourceIndex.get(resourceID).remove(pPI);
+                                                }
+
+                                                if (LOG.isTraceEnabled()) {
+                                                    LOG.trace(resourceIDs.size() + " resources removed from indexes");
+                                                }
+                                            }
+
+                                            transactionTable.removeForPeerID(pID.getPeerIDBytes());
 
                                         }
 
@@ -1613,10 +1633,16 @@ public class SuperPeerPeer extends Peer {
 	 */
 	private void onLookupIndexRequest(LookupIndexRequest lookupRequest) {
 
+        PeerInfo ownPeerInfo = sharedManager.getPeerInfo(true, true);
+
 		RLookup resourceLookup = lookupRequest.getResourceLookup();
         String resourceIDString = ByteUtils.byteArrayToHexString(resourceLookup.getResourceID().getResourceID());
-		PeerInfo resourceKeeperPeerInfo = this.resourceIndex.get(resourceLookup.getResourceID());
-        PeerInfo ownPeerInfo = sharedManager.getPeerInfo(true, true);
+
+        PeerInfo resourceKeeperPeerInfo = null;
+		List<PeerInfo> resourceKeepers = this.resourceIndex.get(resourceLookup.getResourceID());
+        if (resourceKeepers != null && resourceKeepers.size() > 0) {
+            resourceKeeperPeerInfo = resourceKeepers.get(0);
+        }
 
 		boolean[] responseCode;
 		if (resourceKeeperPeerInfo != null) {
@@ -1636,7 +1662,11 @@ public class SuperPeerPeer extends Peer {
 
     private void onLookupIndexLocal(LookupIndexRequest lookupRequest) {
 
-        PeerInfo resourceKeeperPeerInfo = this.resourceIndex.get(lookupRequest.getResourceLookup().getResourceID());
+        PeerInfo resourceKeeperPeerInfo = null;
+        List<PeerInfo> resourceKeepers = this.resourceIndex.get(lookupRequest.getResourceLookup().getResourceID());
+        if (resourceKeepers != null && resourceKeepers.size() > 0) {
+            resourceKeeperPeerInfo = resourceKeepers.get(0);
+        }
 
         if (LOG.isTraceEnabled()) {
             LOG.trace("onLookupIndexLocal keeper=" + resourceKeeperPeerInfo + " for request=" + lookupRequest);
@@ -1661,8 +1691,17 @@ public class SuperPeerPeer extends Peer {
     private void onRemoveObjectRequest(RemoveObjectRequest removeRequest) {
 
         ResourceObject resource = removeRequest.getResourceObject();
-		PeerInfo resourceKeeperPeerInfo = this.resourceIndex.remove(resource.getResourceID());
+        PeerInfo removingPeer = removeRequest.getPeerInfo();
         PeerInfo ownPeerInfo = sharedManager.getPeerInfo(true, true);
+
+        PeerInfo resourceKeeperPeerInfo = null;
+
+		List<PeerInfo> resourceKeepers = this.resourceIndex.get(resource.getResourceID());
+        if (resourceKeepers != null && resourceKeepers.size() > 0) {
+            if (resourceKeepers.remove(removingPeer)) {
+                resourceKeeperPeerInfo = removingPeer;
+            }
+        }
 
         boolean[] responseCode = Response.RESPONSE_CODE_NOT_FOUND_BITS_ARRAY;
         if (resourceKeeperPeerInfo != null) {

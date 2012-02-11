@@ -565,28 +565,31 @@ public class P2PPManager {
 
 		boolean result = true;
 
+        // gets addresses and passes them to shared data manager
+		Hashtable<String, Integer> map = determineAddresses();
+
 		if (this.udpPort > 0) {
 			transportManager.startListen(SupportedProtocols.UDP, null, udpPort);
+            sharedManager.setAddresses(map, AddressInfo.UDP_TRANSPORT_TYPE);
 		}
 
         if (this.tcpPort > 0) {
             GlobalConstants.isOverReliable = true;
             transportManager.startListen(SupportedProtocols.TCP, null, this.tcpPort);
+            sharedManager.setAddresses(map, AddressInfo.TCP_TRANSPORT_TYPE);
         }
 
         if (this.sslPort > 0) {
             GlobalConstants.isOverReliable = true;
             transportManager.startListen(SupportedProtocols.TCP_SSL, null, this.sslPort, this.encryptionKeys, this.encryptionPass);
+            sharedManager.setAddresses(map, AddressInfo.TCP_TRANSPORT_TYPE);
         }
 
         if (this.tlsPort > 0) {
             GlobalConstants.isOverReliable = true;
             transportManager.startListen(SupportedProtocols.TCP_TLS, null, this.tlsPort, this.encryptionKeys, this.encryptionPass);
+            sharedManager.setAddresses(map, AddressInfo.TCP_TRANSPORT_TYPE);
         }
-
-		// gets addresses and passes them to shared data manager
-		Hashtable<String, Integer> map = determineAddresses();
-		sharedManager.setAddresses(map, (udpPort > 0) ? AddressInfo.UDP_TRANSPORT_TYPE : AddressInfo.TCP_TRANSPORT_TYPE);
 
 		// sets entities listener
 		sharedManager.setOutgoingListener(outgoingListener);

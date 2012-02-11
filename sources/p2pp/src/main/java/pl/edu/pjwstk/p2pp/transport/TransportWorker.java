@@ -129,6 +129,10 @@ public class TransportWorker<ProtocolWorkerObject extends ProtocolControl & Prot
 		return this.protocolObject.isReliable();
 	}
 
+    public boolean isEncrypted() {
+        return this.protocolObject.isEncrypted();
+    }
+
 	public boolean isWorkerReady() {
 		return this.protocolObject.isWorkerReady();
 	}
