@@ -7,7 +7,10 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import pl.edu.pjwstk.p2pp.messages.P2PPMessage;
 
 public class TransportFrontier {
 
@@ -18,7 +21,8 @@ public class TransportFrontier {
     final private CopyOnWriteArrayList<String> addresses = new CopyOnWriteArrayList<String>();
 
     private AtomicInteger size = new AtomicInteger(0);
-
+    
+    private final LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<Message>();
 
     public void add(Message message) {
 
@@ -27,25 +31,27 @@ public class TransportFrontier {
             return;
         }
 
-        String receiverAddress = message.getReceiverAddress();
-
-        synchronized (this.addresses) {
-
-            if (!this.frontier.containsKey(receiverAddress)) {
-                this.frontier.put(receiverAddress, new LinkedList<Message>());
-            }
-
-            if (!this.addresses.contains(receiverAddress)) {
-                this.addresses.add(receiverAddress);
-            }
-            //sometimes calledMethod removes below address from frontier, below 
-            // code moves to synchronized block
-            this.size.incrementAndGet();
-            this.frontier.get(receiverAddress).add(message);
-
+//        String receiverAddress = message.getReceiverAddress();
+//
+//        synchronized (this.addresses) {
+//
+//            if (!this.frontier.containsKey(receiverAddress)) {
+//                this.frontier.put(receiverAddress, new LinkedList<Message>());
+//            }
+//
+//            if (!this.addresses.contains(receiverAddress)) {
+//                this.addresses.add(receiverAddress);
+//            }
+//            //sometimes calledMethod removes below address from frontier, below 
+//            // code moves to synchronized block
+//            this.size.incrementAndGet();
+//            this.frontier.get(receiverAddress).add(message);
+//
+//        }
+        this.messages.add(message);
+        if(((P2PPMessage)message).getTransactionID()==null){
+            LOG.fatal("Added message with null transactionID :"+message,new Throwable("null transactionID"));
         }
-
-        
 
     }
 
@@ -63,32 +69,45 @@ public class TransportFrontier {
     }
 
     private Message pollMessage(String address) {
+        Message message = null;
+        /*
+         * sychronised a whole of code block, sometimes is removing queue, 
+         * which holds messages to send - this eliminates that.
+         */
+        synchronized (this.addresses) {
+            if (address == null) {
+                return null;
+            }
+            Queue<Message> queue = this.frontier.get(address);
+            if (queue == null) {
+                return null;
+            }
+           // synchronized (queue) {
+                message = queue.poll();
+                
+                if(message!=null) this.size.decrementAndGet();
+                
+                if (queue.size() < 1) {
 
-        if (address == null) return null;
-        Queue<Message> queue = this.frontier.get(address);
-        if (queue == null) return null;
-
-        Message message;
-        synchronized (queue) {
-            message = queue.poll();
-            if (queue.size() < 1) {
-                synchronized (this.addresses) {
                     this.frontier.remove(address);
                     this.addresses.remove(address);
                 }
-            }
-        }
-
-        this.size.decrementAndGet();
+            //}
+        }        
         return message;
     }
 
     public Message poll() {
-        if (this.size.intValue() < 1) return null;
-
-        String address = this.getRandomAddress();
-
-        return this.pollMessage(address);
+        try {
+            //        if (this.size.intValue() < 1) return null;
+            //
+            //        String address = this.getRandomAddress();
+            //
+            //        return this.pollMessage(address);
+                    return this.messages.poll(1000, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException ex) {
+            return null;
+        }
     }
 
 }
