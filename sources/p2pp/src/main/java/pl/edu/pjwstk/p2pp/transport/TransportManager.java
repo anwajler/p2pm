@@ -134,7 +134,7 @@ public class TransportManager extends Thread {
     public void run() {
 
         if (LOG.isDebugEnabled()) LOG.debug("Starting TransportManager");
-
+        TransportWorker<? extends ProtocolWorker> currentTransportWorker = null;
         while (running) {
             if (this.isInterrupted()) {
                 if (LOG.isDebugEnabled()) LOG.debug("Stopping TransportManager");
@@ -144,10 +144,11 @@ public class TransportManager extends Thread {
             try {
 
                 Message message;
-
+                
                 while ((message = this.frontier.poll()) != null) {
 
-                    for (TransportWorker<? extends ProtocolWorker> currentTransportWorker : transportObjects) {
+                    for (int i = 0; i < transportObjects.size(); i++) {
+                        currentTransportWorker = transportObjects.get(i);
                         if (currentTransportWorker.isWorkerReady() && (currentTransportWorker.isReliable() == message.isOverReliable())) {
                             currentTransportWorker.OnSend(message);
                         }
@@ -156,7 +157,7 @@ public class TransportManager extends Thread {
                 }
 
 	            synchronized (this) {
-	                wait(100);
+	                wait(10);
 	            }
 
             } catch (Throwable e) {

@@ -1,5 +1,6 @@
 package pl.edu.pjwstk.p2pp.messages;
 
+import org.apache.log4j.Logger;
 import pl.edu.pjwstk.p2pp.debug.DebugFields;
 import pl.edu.pjwstk.p2pp.debug.DebugInformation;
 import pl.edu.pjwstk.p2pp.objects.GeneralObject;
@@ -44,7 +45,7 @@ public abstract class P2PPMessage extends Message {
     public static final byte INDEX_PEER_MESSAGE_TYPE = 31;
     public static final byte LOOKUP_INDEX_MESSAGE_TYPE = 32;
     public static final byte LOOKUP_PEER_INDEX_MESSAGE_TYPE = 33;
-
+        
     /** Constant size of message header (without sourceID) in bits. */
 	public static final int COMMON_HEADER_CONSTANT_SIZE = 160;
 
@@ -152,7 +153,8 @@ public abstract class P2PPMessage extends Message {
 	 * generating the response, responseACK, or ACK.
 	 */
 	protected byte[] responseID;
-
+        
+        private static final Logger log = Logger.getLogger(P2PPMessage.class);
 	/**
 	 * Empty constructor that doesn't fill any fields of this object. Useful for creating empty message that could be
 	 * filled with data later (for instance, we read bytes from stream and fill fields one by one).
@@ -366,8 +368,9 @@ public abstract class P2PPMessage extends Message {
             }else return Long.MIN_VALUE;
 	}
 
-	public void setTransactionID(byte[] transactionID) {
+	public void setTransactionID(byte[] transactionID) {            
 		this.transactionID = transactionID;
+                if(this.transactionID==null)log.fatal("Trying set null-type transactionID for: "+this,new Throwable("null-type transactionID"));
 	}
 
 	/**
@@ -428,31 +431,31 @@ public abstract class P2PPMessage extends Message {
 		byte[] bytes = new byte[bytesCount];
 		// determines "message length" field TODO check if this is correct
 		int responseIDlength = 0;
-		if (responseID != null) {
-			responseIDlength = responseID.length;
+		if (this.responseID != null) {
+			responseIDlength = this.responseID.length;
 		}
-		int length = bytesCount - sourceID.length - (COMMON_HEADER_CONSTANT_SIZE / 8) - responseIDlength;
-		ByteUtils.addIntToArrayAtBitIndex(length, messageLength, 0);
+		int length = bytesCount - this.sourceID.length - (COMMON_HEADER_CONSTANT_SIZE / 8) - responseIDlength;
+		ByteUtils.addIntToArrayAtBitIndex(length, this.messageLength, 0);
 		// end of determining message's length
 
-		ByteUtils.addBooleanArrayToArrayAtIndex(protocolVersion, bytes, 0);
-		ByteUtils.addBooleanArrayToArrayAtIndex(messageType, bytes, 2);
-		ByteUtils.addBooleanArrayToArrayAtIndex(new boolean[] { acknowledgment }, bytes, 4);
-		ByteUtils.addBooleanArrayToArrayAtIndex(new boolean[] { byPeer }, bytes, 5);
-		ByteUtils.addBooleanArrayToArrayAtIndex(new boolean[] { recursive }, bytes, 6);
+		ByteUtils.addBooleanArrayToArrayAtIndex(this.protocolVersion, bytes, 0);
+		ByteUtils.addBooleanArrayToArrayAtIndex(this.messageType, bytes, 2);
+		ByteUtils.addBooleanArrayToArrayAtIndex(new boolean[] { this.acknowledgment }, bytes, 4);
+		ByteUtils.addBooleanArrayToArrayAtIndex(new boolean[] { this.byPeer }, bytes, 5);
+		ByteUtils.addBooleanArrayToArrayAtIndex(new boolean[] { this.recursive }, bytes, 6);
 
-		if (reservedOrResponseCode != null) {
-			ByteUtils.addBooleanArrayToArrayAtIndex(reservedOrResponseCode, bytes, RESERVED_OR_RESPONSE_CODE_BYTE_START_INDEX);
+		if (this.reservedOrResponseCode != null) {
+			ByteUtils.addBooleanArrayToArrayAtIndex(this.reservedOrResponseCode, bytes, RESERVED_OR_RESPONSE_CODE_BYTE_START_INDEX);
 		}
-		ByteUtils.addByteToArrayAtBitIndex(requestOrResponseType, bytes, REQUEST_OR_INDICATION_TYPE_BYTE_START_INDEX);
-		ByteUtils.addByteToArrayAtBitIndex(ttl, bytes, TTL_BYTE_START_INDEX);
+		ByteUtils.addByteToArrayAtBitIndex(this.requestOrResponseType, bytes, REQUEST_OR_INDICATION_TYPE_BYTE_START_INDEX);
+		ByteUtils.addByteToArrayAtBitIndex(this.ttl, bytes, TTL_BYTE_START_INDEX);
 		ByteUtils.addIntToArrayAtBitIndex(MAGIC_COOKIE, bytes, MAGIC_COOKIE_BYTES_START_INDEX);
 		ByteUtils.addIntToArrayAtBitIndex(this.senderPort, bytes, SENDER_PORT_BYTES_START_INDEX);
-		ByteUtils.addByteArrayToArrayAtByteIndex(transactionID, bytes, TRANSACTION_ID_BYTES_START_INDEX / 8);
-		ByteUtils.addByteArrayToArrayAtByteIndex(messageLength, bytes, MESSAGE_LENGTH_BYTES_START_INDEX / 8);
-		ByteUtils.addByteArrayToArrayAtByteIndex(sourceID, bytes, SOURCE_ID_BYTES_START_INDEX / 8);
-		if (responseID != null) {
-			ByteUtils.addByteArrayToArrayAtBitIndex(responseID, bytes, SOURCE_ID_BYTES_START_INDEX + sourceID.length * 8);
+		ByteUtils.addByteArrayToArrayAtByteIndex(this.transactionID, bytes, TRANSACTION_ID_BYTES_START_INDEX / 8);
+		ByteUtils.addByteArrayToArrayAtByteIndex(this.messageLength, bytes, MESSAGE_LENGTH_BYTES_START_INDEX / 8);
+		ByteUtils.addByteArrayToArrayAtByteIndex(this.sourceID, bytes, SOURCE_ID_BYTES_START_INDEX / 8);
+		if (this.responseID != null) {
+			ByteUtils.addByteArrayToArrayAtBitIndex(this.responseID, bytes, SOURCE_ID_BYTES_START_INDEX + this.sourceID.length * 8);
 		}
 
 		return bytes;

@@ -447,25 +447,33 @@ public final class ByteUtils {
 	 * @param newPeerID
 	 * @return
 	 */
-	public static String byteArrayToHexString(byte[] array) {
-		if (array == null) {
-			return null;
-		} else {
-			StringBuilder builder = new StringBuilder();
-
-			for (int i = 0; i < array.length; i++) {
-				String currentByteString = "" + Integer.toHexString(array[i] & 0xFF);
-				if (currentByteString.length() == 1) {
-					builder.append("0" + currentByteString);
-				} else {
-					builder.append(currentByteString);
-				}
-
-			}
-
-			return builder.toString();
-		}
-	}
+	   public static String byteArrayToHexString(byte[] array) {
+        if (array == null) {
+            return null;
+        } else {
+            StringBuilder builder;
+            String currentByteString = "";
+            String zero = "0";
+            try {
+                builder = new StringBuilder();
+                for (int i = 0; i < array.length; i++) {
+                    currentByteString = Integer.toHexString(array[i] & 0xFF);
+                    if (currentByteString.length() == 1) {
+                        builder.append(zero).append(currentByteString);
+                    } else {
+                        builder.append(currentByteString);
+                    }
+                    currentByteString = null;
+                    currentByteString = "";
+                }
+                return builder.toString();
+            } finally {
+                builder = null;
+                zero = null;
+                currentByteString = null;
+            }
+        }
+    }
 
 	/**
 	 * Returns boolean array converted to int. This method sums powers of 2 until end of given array, so if given array
