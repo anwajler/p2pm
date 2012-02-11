@@ -20,6 +20,7 @@ public class JCSyncTestRules extends TestRules {
     public static String FIELD_LOG_NAME = "logName";
     public static String FIELD_WORKERS_COUNT = "workers_count";
     public static String FIELD_TEST_IDENTIFIER = "testName";
+    public static String FIELD_nodes_Count = "nodes_count";
     public JCSyncTestRules() {
         super(new Hashtable<String, FieldRule>() {{
             put(FIELD_NODE_NUMBER, new FieldRule(FIELD_NODE_NUMBER, "Number of the node launched", Integer.class));
@@ -27,7 +28,7 @@ public class JCSyncTestRules extends TestRules {
             put(FIELD_BOOT_IP, new FieldRule(FIELD_BOOT_IP, "Bootstrap server's IP address", String.class));
             put(FIELD_BOOT_PORT, new FieldRule(FIELD_BOOT_PORT, "Bootstrap server's port", Integer.class));
             put(FIELD_TRANSPORT_PROTOCOL, new FieldRule(FIELD_TRANSPORT_PROTOCOL, "{TCP/UDP}", String.class));
-            put(FIELD_PROTOCOL, new FieldRule(FIELD_PROTOCOL, "P2P protocol: {kademlia|superpeer}", String.class));
+            put(FIELD_PROTOCOL, new FieldRule(FIELD_PROTOCOL, "P2P protocol: {kademlia|superpeer}", String.class));            put(FIELD_nodes_Count, new FieldRule(FIELD_nodes_Count, "Nodes count", Integer.class));           
             put(FIELD_WORKERS_COUNT,new FieldRule(FIELD_WORKERS_COUNT, "count of the workers nodes", Integer.class));
             put(FIELD_WORKER, new FieldRule(FIELD_WORKER, "determines, that current node will do some stuff on the collection", Boolean.class));
             put(FIELD_WORKER_OPERATION_COUNT, new FieldRule(FIELD_WORKER_OPERATION_COUNT, "how many operation will worker do", Integer.class));

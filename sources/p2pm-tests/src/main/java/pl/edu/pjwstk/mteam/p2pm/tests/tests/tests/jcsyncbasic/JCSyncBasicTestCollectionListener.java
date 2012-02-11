@@ -24,6 +24,8 @@ public class JCSyncBasicTestCollectionListener implements Observer {
             EventManager.getInstance().addEventToQueue(JCsyncBasicTest.EVENT_LAST_NODE_CONNECTED, arg);
             else if(args_.startsWith("worker_finished")){
                 EventManager.getInstance().addEventToQueue(JCsyncBasicTest.EVENT_WORKER_FINISHED, arg);
+            }else if(args_.startsWith("finished node:")){
+                EventManager.getInstance().addEventToQueue(JCsyncBasicTest.EVENT_NODE_FINISHED, arg);
             }                
         }
     }

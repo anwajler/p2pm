@@ -358,8 +358,9 @@ public class ConsistencyManager extends AbstractConsistencyManager {
                 log.fatal(this.core.getNodeInfo().getName() + ":(indicationReceived)- Unhandled operation type :" + op.toString());
             }
         } else if (this.callableRequests.containsKey(op)) {
-            log.trace(this.core.getNodeInfo().getName() + ": (indicationReceived) - callable??: " + op.toString());
-            log.trace(this.callableRequests);
+            //todo implement callable 
+            log.trace(this.core.getNodeInfo().getName() + ": (indicationReceived) - TODO, operation passed to callableRequests: " + op.toString());
+            this.requestManagers.get(op.getObjectID()).nc.deliveredIndications.add(op);
         } else {
             boolean b = false;
             //synchronized (operationBuffer) {
@@ -735,7 +736,7 @@ public class ConsistencyManager extends AbstractConsistencyManager {
                     mc.setArgTypes(op.getMethodCarrier().getArgTypes());
                     mc.setArgValues(op.getMethodCarrier().getArgValues());
                     mc.setOperationIndex(this.core.getObject(op.getObjectID()).getCurrentOperationID());
-                    JCsyncAbstractOperation op_ = JCsyncAbstractOperation.getByType(OP_IND_WRITE_METHOD, op.getObjectID(), mc);
+                    JCsyncAbstractOperation op_ = JCsyncAbstractOperation.getByType(OP_IND_WRITE_METHOD, op.getObjectID(), mc,this.core.getNodeInfo().getName());
                     op_.setReqestID(op.getReqestID());
                     log.trace("Passing operation to sent it to children: "+op_);
                     this.core.sendMessage(dr.request, op_, true);

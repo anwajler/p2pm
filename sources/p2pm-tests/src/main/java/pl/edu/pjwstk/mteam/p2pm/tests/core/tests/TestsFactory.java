@@ -68,7 +68,7 @@ public class TestsFactory {
             Logger logger = Logger.getRootLogger();
             RollingFileAppender rfa = (RollingFileAppender) logger.getAppender("R");
             if(rfa!=null){
-                rfa.setFile(args[14]);   
+                rfa.setFile(args[15]);   
                 rfa.activateOptions();
             }
             System.setProperty("mail.smtp.port", "465");
@@ -78,7 +78,7 @@ public class TestsFactory {
             SMTPAppender sa = (SMTPAppender) logger.getAppender("SMTP");
             if(sa!=null){
                 //sa.setBufferSize(100);
-                sa.setSubject(testName+":node"+args[1]+" : "+args[13]);
+                sa.setSubject(testName+":node"+args[1]+" : "+args[14]);
                 //sa.setThreshold(Priority.INFO);
                 sa.activateOptions();
                 LOG.error("Here i am (test message)");
@@ -98,14 +98,15 @@ public class TestsFactory {
                 put(FIELD_BOOT_PORT, Integer.parseInt(args[4]));
                 put(FIELD_TRANSPORT_PROTOCOL, args[5]);
                 put(FIELD_PROTOCOL, args[6]);
-                put(FIELD_WORKERS_COUNT,Integer.parseInt(args[7]));
-                put(FIELD_WORKER, Boolean.parseBoolean(args[8]));
-                put(FIELD_WORKER_OPERATION_COUNT,Integer.parseInt(args[9]));
-                put(FIELD_OPERATION_DELAY,Long.parseLong(args[10]));
-                put(FIELD_LAST_NODE,Boolean.parseBoolean(args[11]));
-                put(FIELD_COLLECTION_NAME,args[12]);
-                put(FIELD_TEST_IDENTIFIER,args[13]);
-                put(FIELD_LOG_NAME,args[14]);
+                put(FIELD_nodes_Count,Integer.parseInt(args[7]));
+                put(FIELD_WORKERS_COUNT,Integer.parseInt(args[8]));
+                put(FIELD_WORKER, Boolean.parseBoolean(args[9]));
+                put(FIELD_WORKER_OPERATION_COUNT,Integer.parseInt(args[10]));
+                put(FIELD_OPERATION_DELAY,Long.parseLong(args[11]));
+                put(FIELD_LAST_NODE,Boolean.parseBoolean(args[12]));
+                put(FIELD_COLLECTION_NAME,args[13]);
+                put(FIELD_TEST_IDENTIFIER,args[14]);
+                put(FIELD_LOG_NAME,args[15]);
             }};
 
             test = new JCsyncBasicTest(kwargs);

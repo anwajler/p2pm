@@ -31,6 +31,7 @@ import pl.edu.pjwstk.mteam.p2pm.tests.tests.tests.jcsyncbasic.node.NodeCallback;
 import pl.edu.pjwstk.mteam.p2pm.tests.tests.tests.jcsyncbasic.node.P2ppNode;
 import pl.edu.pjwstk.mteam.pubsub.core.CoreAlgorithm;
 
+
 public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
 
     public static final Logger LOG = Logger.getLogger(JCsyncBasicTest.class);
@@ -41,6 +42,7 @@ public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
     public static String EVENT_JCSYNC_ON_LOCAL_UPDATE = "JCSYNC_ON_LOCAL_UPDATE";
     public static String EVENT_LAST_NODE_CONNECTED = "LAST_NODE_CONNECTED";
     public static String EVENT_WORKER_FINISHED = "WORKER_FINISHED";
+    public static String EVENT_NODE_FINISHED= "NODE_FINISHED";
     private Map<String, Object> kwargs;
     private P2ppNode p2pNode;
     private TestState testState = TestState.UNCONNECTED;
@@ -55,6 +57,7 @@ public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
     private CountDownLatch workersLatch;
     private CountDownLatch waitForLastNode;
     private CountDownLatch finish;
+    private CountDownLatch testEnded;
     private JCSyncBasicTestCollectionListener collectionListener;
     private static String[] mapValues = {"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"};
     private static String collectionName = "collection";
@@ -69,6 +72,7 @@ public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
         EventManager.getInstance().subscribe(EVENT_JCSYNC_ON_LOCAL_UPDATE, this);
         EventManager.getInstance().subscribe(EVENT_LAST_NODE_CONNECTED, this);
         EventManager.getInstance().subscribe(EVENT_WORKER_FINISHED, this);
+        EventManager.getInstance().subscribe(EVENT_NODE_FINISHED, this);
     }
 
     static String getCollectionName() {
@@ -142,6 +146,8 @@ public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
         Long deelay_between_operation = (Long) this.kwargs.get(FIELD_OPERATION_DELAY);
         this.finish = new CountDownLatch(workers_count * operation_count);
         this.workersLatch = new CountDownLatch(workers_count);
+        Integer nodes_count = (Integer)this.kwargs.get(FIELD_nodes_Count);
+        this.testEnded = new CountDownLatch(nodes_count);
         if (lastNode) {
             this.observable.notifyObservers("last_node_connected");
         }
@@ -181,15 +187,19 @@ public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
         } catch (InterruptedException ex) {
             LOG.error("An error occurred: ", ex);
         }
-
+        this.observable.notifyObservers("finished node:"+this.p2pNode.getUserName());
         printCollectionData(this.collection);
         try {
             logDataToDatabase(this.collection);
         } catch (SQLException ex) {
             LOG.error("An error occurred: ", ex);
         }
-
-        snooze(10000);
+        try {
+            this.testEnded.await();
+        } catch (InterruptedException ex) {
+            LOG.error("An error occurred: ", ex);
+        }
+        snooze(45000);
         this.p2pNode.networkLeave();
         return true;
     }
@@ -293,9 +303,9 @@ public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
             Object topicID = eventDataArr[0];
             byte[] message = (byte[]) eventDataArr[1];
 
-            if (LOG.isDebugEnabled()) {
+            //if (LOG.isDebugEnabled()) {
                 LOG.info(this.p2pNode.getUserId() + ": New event in topic " + topicID + ": " + new String(message));
-            }
+            //}
         } else if (EVENT_JCSYNC_ON_LOCAL_UPDATE.equals(eventType)) {
             this.finish.countDown();
 //            JCSyncWriteMethod wm = (JCSyncWriteMethod) eventData;
@@ -312,6 +322,8 @@ public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
             this.waitForLastNode.countDown();
         } else if (EVENT_WORKER_FINISHED.equals(eventType)) {
             this.workersLatch.countDown();
+        }else if (EVENT_NODE_FINISHED.equals(eventType)) {
+            this.testEnded.countDown();
         }
 
 
@@ -539,7 +551,6 @@ public class JCsyncBasicTest extends Thread implements ITest, IEventSubscriber {
         }
     }
 }
-
 enum TestState {
 
     UNCONNECTED, JOINED, CREATEDTOPIC, SUBSCRIBED, CREATEDCOLLECTION
