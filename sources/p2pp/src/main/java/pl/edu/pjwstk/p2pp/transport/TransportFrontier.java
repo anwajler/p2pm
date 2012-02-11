@@ -22,7 +22,7 @@ public class TransportFrontier {
 
     private AtomicInteger size = new AtomicInteger(0);
     
-    private final LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<Message>();
+    //private final LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<Message>();
 
     public void add(Message message) {
 
@@ -31,27 +31,27 @@ public class TransportFrontier {
             return;
         }
 
-//        String receiverAddress = message.getReceiverAddress();
-//
-//        synchronized (this.addresses) {
-//
-//            if (!this.frontier.containsKey(receiverAddress)) {
-//                this.frontier.put(receiverAddress, new LinkedList<Message>());
-//            }
-//
-//            if (!this.addresses.contains(receiverAddress)) {
-//                this.addresses.add(receiverAddress);
-//            }
-//            //sometimes calledMethod removes below address from frontier, below 
-//            // code moves to synchronized block
-//            this.size.incrementAndGet();
-//            this.frontier.get(receiverAddress).add(message);
-//
-//        }
-        this.messages.add(message);
-        if(((P2PPMessage)message).getTransactionID()==null){
-            LOG.fatal("Added message with null transactionID :"+message,new Throwable("null transactionID"));
+        String receiverAddress = message.getReceiverAddress();
+
+        synchronized (this.addresses) {
+
+            if (!this.frontier.containsKey(receiverAddress)) {
+                this.frontier.put(receiverAddress, new LinkedList<Message>());
+            }
+
+            if (!this.addresses.contains(receiverAddress)) {
+                this.addresses.add(receiverAddress);
+            }
+            //sometimes calledMethod removes below address from frontier, below 
+            // code moves to synchronized block
+            this.size.incrementAndGet();
+            this.frontier.get(receiverAddress).add(message);
+
         }
+//        this.messages.add(message);
+//        if(((P2PPMessage)message).getTransactionID()==null){
+//            LOG.fatal("Added message with null transactionID :"+message,new Throwable("null transactionID"));
+//        }
 
     }
 
@@ -98,16 +98,17 @@ public class TransportFrontier {
     }
 
     public Message poll() {
-        try {
-            //        if (this.size.intValue() < 1) return null;
-            //
-            //        String address = this.getRandomAddress();
-            //
-            //        return this.pollMessage(address);
-                    return this.messages.poll(1000, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException ex) {
-            return null;
-        }
+//        try {
+                    if (this.size.intValue() < 1) return null;
+            
+                    String address = this.getRandomAddress();
+            
+                    return this.pollMessage(address);
+//                    return this.messages.poll(1000, TimeUnit.MILLISECONDS);
+//        } catch (InterruptedException ex) {
+//            return null;
+//        }
+//    }
     }
 
 }
