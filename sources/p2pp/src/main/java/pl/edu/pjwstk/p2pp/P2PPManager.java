@@ -26,6 +26,7 @@ import pl.edu.pjwstk.p2pp.messages.responses.BootstrapResponse;
 import pl.edu.pjwstk.p2pp.objects.AddressInfo;
 import pl.edu.pjwstk.p2pp.objects.P2POptions;
 import pl.edu.pjwstk.p2pp.testing.MessagesToDatabaseProvider;
+import pl.edu.pjwstk.p2pp.transactions.Transaction;
 import pl.edu.pjwstk.p2pp.transport.MessageStorage;
 import pl.edu.pjwstk.p2pp.transport.TransportManager;
 import pl.edu.pjwstk.p2pp.util.AbstractMessageFactory;
@@ -77,7 +78,8 @@ public class P2PPManager {
 	private Vector<P2PPEntity> entities = new Vector<P2PPEntity>();
 
 	/** Messages waiting to be passed to writers. */
-	private Vector<Message> messagesToBeSend = new Vector<Message>();
+	//private Vector<Message> messagesToBeSend = new Vector<Message>();
+    private Vector<Object[]> messagesToBeSend = new Vector<Object[]>();
 
 	/** Datagram socket used by unreliable transport readers/writers. */
 	//private DatagramSocket datagramSocket;
@@ -99,8 +101,9 @@ public class P2PPManager {
 	 * Listener of outgoing messages coming from entities or services.
 	 */
 	private OutgoingMessagesListener outgoingListener = new OutgoingMessagesListener() {
-		public void onSend(Message message) {
-			messagesToBeSend.add(message);
+		public void onSend(Message message, Transaction transaction) {
+			//messagesToBeSend.add(message);
+            messagesToBeSend.add(new Object[]{message,transaction});
 		}
 	};
 
@@ -190,7 +193,8 @@ public class P2PPManager {
 		 */
 		private void passMessagesToWriters() {
 			while (messagesToBeSend.size() > 0) {
-				Message message = messagesToBeSend.remove(0);
+				//Message message = messagesToBeSend.remove(0);
+                Object[] message = messagesToBeSend.remove(0);
 				if (LOG.isDebugEnabled()) LOG.debug("Message passed to writers " + message.toString());
 				fireOnSend(message);
 			}
@@ -514,7 +518,8 @@ public class P2PPManager {
 	 * 
 	 * @param message
 	 */
-	private void fireOnSend(Message message) {
+	//private void fireOnSend(Message message) {
+    private void fireOnSend(Object[] message) {
 //		for (CommunicationObject current : communicationObjects) {
 //			if (current.onSend(message))
 //				break;
@@ -522,9 +527,9 @@ public class P2PPManager {
 		transportManager.eventMessageToBeSend(message);
 
         // TODO Perhaps there should be some information which entity is sending particular message?
-        if (this.entities.size() > 0) {
+        /*if (this.entities.size() > 0) {
             this.entities.get(0).writeDebugInformation(message, false);
-        }
+        } */
 	}
 
 	/**

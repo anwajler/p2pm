@@ -3,6 +3,7 @@ package pl.edu.pjwstk.p2pp.transport;
 import java.io.IOException;
 import java.util.Vector;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -16,12 +17,13 @@ import pl.edu.pjwstk.p2pp.messages.MalformedP2PPMessageException;
 import pl.edu.pjwstk.p2pp.messages.Message;
 import pl.edu.pjwstk.p2pp.messages.NonInterpretedMessage;
 import pl.edu.pjwstk.p2pp.objects.UnsupportedGeneralObjectException;
+import pl.edu.pjwstk.p2pp.transactions.Transaction;
 import pl.edu.pjwstk.p2pp.util.AbstractMessageFactory;
 
 public class TransportWorker<ProtocolWorkerObject extends ProtocolControl & ProtocolReader & ProtocolWriter> implements ProtocolControl{
 	private final static Logger LOG = Logger.getLogger(TransportWorker.class);
 
-    private final ThreadPoolExecutor sendExecutor = new ThreadPoolExecutor(1, 1, 5, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(1000));
+    private final TransportThreadPoolExecutor sendExecutor = new TransportThreadPoolExecutor(10, 10, 10, TimeUnit.SECONDS, new LinkedBlockingDeque<Runnable>(1000));
 
 	protected Vector<AbstractMessageFactory> messageFactories = new Vector<AbstractMessageFactory>();
 	//private MessageStorage messageStorage;
@@ -91,7 +93,10 @@ public class TransportWorker<ProtocolWorkerObject extends ProtocolControl & Prot
 		return messages;
 	}
 
-	public boolean OnSend(Message message){
+	//public boolean OnSend(Message message){
+    public boolean OnSend(Object[] messageTransaction){
+        Message message = (Message) messageTransaction[0];
+        Transaction transaction = (Transaction) messageTransaction[1];
 		if (LOG.isDebugEnabled()) {
             LOG.debug("Transport object sending message to peer " + message.getReceiverAddress() + ":" + message.getReceiverPort());
         }
@@ -109,7 +114,8 @@ public class TransportWorker<ProtocolWorkerObject extends ProtocolControl & Prot
             strb.append(message.getReceiverPort());
             LOG.warn(strb.toString());
         }*/
-        this.sendExecutor.submit(new SendTask(this.protocolObject, message));
+        //this.sendExecutor.submit(new SendTask(this.protocolObject, message));
+        this.sendExecutor.submit(new SendTask(this.protocolObject, message, transaction));
 		return true;
 	}
 

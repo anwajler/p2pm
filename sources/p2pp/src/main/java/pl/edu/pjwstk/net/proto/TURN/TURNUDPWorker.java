@@ -129,7 +129,7 @@ public abstract class TURNUDPWorker extends UDPWorker implements ProtocolControl
 	 * @see pl.edu.pjwstk.net.proto.ProtocolWriter#SendMessage(pl.edu.pjwstk.p2pp.messages.Message)
 	 */
 	@Override
-	public boolean SendMessage(Message message) {
+	public boolean SendMessage(Message messagez) {
 		// TODO Auto-generated method stub
 		return false;
 	}

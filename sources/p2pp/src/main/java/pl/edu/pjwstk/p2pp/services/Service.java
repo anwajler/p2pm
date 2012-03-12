@@ -3,6 +3,7 @@ package pl.edu.pjwstk.p2pp.services;
 import pl.edu.pjwstk.p2pp.OutgoingMessagesListener;
 import pl.edu.pjwstk.p2pp.messages.Message;
 import pl.edu.pjwstk.p2pp.objects.ResourceObject;
+import pl.edu.pjwstk.p2pp.transactions.Transaction;
 
 /**
  * Abstract class describing service of P2PP (draft 01).
@@ -57,8 +58,8 @@ public abstract class Service {
 	 * @param message
 	 *            Message to be send.
 	 */
-	protected void fireOnSend(Message message) {
-		outgoingListener.onSend(message);
+	protected void fireOnSend(Message message, Transaction transaction) {
+		outgoingListener.onSend(message, transaction);
 	}
 
 	/**

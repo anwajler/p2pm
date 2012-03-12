@@ -103,7 +103,8 @@ public class TransportManager extends Thread {
 		}
 	}
 	
-	public void eventMessageToBeSend(Message message){
+	//public void eventMessageToBeSend(Message message){
+    public void eventMessageToBeSend(Object[] message){
         this.frontier.add(message);
 		/*for (TransportWorker<? extends ProtocolWorker> currentTransportWorker : transportObjects) {
 			if (currentTransportWorker.isWorkerReady()) {
@@ -143,14 +144,18 @@ public class TransportManager extends Thread {
 
             try {
 
-                Message message;
+                //Message message;
+                Object[] messageTransaction;
                 
-                while ((message = this.frontier.poll()) != null) {
+                //while ((message = this.frontier.poll()) != null) {
+                while ((messageTransaction = this.frontier.poll()) != null) {
 
                     for (int i = 0; i < transportObjects.size(); i++) {
                         currentTransportWorker = transportObjects.get(i);
+                        Message message = (Message) messageTransaction[0];
                         if (currentTransportWorker.isWorkerReady() && (currentTransportWorker.isReliable() == message.isOverReliable())) {
-                            currentTransportWorker.OnSend(message);
+                            //currentTransportWorker.OnSend(message);
+                            currentTransportWorker.OnSend(messageTransaction);
                         }
                     }
 

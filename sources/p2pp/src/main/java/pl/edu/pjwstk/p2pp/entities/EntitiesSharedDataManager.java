@@ -13,6 +13,7 @@ import pl.edu.pjwstk.p2pp.objects.PeerInfo;
 import pl.edu.pjwstk.p2pp.objects.RoutingTable;
 import pl.edu.pjwstk.p2pp.objects.UnhashedID;
 import pl.edu.pjwstk.p2pp.objects.Uptime;
+import pl.edu.pjwstk.p2pp.transactions.Transaction;
 import pl.edu.pjwstk.p2pp.transactions.TransactionTable;
 import pl.edu.pjwstk.p2pp.util.Arrays;
 import pl.edu.pjwstk.p2pp.util.ByteUtils;
@@ -311,8 +312,8 @@ public class EntitiesSharedDataManager {
 	/**
 	 * Informs entities listener about outgoing message.
 	 */
-	public void fireOnSend(Message message) {
-		outgoingListener.onSend(message);
+	public void fireOnSend(Message message, Transaction transaction) {
+		outgoingListener.onSend(message, transaction);
 	}
 
 	/**

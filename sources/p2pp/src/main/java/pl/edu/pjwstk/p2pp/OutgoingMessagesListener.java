@@ -1,6 +1,7 @@
 package pl.edu.pjwstk.p2pp;
 
 import pl.edu.pjwstk.p2pp.messages.Message;
+import pl.edu.pjwstk.p2pp.transactions.Transaction;
 
 /**
  * Interface for listeners of outgoing messages.
@@ -15,6 +16,6 @@ public interface OutgoingMessagesListener {
 	 * 
 	 * @param message
 	 */
-	public void onSend(Message message);
+	public void onSend(Message message, Transaction transaction);
 
 }

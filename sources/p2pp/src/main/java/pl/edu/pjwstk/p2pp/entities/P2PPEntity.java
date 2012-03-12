@@ -29,7 +29,7 @@ import pl.edu.pjwstk.p2pp.util.ByteUtils;
  * <ul>
  * <li>receiving messages messages {@link #onReceive(pl.edu.pjwstk.p2pp.messages.Message)})</li>
  * <li>receiving commands from, for instance, command line ({@link #onCommand()} )</li>
- * <li>sending messages to entities listeners ({@link #fireOnSend(pl.edu.pjwstk.p2pp.messages.Message)})</li>
+ * <li>sending messages to entities listeners ({@link #fireOnSend(pl.edu.pjwstk.p2pp.messages.Message,Transaction)})</li>
  * </ul>
  * </p>
  * <p>
@@ -341,7 +341,7 @@ public abstract class P2PPEntity {
                 // sends an ACK even though there's no matching transaction (spec says so)
                 Acknowledgment ack = response.createACK(sharedManager.getPeerInfo(true, isNodeAfterBootstrapping())
                         .getPeerID().getPeerIDBytes());
-                fireOnSend(ack);
+                fireOnSend(ack, transaction);
             }
         }
 
@@ -554,8 +554,8 @@ public abstract class P2PPEntity {
     /**
      * Informs outgoing messages listeners of a message to be send.
      */
-    public void fireOnSend(Message message) {
-		outgoingListener.onSend(message);
+    public void fireOnSend(Message message, Transaction transaction) {
+		outgoingListener.onSend(message, transaction);
 	}
 
 	/**

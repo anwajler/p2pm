@@ -40,6 +40,7 @@ public class TransactionTable {
 
     private final Object lock = new Object();
 
+
     /**
      * Map of request transactions identified by transactionID [Long transactionID, Transaction transaction]].
      */
@@ -411,7 +412,7 @@ public class TransactionTable {
                 if (message != null) {       
                     //sometimes returned message does not have set transactionID yet, below line fixed this issue.
                     if(((P2PPMessage)message).getTransactionID()==null)((P2PPMessage)message).setTransactionID(currentTransaction.getTransactionID());
-                    outgoingListener.onSend(message);
+                    outgoingListener.onSend(message, currentTransaction);
                 }
             }
 
@@ -432,7 +433,7 @@ public class TransactionTable {
                     Message message = currentTransaction.onTimeSlot(this, localEntity);
                     // if transaction wants to send message, it is passed to outgoing listener
                     if (message != null) {
-                        outgoingListener.onSend(message);
+                        outgoingListener.onSend(message, currentTransaction);
                     }
                 }
             }
@@ -443,7 +444,7 @@ public class TransactionTable {
                 Transaction currentTransaction = this.indicationTransactionsMap.get(transactionIDAsLong);
                 Message message = currentTransaction.onTimeSlot(this, localEntity);
                 if (message != null) {
-                    outgoingListener.onSend(message);
+                    outgoingListener.onSend(message, currentTransaction);
                 }
             }
 

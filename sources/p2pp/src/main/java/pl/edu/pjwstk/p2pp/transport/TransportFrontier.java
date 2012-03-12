@@ -11,12 +11,14 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import pl.edu.pjwstk.p2pp.messages.P2PPMessage;
+import sun.jdbc.odbc.ee.ObjectPool;
 
 public class TransportFrontier {
 
     public static final Logger LOG = Logger.getLogger(TransportFrontier.class);
 
-    private ConcurrentHashMap<String, LinkedList<Message>> frontier = new ConcurrentHashMap<String, LinkedList<Message>>();
+    //private ConcurrentHashMap<String, LinkedList<Message>> frontier = new ConcurrentHashMap<String, LinkedList<Message>>();
+    private ConcurrentHashMap<String, LinkedList<Object[]>> frontier = new ConcurrentHashMap<String, LinkedList<Object[]>>();
 
     final private CopyOnWriteArrayList<String> addresses = new CopyOnWriteArrayList<String>();
 
@@ -24,7 +26,10 @@ public class TransportFrontier {
     
     //private final LinkedBlockingQueue<Message> messages = new LinkedBlockingQueue<Message>();
 
-    public void add(Message message) {
+    //public void add(Message message) {
+    public void add(Object[] messageTransaction) {
+
+        Message message = (Message) messageTransaction[0];
 
         if (message == null) {
             LOG.warn("Trying to add null message");
@@ -36,7 +41,8 @@ public class TransportFrontier {
         synchronized (this.addresses) {
 
             if (!this.frontier.containsKey(receiverAddress)) {
-                this.frontier.put(receiverAddress, new LinkedList<Message>());
+                //this.frontier.put(receiverAddress, new LinkedList<Message>());
+                this.frontier.put(receiverAddress, new LinkedList<Object[]>());
             }
 
             if (!this.addresses.contains(receiverAddress)) {
@@ -45,7 +51,8 @@ public class TransportFrontier {
             //sometimes calledMethod removes below address from frontier, below 
             // code moves to synchronized block
             this.size.incrementAndGet();
-            this.frontier.get(receiverAddress).add(message);
+            //this.frontier.get(receiverAddress).add(message);
+            this.frontier.get(receiverAddress).add(messageTransaction);
 
         }
 //        this.messages.add(message);
@@ -68,8 +75,10 @@ public class TransportFrontier {
         return randomAddress;
     }
 
-    private Message pollMessage(String address) {
-        Message message = null;
+    //private Message pollMessage(String address) {
+    private Object[] pollMessage(String address) {
+        //Message message = null;
+        Object[] message = null;
         /*
          * sychronised a whole of code block, sometimes is removing queue, 
          * which holds messages to send - this eliminates that.
@@ -78,7 +87,8 @@ public class TransportFrontier {
             if (address == null) {
                 return null;
             }
-            Queue<Message> queue = this.frontier.get(address);
+            //Queue<Message> queue = this.frontier.get(address);
+            Queue<Object[]> queue = this.frontier.get(address);
             if (queue == null) {
                 return null;
             }
@@ -97,7 +107,8 @@ public class TransportFrontier {
         return message;
     }
 
-    public Message poll() {
+    //public Message poll() {
+    public Object[] poll() {
 //        try {
                     if (this.size.intValue() < 1) return null;
             

@@ -48,6 +48,7 @@ public class SuperPeerPeer extends Peer {
 	public static final int DEFAULT_EXPIRES_SECONDS = 120;
 
     private AddressInfo bootstrapAddress;
+    private boolean iAmSuperPeer = false;
 
     private Date lastPeerLookup = new Date();
     private final Map<PeerID, PeerInfo> peerIndex = new ConcurrentHashMap<PeerID,PeerInfo>();
@@ -450,6 +451,9 @@ public class SuperPeerPeer extends Peer {
 
                     // saves information about bootstrap candidates
                     bootstrapCandidates = bootstrapResponse.getPeersInOverlay();
+                    if (bootstrapCandidates.size() == 0) {
+                        iAmSuperPeer = true;
+                    }
                     for (PeerInfo peerInfo : bootstrapCandidates) {
                         routingTable.addPeerInfo(peerInfo);
                     }
@@ -606,14 +610,14 @@ public class SuperPeerPeer extends Peer {
 
                 List<ResourceObject> resources = resourceManager.getResourceObject(resourceLookup);
                 if (resources == null) {
-                    PeerInfo nextHop = routingTable.getNextHop(resourceLookup.getResourceID().getResourceID());
+                    PeerInfo superPeerPI = this.bootstrapCandidates.get(0);
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Resource " + ByteUtils.byteArrayToHexString(resourceLookup.getResourceID().getResourceID()) +
-                                " not found. Looking up in index of " + nextHop);
+                                " not found. Looking up in index of " + superPeerPI);
                     }
-                    if (nextHop != null) {
-                        transactionTable.createTransactionAndFill(request, lookupIndexTransactionListener, nextHop.getAddressInfos(), ownPeerID,
-                            nextHop.getPeerID().getPeerIDBytes());
+                    if (!this.iAmSuperPeer) {
+                        transactionTable.createTransactionAndFill(request, lookupIndexTransactionListener, superPeerPI.getAddressInfos(), ownPeerID,
+                            superPeerPI.getPeerID().getPeerIDBytes());
                     } else {
                         onLookupIndexLocal(request);
                     }
@@ -710,10 +714,10 @@ public class SuperPeerPeer extends Peer {
                 PeerInfo ownPeerInfo = sharedManager.getPeerInfo(true, true);
                 IndexRequest indexRequest = new IndexRequest(P2PPMessage.P2PP_PROTOCOL_VERSION_1, false, true, false, (byte) 255, null,
                         sharedManager.getPeerIDAsBytes(), GlobalConstants.isOverReliable, false, null, ownPeerInfo, resourceObject);
-                PeerInfo nextHop = routingTable.getNextHop(resourceObject.getResourceID().getResourceID());
-                if (nextHop != null) {
-                    transactionTable.createTransactionAndFill(indexRequest, indexRequestTransactionListener, nextHop.getAddressInfos(),
-                        ownPeerInfo.getPeerID().getPeerIDBytes(), nextHop.getPeerID().getPeerIDBytes());
+                PeerInfo superPeerPI = this.bootstrapCandidates.get(0);
+                if (!this.iAmSuperPeer) {
+                    transactionTable.createTransactionAndFill(indexRequest, indexRequestTransactionListener, superPeerPI.getAddressInfos(),
+                        ownPeerInfo.getPeerID().getPeerIDBytes(), superPeerPI.getPeerID().getPeerIDBytes());
                 } else {
                     addResourceToIndex(resourceObject.getResourceID(), ownPeerInfo);
                     callback.onDeliverRequest(indexRequest, new ArrayList<ResourceObject>(){{add(resourceObject);}});
@@ -776,15 +780,15 @@ public class SuperPeerPeer extends Peer {
                     }
 
                     ResourceObject removedResource = this.resourceManager.removeResourceObject(contentType, contentSubtype,resourceID, owner);
-                    PeerInfo nextHop = routingTable.getNextHop(resourceLookup.getResourceID().getResourceID());
+                    PeerInfo superPeerPI = this.bootstrapCandidates.get(0);
 
-                    if (nextHop != null) {
+                    if (!this.iAmSuperPeer) {
 
                         RemoveObjectRequest removeRequest = new RemoveObjectRequest(P2PPMessage.P2PP_PROTOCOL_VERSION_1, false, true, false,
                                 (byte) 255, null, sharedManager.getPeerIDAsBytes(), GlobalConstants.isOverReliable, false, null,
                                 sharedManager.getPeerInfo(true, true), removedResource);
-                        transactionTable.createTransactionAndFill(removeRequest, removeObjectTransactionListener, nextHop.getAddressInfos(),
-                                ownPeerID, nextHop.getPeerID().getPeerIDBytes());
+                        transactionTable.createTransactionAndFill(removeRequest, removeObjectTransactionListener, superPeerPI.getAddressInfos(),
+                                ownPeerID, superPeerPI.getPeerID().getPeerIDBytes());
 
                     } else {
 

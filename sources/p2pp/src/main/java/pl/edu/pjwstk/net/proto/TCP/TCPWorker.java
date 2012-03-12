@@ -6,6 +6,8 @@ import pl.edu.pjwstk.net.proto.*;
 import pl.edu.pjwstk.p2pp.GlobalConstants;
 import pl.edu.pjwstk.p2pp.messages.Message;
 import pl.edu.pjwstk.p2pp.messages.NonInterpretedMessage;
+import pl.edu.pjwstk.p2pp.transactions.Transaction;
+
 import javax.net.SocketFactory;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
@@ -119,7 +121,7 @@ public class TCPWorker extends ProtocolWorker implements ProtocolControl, Protoc
             message.setSenderPort(this.localPort);
 
             socket = this.socketFactory.createSocket(message.getReceiverAddress(), message.getReceiverPort());
-            socket.setSoTimeout(30000);
+            socket.setSoTimeout(Transaction.T3/2);
             if (this.encryption != null) ((SSLSocket)socket).startHandshake();
             OutputStream outputStream = socket.getOutputStream();
             outputStream.write(message.asBytes());
