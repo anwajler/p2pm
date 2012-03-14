@@ -87,7 +87,7 @@ public class JCSyncObservable extends Observable implements JCsyncNucleusInterfa
     }
 
     @Override
-    public Object invoke(String methodName, Class[] argTypes, Object[] argValues) {
+    public Object invoke(String methodName, Class[] argTypes, Object[] argValues, boolean local) {
         methodName = methodName + '_';
         Method[] allMethods = getClass().getDeclaredMethods();
         Object retVal = null;

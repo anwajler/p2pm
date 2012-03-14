@@ -47,7 +47,7 @@ public abstract class AbstractConsistencyManager {
      * @param respCode response code contained in {@link JCSyncConstans JCSyncConstans}
      * Every 'pub-sub' codes is also converted to JCSync codes, take a look at {@link MessageDeliveryObserver#onDeliverPubSubResponse(java.lang.String, short, short, long)  onDeliverPubSubResponse}
      */
-    public abstract void responseReceived(JCsyncAbstractOperation op, short respCode);
+    public abstract void responseReceived(JCsyncAbstractOperation op, short respCode/*, long globalRequestID*/);
     /**
      * Called when the request is received from the layer. The {@link PubSubCustomisableAlgorithm PubSubCustomisableAlgorith} 
      * (extension of {@link DefaultCustomizableAlgorithm DefaultCustomisableAlgorith}) 
@@ -142,7 +142,7 @@ public abstract class AbstractConsistencyManager {
      * @throws IllegalArgumentException
      * @throws InvocationTargetException
      */
-    protected Object invoke(JCSyncAbstractSharedObject o,MethodCarrier m) throws SecurityException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{        
-        return o.invokeWriteOperation(m.getGenericMethodName(), m.getArgTypes(),m.getArgValues());
+    protected Object invoke(JCSyncAbstractSharedObject o, MethodCarrier m, boolean local) throws SecurityException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException{        
+        return o.invokeWriteOperation(m.getGenericMethodName(), m.getArgTypes(),m.getArgValues(), local);
     }
 }

@@ -3,6 +3,8 @@
  */
 package pl.edu.pjwstk.mteam.pubsub.transport;
 
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.LinkedBlockingQueue;
 import pl.edu.pjwstk.mteam.core.MessageListener;
 import pl.edu.pjwstk.mteam.core.NetworkObject;
 import pl.edu.pjwstk.mteam.core.Node;
@@ -60,6 +62,7 @@ public class PubSubTransport implements MessageListener{
 	 * Used for sending publish-subscribe messages directly.
 	 */
 	private TCPWriter tcpWriter;
+        private Thread worker;
 	
 	/**
 	 * Creates PubSubTransport object.
@@ -72,6 +75,8 @@ public class PubSubTransport implements MessageListener{
 		node = n;
 		tcpWriter = new TCPWriter();
 		tcpReader = new TCPReader(port, this);
+                worker = new Thread(new Worker());
+                worker.start();                
 	}
 	
 	/**
@@ -119,6 +124,34 @@ public class PubSubTransport implements MessageListener{
                 return true;
 	}
 	
+        LinkedBlockingQueue<byte[]> deliveredMessages = new LinkedBlockingQueue<byte[]>();
+        class Worker implements Runnable{
+
+        @Override
+        public void run() {
+            PubSubMessage msg = null;
+            while(true){
+                try{msg = PubSubMessage.parseMessage(deliveredMessages.take());
+                if(msg instanceof PubSubRequest){
+                    pubsubManager.onDeliverRequest((PubSubRequest)msg);
+		}
+		else if(msg instanceof PubSubIndication){
+                   pubsubManager.onDeliverIndication((PubSubIndication)msg);
+		}
+		else{
+                   pubsubManager.onDeliverResponse((PubSubResponse)msg);  
+                }
+                }
+                catch(Exception e){
+                    logger.fatal(node.getUserName()+": An error occurred while processing message for topic: "+msg.getTopicID(), e);
+                    //return false;
+                }finally{
+                    msg = null;
+                }
+            }
+        }
+            
+        }
 	/**
 	 * Parses messages, which this node is destination for, determines, whether 
 	 * it is a request, indication or response and invokes appropriate onDeliver...
@@ -130,26 +163,28 @@ public class PubSubTransport implements MessageListener{
 	 */
         
 	public boolean onDeliverMessage(byte[] msgBytes) {
-                PubSubMessage msg = null;
-                try{msg = PubSubMessage.parseMessage(msgBytes);
-                if(msg instanceof PubSubRequest){
-	       return pubsubManager.onDeliverRequest((PubSubRequest)msg);
-		}
-		else if(msg instanceof PubSubIndication){
-	       return pubsubManager.onDeliverIndication((PubSubIndication)msg);
-		}
-		else{
-	       return pubsubManager.onDeliverResponse((PubSubResponse)msg);  
-                }
-                }
-                catch(Exception e){
-                    logger.fatal(node.getUserName()+": An error occurred while processing message for topic: "+msg.getTopicID(), e);
-                    return false;
-                }finally{
-                    msg = null;
-                    msgBytes = null;
-                }
-                
+            this.deliveredMessages.add(msgBytes);
+            return true;
+//                PubSubMessage msg = null;
+//                try{msg = PubSubMessage.parseMessage(msgBytes);
+//                if(msg instanceof PubSubRequest){
+//	       return pubsubManager.onDeliverRequest((PubSubRequest)msg);
+//		}
+//		else if(msg instanceof PubSubIndication){
+//	       return pubsubManager.onDeliverIndication((PubSubIndication)msg);
+//		}
+//		else{
+//	       return pubsubManager.onDeliverResponse((PubSubResponse)msg);  
+//                }
+//                }
+//                catch(Exception e){
+//                    logger.fatal(node.getUserName()+": An error occurred while processing message for topic: "+msg.getTopicID(), e);
+//                    return false;
+//                }finally{
+//                    msg = null;
+//                    msgBytes = null;
+//                }
+//                
 	}
 
 	/**

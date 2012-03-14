@@ -89,6 +89,8 @@ public interface JCsyncAlgorithInterface {
             throws ObjectNotExistsException,
             OperationForbiddenException,
             Exception;
+    
+    public void modifyAccessControlLists(String name, AccessControlLists acRules);
     /**
      * Checking the root status on the shared object with given name. 
      * <br> For more information please refer to the Publish-Subscribe (pub-sub)
@@ -132,6 +134,8 @@ public interface JCsyncAlgorithInterface {
      * @param respCode response code.
      */
     public void sendResponse(PublishRequest req, int respCode);
+    
+    //public void sendResponse(PublishRequest req, int respCode, long requestID);
     /**
      * Returns <tt>Topic</tt> object associated to shared object with given name.
      * @param name shared object identifier.

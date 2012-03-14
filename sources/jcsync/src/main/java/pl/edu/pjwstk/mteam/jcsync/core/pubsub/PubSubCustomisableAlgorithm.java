@@ -593,17 +593,18 @@ public class PubSubCustomisableAlgorithm extends DefaultCustomizableAlgorithm {
 
             @Override
             public void onOverlayError(Node node, Object sourceID, int errorCode) {
-                log.error("onOverlayError, node:"+node.getUserName()+", object:"+sourceID+", errorCode: "+errorCode);
+                log.error("onOverlayError, node:"+node.getUserName()+", object:"+sourceID+", errorCode: "+errorCode,new Throwable("OnOverlayError"));
                 
             }
 
             @Override
             public void onOverlayError(Node node, Object sourceID, int errorCode, int transID) {
-                log.error("onOverlayError, node:"+node.getUserName()+", object:"+sourceID+", errorCode: "+errorCode);
+                log.error("onOverlayError, node:"+node.getUserName()+", object:"+sourceID+", errorCode: "+errorCode,new Throwable("OnOverlayError"));
             }
 
             @Override
             public void onPubSubError(Node node, Object topicID, short operationType, int errorCode) {
+                log.error("onOverlayError, node:"+node.getUserName()+", errorCode: "+errorCode,new Throwable("OnOverlayError"));
 //                if (knownTopicsName.contains((String) topicID)) {
 //                    if (operationType == PubSubConstants.OPERATION_CREATETOPIC) {
 //                        observer.onDeliverPubSubResponse((String) topicID, PubSubConstants.MSG_CREATETOPIC, (short) PubSubConstants.RESP_ALREADYEXISTS);

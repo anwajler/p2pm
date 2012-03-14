@@ -36,7 +36,7 @@ public interface JCsyncNucleusInterface extends Serializable {
      * @return depends on invoked method.
      */
     //TODO this method should be more hidden
-    Object invoke(String methodName, Class[]argTypes, Object [] argValues);
+    Object invoke(String methodName, Class[] argTypes, Object[] argValues, boolean local);
     
     /**
      * Informs <tt>JCSyncNucleusInterface</tt> about the associated shared object 

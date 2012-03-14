@@ -162,7 +162,7 @@ public class JCSyncHashMap<K, V> extends HashMap<K, V> implements JCsyncNucleusI
     }
 
     @Override
-    public Object invoke(String methodName, Class[] argTypes, Object[] argValues) {
+    public Object invoke(String methodName, Class[] argTypes, Object[] argValues, boolean local) {
         methodName = methodName + '_';
         Method[] allMethods = getClass().getDeclaredMethods();
         Object retVal = null;

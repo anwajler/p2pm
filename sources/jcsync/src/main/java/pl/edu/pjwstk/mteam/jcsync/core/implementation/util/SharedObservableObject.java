@@ -59,13 +59,13 @@ public class SharedObservableObject extends JCSyncAbstractSharedObject{
 
     @Override
     protected Object invokeReadOperation(String methodName, Class[] argTypes, Object[] argValues) throws SecurityException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
-        return ((JCsyncNucleusInterface)getNucleusObject()).invoke(methodName, argTypes, argValues);
+        return ((JCsyncNucleusInterface)getNucleusObject()).invoke(methodName, argTypes, argValues, false);
     }
 
     @Override
-    protected Object invokeWriteOperation(String methodName, Class[] argTypes, Object[] argValues) throws SecurityException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
+    protected Object invokeWriteOperation(String methodName, Class[] argTypes, Object[] argValues, boolean local) throws SecurityException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         super.nextOperationID();
-        return ((JCsyncNucleusInterface)getNucleusObject()).invoke(methodName, argTypes, argValues);
+        return ((JCsyncNucleusInterface)getNucleusObject()).invoke(methodName, argTypes, argValues, false);
     }
     /**
      * Returns an <tt>JCSyncNucleusInterface</tt> extended object.

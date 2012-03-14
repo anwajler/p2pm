@@ -188,7 +188,7 @@ public class JCSyncAbstractSharedObjectTest {
         Topic t = new Topic(name);
         Subscriber subscriber = new Subscriber("node1", t);
         t.setOwner(subscriber);
-        AccessControlRules acRules = new AccessControlRules(t);
+        AccessControlLists acRules = new AccessControlLists(t);
         acRules.getRule(PubSubConstants.OPERATION_PUBLISH).getOperation().addEvent(new Event(RegisteredOperations.OP_REQ_TRANSFER_OBJECT));
         acRules.getRule(PubSubConstants.OPERATION_PUBLISH).addUser(RegisteredOperations.OP_REQ_TRANSFER_OBJECT, null);
         acRules.getRule(PubSubConstants.OPERATION_NOTIFY).getOperation().addEvent(new Event(RegisteredOperations.OP_IND_TRANSFER_OBJECT));
@@ -227,7 +227,7 @@ public class JCSyncAbstractSharedObjectTest {
         Topic t = new Topic(name);
         Subscriber subscriber = new Subscriber("node1", t);
         t.setOwner(subscriber);
-        AccessControlRules acRules = new AccessControlRules(t);
+        AccessControlLists acRules = new AccessControlLists(t);
         acRules.getRule(PubSubConstants.OPERATION_PUBLISH).getOperation().addEvent(new Event(RegisteredOperations.OP_REQ_TRANSFER_OBJECT));
         acRules.getRule(PubSubConstants.OPERATION_PUBLISH).addUser(RegisteredOperations.OP_REQ_TRANSFER_OBJECT, null);
         acRules.getRule(PubSubConstants.OPERATION_NOTIFY).getOperation().addEvent(new Event(RegisteredOperations.OP_IND_TRANSFER_OBJECT));
@@ -275,7 +275,7 @@ public class JCSyncAbstractSharedObjectTest {
         Topic t = new Topic(name);
         Subscriber subscriber = new Subscriber("node1", t);
         t.setOwner(subscriber);
-        AccessControlRules acRules = new AccessControlRules(t);
+        AccessControlLists acRules = new AccessControlLists(t);
         acRules.getRule(PubSubConstants.OPERATION_PUBLISH).getOperation().addEvent(new Event(RegisteredOperations.OP_REQ_TRANSFER_OBJECT));
         acRules.getRule(PubSubConstants.OPERATION_PUBLISH).addUser(RegisteredOperations.OP_REQ_TRANSFER_OBJECT, null);
         acRules.getRule(PubSubConstants.OPERATION_NOTIFY).getOperation().addEvent(new Event(RegisteredOperations.OP_IND_TRANSFER_OBJECT));
@@ -353,7 +353,7 @@ public class JCSyncAbstractSharedObjectTest {
         Topic t = new Topic(name);
         Subscriber subscriber = new Subscriber("node1", t);
         t.setOwner(subscriber);
-        AccessControlRules acRules = new AccessControlRules(t);
+        AccessControlLists acRules = new AccessControlLists(t);
         acRules.getRule(PubSubConstants.OPERATION_SUBSCRIBE).addUser(PubSubConstants.EVENT_ALL,subscriber);
         s1 = new SimpleSharedObject(name, core2, DefaultConsistencyManager.class,acRules);
         assertNotNull("shared object are not initialized!", s1);
@@ -463,7 +463,7 @@ public class JCSyncAbstractSharedObjectTest {
         Object[] argValues = null;
         JCSyncAbstractSharedObject instance = null;
         Object expResult = null;
-        Object result = instance.invokeWriteOperation(methodName, argTypes, argValues);
+        Object result = instance.invokeWriteOperation(methodName, argTypes, argValues, false);
         assertEquals(expResult, result);
         // TODO review the generated test code and remove the default call to fail.
         fail("The test case is a prototype.");
@@ -488,7 +488,7 @@ public class JCSyncAbstractSharedObjectTest {
 
 class SimpleSharedObject extends JCSyncAbstractSharedObject implements List {
     
-    public SimpleSharedObject(String name, JCSyncCore core, Class consistencyManager, AccessControlRules acRules) throws ObjectExistsException, Exception {
+    public SimpleSharedObject(String name, JCSyncCore core, Class consistencyManager, AccessControlLists acRules) throws ObjectExistsException, Exception {
 
         super(name, new ArrayList(), core, consistencyManager, SimpleSharedObject.class, acRules);
     }

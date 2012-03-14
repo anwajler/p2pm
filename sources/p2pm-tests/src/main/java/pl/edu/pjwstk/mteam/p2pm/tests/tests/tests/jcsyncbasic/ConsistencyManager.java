@@ -10,6 +10,7 @@ import java.util.Comparator;
 import java.util.TreeMap;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.logging.Level;
 import pl.edu.pjwstk.mteam.pubsub.core.PubSubConstants;
 import org.apache.log4j.Logger;
 import java.util.HashMap;
@@ -705,6 +706,13 @@ public class ConsistencyManager extends AbstractConsistencyManager {
                 } else if (dr.operation.getOperationType() == OP_REQ_WRITE_METHOD) {
                     Object retVal = null;
                     try {
+                        if (blockingRequests.containsKey(op)) {
+//                        try {
+//                                    Thread.sleep(500);
+//                                } catch (InterruptedException ex) {
+//                                    java.util.logging.Logger.getLogger(ConsistencyManager.class.getName()).log(Level.SEVERE, null, ex);
+//                                }
+                        }
                         // --------- for debugging -------------
                         if(op.getObjectID().compareTo(JCsyncBasicTest.getCollectionName())==0){
                         MethodCarrier mc = op.getMethodCarrier();
@@ -712,22 +720,13 @@ public class ConsistencyManager extends AbstractConsistencyManager {
                         ((OperationDetails)mc.getArgValues()[1]).setIndicationReceivingTime(System.currentTimeMillis()); 
                         }
                         // -------------------------------------
-                        retVal = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier());
+                        retVal = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier(), false);
                         if(op.getObjectID().compareTo(JCsyncBasicTest.getCollectionName())==0){
                                 EventManager.getInstance().addEventToQueue(JCsyncBasicTest.EVENT_JCSYNC_ON_REMOTE_UPDATE, op.getMethodCarrier());
                             }
+                        
                         log.trace(this.core.getNodeInfo().getName() + ":vOperation invoked: " + dr.operation);
-                        if (blockingRequests.containsKey(op)) {
-                            log.trace(this.core.getNodeInfo().getName() + ":Operation is in the map request, setting retValue: " + dr.operation);
-                            blockingRequests.get(op).retVal = retVal;
-                            synchronized (blockingRequests.get(op).methodAlreadyInvoked) {
-                                blockingRequests.get(op).methodAlreadyInvoked = true;
-                                if (blockingRequests.get(op).respCode != -1) {
-                                    log.trace(this.core.getNodeInfo().getName() + ":Operation is in the map request, releasing semaphore: " + dr.operation);
-                                    blockingRequests.get(op).semaphore.release();
-                                }
-                            }
-                        }
+                        
                     } catch (Exception e) {
                         log.error(this.core.getNodeInfo().getName() + ":An error occurred while invoking method.", e);
                     }
@@ -736,10 +735,22 @@ public class ConsistencyManager extends AbstractConsistencyManager {
                     mc.setArgTypes(op.getMethodCarrier().getArgTypes());
                     mc.setArgValues(op.getMethodCarrier().getArgValues());
                     mc.setOperationIndex(this.core.getObject(op.getObjectID()).getCurrentOperationID());
-                    JCsyncAbstractOperation op_ = JCsyncAbstractOperation.getByType(OP_IND_WRITE_METHOD, op.getObjectID(), mc,this.core.getNodeInfo().getName());
+                    JCsyncAbstractOperation op_ = JCsyncAbstractOperation.getByType(OP_IND_WRITE_METHOD, op.getObjectID(), mc,op.getPublisher());
                     op_.setReqestID(op.getReqestID());
                     log.trace("Passing operation to sent it to children: "+op_);
                     this.core.sendMessage(dr.request, op_, true);
+                    if (blockingRequests.containsKey(op)) {
+                            log.trace(this.core.getNodeInfo().getName() + ":Operation is in the map request, setting retValue: " + dr.operation);
+                            blockingRequests.get(op).retVal = retVal;
+                            synchronized (blockingRequests.get(op).methodAlreadyInvoked) {
+                                blockingRequests.get(op).methodAlreadyInvoked = true;
+                                if (blockingRequests.get(op).respCode != -1) {
+                                    log.trace(this.core.getNodeInfo().getName() + ":Operation is in the map request, releasing semaphore: " + dr.operation);
+                                
+                                    blockingRequests.get(op).semaphore.release();
+                                }
+                            }
+                        }
                 } else {
                     log.fatal(this.core.getNodeInfo().getName() + ":Unhandled operation: " + dr.operation);
                 }
@@ -865,7 +876,7 @@ public class ConsistencyManager extends AbstractConsistencyManager {
                         ((OperationDetails)mc.getArgValues()[1]).setIndicationReceivingTime(System.currentTimeMillis()); 
                         }
                         // -------------------------------------
-                                result = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier());
+                                result = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier(), false);
                                 if(op.getObjectID().compareTo(JCsyncBasicTest.getCollectionName())==0){
                                 EventManager.getInstance().addEventToQueue(JCsyncBasicTest.EVENT_JCSYNC_ON_REMOTE_UPDATE, op.getMethodCarrier());
                             }
@@ -919,7 +930,7 @@ public class ConsistencyManager extends AbstractConsistencyManager {
                         ((OperationDetails)mc.getArgValues()[1]).setIndicationReceivingTime(System.currentTimeMillis()); 
                         }
                         // -------------------------------------
-                            result = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier());
+                            result = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier(), false);
                             if(op.getObjectID().compareTo(JCsyncBasicTest.getCollectionName())==0){
                                 EventManager.getInstance().addEventToQueue(JCsyncBasicTest.EVENT_JCSYNC_ON_REMOTE_UPDATE, op.getMethodCarrier());
                             }

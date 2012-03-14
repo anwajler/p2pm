@@ -45,7 +45,7 @@ private Object shared_object = null;
     }
     
     @Override
-    public Object invoke(String methodName, Class[] argTypes, Object[] argValues) {
+    public Object invoke(String methodName, Class[] argTypes, Object[] argValues, boolean local) {
         methodName = methodName + '_';
         Object retVal = null;
         Method m = null;

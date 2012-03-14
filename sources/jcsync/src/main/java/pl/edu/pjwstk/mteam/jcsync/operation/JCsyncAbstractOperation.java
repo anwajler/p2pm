@@ -38,6 +38,8 @@ public class JCsyncAbstractOperation implements Comparable {
      * Request identifier of current operation.
      */
     protected long reqestID = -1;
+    
+    protected long globalRequestID = -1;
     protected final String publisher;
     /**
      * Creates new instance of class with given arguments.
@@ -313,6 +315,13 @@ public class JCsyncAbstractOperation implements Comparable {
         this.reqestID = reqestID;
     }
     
+    public void setGlobalReqID(long reqID){
+        this.globalRequestID = reqID;
+    }
+    public long getGlobalReqID(){
+        return this.globalRequestID;
+    }
+    
     /**
      * Returns necessary information to invoke delivered method as 
      * <tt>MethodCarrier</tt> related with current operation.
@@ -336,7 +345,7 @@ public class JCsyncAbstractOperation implements Comparable {
         if (this.objectID.compareTo(o.getObjectID()) == 0) {
             if (this.operationType == o.getOperationType() 
                     && this.reqestID == o.getReqestID()) {
-                return 0;
+                return this.publisher.compareTo(o.publisher);                
             }
         }
         return -1;
@@ -372,6 +381,8 @@ public class JCsyncAbstractOperation implements Comparable {
         sb.append('[');
         sb.append(this.operationType);
         sb.append(']');
+        sb.append('-');
+        sb.append(this.publisher);
         sb.append('-');
         sb.append(OP_NAMES.get(this.operationType));
         sb.append('-');

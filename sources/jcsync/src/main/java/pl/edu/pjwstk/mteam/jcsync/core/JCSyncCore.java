@@ -236,6 +236,10 @@ public class JCSyncCore implements MessageDeliveryObserver, JCsyncAlgorithInterf
 
         return null;
     }
+    @Override
+    public void modifyAccessControlLists(String name, AccessControlLists acRules) {
+        this.pubsubLayer.getCustomAlgorith().modifyAccessControlRules(name, acRules);
+    }
 
     /**
      * Sends operation as a pub-sub message thought overlay related with given 
@@ -262,6 +266,10 @@ public class JCSyncCore implements MessageDeliveryObserver, JCsyncAlgorithInterf
     public void sendResponse(PublishRequest req, int respCode) {
         this.pubsubLayer.sendResponse(respCode, req, getAssignedTopic(req.getTopicID()));
     }
+//    @Override
+//    public void sendResponse(PublishRequest req, int respCode/*, long requestID*/) {
+//        this.pubsubLayer.sendResponse(respCode, req, getAssignedTopic(req.getTopicID())/*,requestID*/);
+//    }
     private class Key implements Comparable{
         
         private final String topicID;
@@ -374,7 +382,9 @@ public class JCSyncCore implements MessageDeliveryObserver, JCsyncAlgorithInterf
                         log.trace(getNodeInfo().getName()
                                 + ": transferring shared object with current operation id: "
                                 + so.getCurrentOperationID() + ", to node: " + req.getPublisher());
-                        JCsyncAbstractOperation op_ = JCsyncAbstractOperation.get_OP_IND_TRANSFER_OBJECT(op.getObjectID(), so.encode(),this.getNodeInfo().getName());
+                        JCsyncAbstractOperation op_ = 
+                                JCsyncAbstractOperation.get_OP_IND_TRANSFER_OBJECT
+                                (op.getObjectID(), so.encode(),req.getPublisher());
                         op_.setReqestID(op.getReqestID());
                         sendMessage(req, op_, false);
                     }

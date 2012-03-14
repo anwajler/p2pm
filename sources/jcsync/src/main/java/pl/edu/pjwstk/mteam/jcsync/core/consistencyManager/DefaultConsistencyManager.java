@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.TreeMap;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.logging.Level;
 import pl.edu.pjwstk.mteam.pubsub.core.PubSubConstants;
 import org.apache.log4j.Logger;
 import java.util.HashMap;
@@ -202,7 +203,7 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
      * @see RegisteredOperations
      */
     @Override
-    public void responseReceived(JCsyncAbstractOperation op, short respCode) {
+    public void responseReceived(JCsyncAbstractOperation op, short respCode/*, long globalRequestID*/) {
         log.trace("(response received (" + respCode + ")): " + op.toString());
         if (this.blockingRequests.containsKey(op)) {
             synchronized (this.blockingRequests.get(op).methodAlreadyInvoked) {
@@ -682,7 +683,10 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
         public void run() {
             DeliveredRequest dr = null;
             JCsyncAbstractOperation op;
+            boolean local = false;
             while (true) {
+                op = null;
+                dr = null;
                 try {
                     dr = this.deliveredRequests.take();
                 } catch (InterruptedException ex) {
@@ -698,31 +702,38 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
                 } else if (dr.operation.getOperationType() == OP_REQ_WRITE_METHOD) {
                     Object retVal = null;
                     try {
-                        retVal = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier());
-                        log.trace(this.core.getNodeInfo().getName() + ":vOperation invoked: " + dr.operation);
-                        if (blockingRequests.containsKey(op)) {
-                            log.trace(this.core.getNodeInfo().getName() + ":Operation is in the map request, setting retValue: " + dr.operation);
-                            blockingRequests.get(op).retVal = retVal;
-                            synchronized (blockingRequests.get(op).methodAlreadyInvoked) {
-                                blockingRequests.get(op).methodAlreadyInvoked = true;
-                                if (blockingRequests.get(op).respCode != -1) {
-                                    log.trace(this.core.getNodeInfo().getName() + ":Operation is in the map request, releasing semaphore: " + dr.operation);
-                                    blockingRequests.get(op).semaphore.release();
-                                }
-                            }
-                        }
+                        if(op.getPublisher().compareTo(this.core.getNodeInfo().getName())==0) local = true;
+                        else local = false;
+                        retVal = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier(), local);
+                        log.trace(this.core.getNodeInfo().getName() + ":vOperation invoked: " + op);                        
                     } catch (Exception e) {
                         log.error(this.core.getNodeInfo().getName() + ":An error occurred while invoking method.", e);
                     }
+                    
+                    log.trace(this.core.getNodeInfo().getName() + ":Preparing to send indication to children: " + dr.operation);
                     MethodCarrier mc = new MethodCarrier(op.getMethodCarrier().getGenericMethodName());
                     mc.setRetVal((Serializable) retVal);
                     mc.setArgTypes(op.getMethodCarrier().getArgTypes());
                     mc.setArgValues(op.getMethodCarrier().getArgValues());
                     mc.setOperationIndex(this.core.getObject(op.getObjectID()).getCurrentOperationID());
-                    JCsyncAbstractOperation op_ = JCsyncAbstractOperation.getByType(OP_IND_WRITE_METHOD, op.getObjectID(), mc, op.getPublisher());
-                    op_.setReqestID(op.getReqestID());
-                    log.trace("Passing operation to sent it to children: " + op_);
-                    this.core.sendMessage(dr.request, op_, true);
+                    JCsyncAbstractOperation op__ = JCsyncAbstractOperation.getByType(OP_IND_WRITE_METHOD, dr.operation.getObjectID(), mc, dr.operation.getPublisher());
+                    op__.setReqestID(op.getReqestID());
+                    log.trace("Passing operation to sent it to children: " + op__);
+                    this.core.sendMessage(dr.request, op__, true);
+                    if (blockingRequests.containsKey(op)) {
+                            log.trace(this.core.getNodeInfo().getName() + ":Operation is in the map request, setting retValue: " + dr.operation);
+                            blockingRequests.get(op).retVal = retVal;
+                            synchronized (blockingRequests.get(op).methodAlreadyInvoked) {
+                                blockingRequests.get(op).methodAlreadyInvoked = true;
+                                if (blockingRequests.get(op).respCode != -1) {
+                                
+                                    log.trace(this.core.getNodeInfo().getName() + ":Operation is in the map request, releasing semaphore: " + dr.operation);
+                                    
+                                    blockingRequests.get(op).semaphore.release();
+                                
+                                }
+                            }
+                        }
                 } else {
                     log.fatal(this.core.getNodeInfo().getName() + ":Unhandled operation: " + dr.operation);
                 }
@@ -776,7 +787,7 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
         @Override
         public void run() {
             JCsyncAbstractOperation op = null;
-
+            boolean local = false;
             while (true) {
 
 
@@ -845,7 +856,9 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
                             if ((op.getOperationType() + 128) == OP_IND_WRITE_METHOD) {
                                 Object result = null;
                                 try {
-                                    result = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier());
+                                    if(op.getPublisher().compareTo(this.core.getNodeInfo().getName())==0) local = true;
+                                    else local = false;
+                                    result = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier(), local);
                                     log.trace(this.core.getNodeInfo().getName() + ":Method invoked (" + op.getMethodCarrier().genericMethodName + ") on: " + op.toString());
                                     if (result != null) {
                                         if (result.equals(op.getMethodCarrier().getRetVal())) {
@@ -883,7 +896,9 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
                     if ((op.getOperationType() + 128) == OP_IND_WRITE_METHOD) {
                         Object result = null;
                         try {
-                            result = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier());
+                            if(op.getPublisher().compareTo(this.core.getNodeInfo().getName())==0) local = true;
+                            else local = false;
+                            result = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier(), local);
                             log.trace(this.core.getNodeInfo().getName() + ":Method invoked (" + op.getMethodCarrier().genericMethodName + ") on: " + op.toString());
                             if (result != null) {
                                 if (result.equals(op.getMethodCarrier().getRetVal())) {
@@ -899,7 +914,9 @@ public class DefaultConsistencyManager extends AbstractConsistencyManager {
                     if ((op.getOperationType() + 128) == OP_IND_WRITE_METHOD) {
                         Object result = null;
                         try {
-                            result = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier());
+                            if(op.getPublisher().compareTo(this.core.getNodeInfo().getName())==0) local = true;
+                            else local = false;
+                            result = invoke(this.core.getObject(op.getObjectID()), op.getMethodCarrier(), local);
                             log.debug(this.core.getNodeInfo().getName() + ":Method invoked (" + op.getMethodCarrier().genericMethodName + ") on: " + op.toString());
                             if (result.equals(op.getMethodCarrier().getRetVal())) {
                                 log.trace(this.core.getNodeInfo().getName() + ":Result value may not be the same as given in indication!");

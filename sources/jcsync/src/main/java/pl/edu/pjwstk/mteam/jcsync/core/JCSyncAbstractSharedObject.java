@@ -103,6 +103,8 @@ public abstract class JCSyncAbstractSharedObject {
      * operation identifier, it is used to sort incoming indication and invoke id in proper order
      */
     private AtomicLong operationID = new AtomicLong(0);
+    
+    private AtomicLong currRequestID = new AtomicLong(0);
     /**
      * just to synchronise operationID incrementation 
      */
@@ -164,7 +166,7 @@ public abstract class JCSyncAbstractSharedObject {
      * @throws ObjectExistsException if the object with this name is already created in the network 
      * @throws Exception 
      */
-    protected JCSyncAbstractSharedObject(String name, Serializable nucleus, JCSyncCore core, Class consistencyManager, Class sharedObjectClass, AccessControlRules acRules)
+    protected JCSyncAbstractSharedObject(String name, Serializable nucleus, JCSyncCore core, Class consistencyManager, Class sharedObjectClass, AccessControlLists acRules)
             throws ObjectExistsException,
             Exception {
         if (name == null || core == null || name.length() == 0 || consistencyManager == null || sharedObjectClass == null) {
@@ -226,6 +228,9 @@ public abstract class JCSyncAbstractSharedObject {
             retVal = this.operationID.get();
         }
         return retVal;
+    }
+    public long getAndIncrementCurrentRequestID(){
+        return this.currRequestID.getAndIncrement();
     }
 
     /**
@@ -455,7 +460,7 @@ public abstract class JCSyncAbstractSharedObject {
      * @throws IllegalArgumentException
      * @throws InvocationTargetException
      */
-    protected synchronized Object invokeWriteOperation(String methodName, Class[] argTypes, Object[] argValues)
+    protected synchronized Object invokeWriteOperation(String methodName, Class[] argTypes, Object[] argValues, boolean local)
             throws SecurityException, NoSuchMethodException,
             IllegalAccessException, IllegalArgumentException,
             InvocationTargetException {

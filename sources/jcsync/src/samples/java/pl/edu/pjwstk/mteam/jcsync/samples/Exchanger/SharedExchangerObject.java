@@ -1,4 +1,4 @@
-package pl.edu.pjwstk.mteam.jcsync.core.implementation.collections;
+package pl.edu.pjwstk.mteam.jcsync.samples.Exchanger;
 
 import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
@@ -6,19 +6,21 @@ import pl.edu.pjwstk.mteam.jcsync.core.AccessControlLists;
 import pl.edu.pjwstk.mteam.jcsync.core.JCSyncAbstractSharedObject;
 import pl.edu.pjwstk.mteam.jcsync.core.JCSyncCore;
 import pl.edu.pjwstk.mteam.jcsync.core.consistencyManager.DefaultConsistencyManager;
+import pl.edu.pjwstk.mteam.jcsync.core.implementation.collections.JCsyncNucleusInterface;
 import pl.edu.pjwstk.mteam.jcsync.exception.ObjectExistsException;
+import pl.edu.pjwstk.mteam.jcsync.operation.JCsyncAbstractOperation;
+import pl.edu.pjwstk.mteam.jcsync.operation.MethodCarrier;
+import pl.edu.pjwstk.mteam.jcsync.operation.RegisteredOperations;
 
 /**
- * An extension of {@link JCSyncAbstractSharedObject JCSyncAbstractSharedObject}
- * created for the purposes of implemented collections.
  * @author Piotr Bucior
  */
-public class SharedCollectionObject extends JCSyncAbstractSharedObject{
+public class SharedExchangerObject extends JCSyncAbstractSharedObject{
 
     /**
      * Creates new instance with blank constructor.
      */
-    public SharedCollectionObject(){
+    public SharedExchangerObject(){
         
     }
     /**
@@ -29,8 +31,8 @@ public class SharedCollectionObject extends JCSyncAbstractSharedObject{
      * @throws ObjectExistsException if the object with this name is already created in the network 
      * @throws Exception any occurred exception
      */
-    public SharedCollectionObject(String name, JCsyncNucleusInterface nucleus, JCSyncCore core) throws ObjectExistsException, Exception{
-        super(name, nucleus, core, DefaultConsistencyManager.class, SharedCollectionObject.class);
+    public SharedExchangerObject(String name, JCsyncNucleusInterface nucleus, JCSyncCore core) throws ObjectExistsException, Exception{
+        super(name, nucleus, core, DefaultConsistencyManager.class, SharedExchangerObject.class);
         nucleus.objectCtreated(this);
     }
     /**
@@ -42,8 +44,8 @@ public class SharedCollectionObject extends JCSyncAbstractSharedObject{
      * @throws ObjectExistsException if the object with this name is already created in the network 
      * @throws Exception any occurred exception
      */
-    public SharedCollectionObject(String name, JCsyncNucleusInterface nucleus, JCSyncCore core, AccessControlLists acRules) throws ObjectExistsException, Exception{
-        super(name, nucleus, core, DefaultConsistencyManager.class, SharedCollectionObject.class,acRules);
+    public SharedExchangerObject(String name, JCsyncNucleusInterface nucleus, JCSyncCore core, AccessControlLists acRules) throws ObjectExistsException, Exception{
+        super(name, nucleus, core, DefaultConsistencyManager.class, SharedExchangerObject.class,acRules);
         nucleus.objectCtreated(this);
     }
     /**
@@ -55,8 +57,8 @@ public class SharedCollectionObject extends JCSyncAbstractSharedObject{
      * @throws ObjectExistsException if the object with this name is already created in the network 
      * @throws Exception any occurred exception
      */
-    public SharedCollectionObject(String name, JCsyncNucleusInterface nucleus, JCSyncCore core, Class consistencyManager) throws ObjectExistsException, Exception{
-        super(name, nucleus, core, consistencyManager, SharedCollectionObject.class);
+    public SharedExchangerObject(String name, JCsyncNucleusInterface nucleus, JCSyncCore core, Class consistencyManager) throws ObjectExistsException, Exception{
+        super(name, nucleus, core, consistencyManager, SharedExchangerObject.class);
         nucleus.objectCtreated(this);
     }
     /**
@@ -69,8 +71,8 @@ public class SharedCollectionObject extends JCSyncAbstractSharedObject{
      * @throws ObjectExistsException if the object with this name is already created in the network 
      * @throws Exception any occurred exception
      */
-    public SharedCollectionObject(String name, JCsyncNucleusInterface nucleus, JCSyncCore core, Class consistencyManager,AccessControlLists acRules) throws ObjectExistsException, Exception{
-        super(name, nucleus, core, consistencyManager, SharedCollectionObject.class,acRules);
+    public SharedExchangerObject(String name, JCsyncNucleusInterface nucleus, JCSyncCore core, Class consistencyManager,AccessControlLists acRules) throws ObjectExistsException, Exception{
+        super(name, nucleus, core, consistencyManager, SharedExchangerObject.class,acRules);
         nucleus.objectCtreated(this);
     }
     @Override
@@ -80,7 +82,17 @@ public class SharedCollectionObject extends JCSyncAbstractSharedObject{
 
     @Override
     protected Object publishWriteOperation(String methodName, Class[] argTypes, Serializable[] argValues) throws Exception {
-        return super.publishWriteOperation(methodName, argTypes, argValues);
+        //return super.publishWriteOperation(methodName, argTypes, argValues);
+        MethodCarrier mc = new MethodCarrier(methodName);
+        mc.setArgTypes(argTypes);
+        mc.setArgValues(argValues);
+        JCsyncAbstractOperation op = JCsyncAbstractOperation.getByType(RegisteredOperations.OP_REQ_WRITE_METHOD, super.getID(), mc,this.coreAlg.getNodeInfo().getName());
+        //this.coreAlg.getConsistencyManager(this.ID).beforeRequestSend(op, true);
+        this.coreAlg.sendMessage(op, false);
+        //Object e = this.coreAlg.getConsistencyManager(this.ID).afterRequestSend(op, true);
+        //if(e!= null && e instanceof Exception) throw (Exception)e;
+        //else return e;
+        return null;
     }
 
     @Override
@@ -91,7 +103,7 @@ public class SharedCollectionObject extends JCSyncAbstractSharedObject{
     @Override
     protected Object invokeWriteOperation(String methodName, Class[] argTypes, Object[] argValues, boolean local) throws SecurityException, NoSuchMethodException, IllegalAccessException, IllegalArgumentException, InvocationTargetException {
         super.nextOperationID();
-        return ((JCsyncNucleusInterface)getNucleusObject()).invoke(methodName, argTypes, argValues, false);
+        return ((JCsyncNucleusInterface)getNucleusObject()).invoke(methodName, argTypes, argValues, local);
     }
     
     /**
