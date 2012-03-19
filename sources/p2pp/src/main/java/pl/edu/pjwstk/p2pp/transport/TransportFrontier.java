@@ -11,7 +11,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import pl.edu.pjwstk.p2pp.messages.P2PPMessage;
-import sun.jdbc.odbc.ee.ObjectPool;
 
 public class TransportFrontier {
 
