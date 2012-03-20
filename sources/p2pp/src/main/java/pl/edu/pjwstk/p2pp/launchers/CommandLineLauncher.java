@@ -547,9 +547,10 @@ public class CommandLineLauncher {
 
     public static void main(String[] args) {
 
+    	String[] argsStatic = {"pl.edu.pjwstk.p2pp.launchers.CommandLineLauncher", "-m", "4", "-tcp", "7080", "-p", "SuperPeer", "-h", "SHA-1", "-o", "overlayid", "-hl", "20", "-hb", "2", "-sra", "127.0.0.1", "-srp", "708"};
         configureLogger();
 
-        CommandLineLauncher launcher = new CommandLineLauncher(args);
+        CommandLineLauncher launcher = new CommandLineLauncher(argsStatic);
 
         try {
             boolean argsOK = launcher.parseAndCheckArguments();
